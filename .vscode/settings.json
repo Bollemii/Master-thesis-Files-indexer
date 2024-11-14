@@ -1,0 +1,28 @@
+{
+  "cSpell.words": [
+    "autoflush",
+    "fastapi",
+    "fitz",
+    "iterrows",
+    "langdetect",
+    "lemmatize",
+    "lemmatized",
+    "lemmatizer",
+    "outdir",
+    "oxps",
+    "postgresql",
+    "pydantic",
+    "pymupdf",
+    "pytesseract",
+    "sessionmaker",
+    "sqlalchemy",
+    "sqlite",
+    "sqlmodel",
+    "stopword",
+    "stopwords",
+    "unidecode",
+    "uvicorn",
+    "wordnet"
+  ],
+  "cSpell.ignoreWords": ["figsci"]
+}

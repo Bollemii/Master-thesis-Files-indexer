@@ -1,0 +1,37 @@
+services:
+  api:
+    build: .
+    container_name: api
+    environment:
+      - PORT=8000
+      - DATABASE_URL=${DATABASE_URL}
+    ports:
+      - "8000:8000"
+    volumes:
+      - document-storage:${DOCUMENT_STORAGE_PATH}
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    container_name: postgres
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PW}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PW}
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    restart: unless-stopped
