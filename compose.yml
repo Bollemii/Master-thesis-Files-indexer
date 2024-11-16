@@ -6,9 +6,9 @@ services:
       - PORT=8000
       - DATABASE_URL=${DATABASE_URL}
     ports:
-      - "8000:8000"
+      - "8000:80"
     volumes:
-      - document-storage:${DOCUMENT_STORAGE_PATH}
+      - document-storage:/documents
     depends_on:
       - db
     restart: unless-stopped
@@ -20,8 +20,10 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PW}
       - POSTGRES_DB=${POSTGRES_DB}
-    ports:
-      - "5432:5432"
+    expose:
+      - "5432"
+    volumes:
+      - db-storage:/var/lib/postgresql/data
     restart: unless-stopped
 
   pgadmin:
@@ -35,3 +37,7 @@ services:
     depends_on:
       - db
     restart: unless-stopped
+
+volumes:
+  document-storage:
+  db-storage:
