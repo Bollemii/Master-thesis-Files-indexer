@@ -208,9 +208,7 @@ class Reader:
             rEnd, wEnd = Pipe(duplex=False)
             readers.append(rEnd)
             w = Process(target=work, args=(
-            i_worker, queue, wEnd, './tmp', 'C:/Program Files/LibreOffice/program/soffice.exe',
-            r'C:\Users\lphilippe\Documents\Agilytic\Daoust\automatch\arc\tesseract-4.0.0-alpha\tesseract.exe', 500,
-            False))
+            i_worker, queue, wEnd, './tmp', '/usr/bin/libreoffice', '/usr/bin/tesseract', 500, False))
             workers.append(w)
             workers[i_worker].start()
             wEnd.close()
@@ -255,7 +253,7 @@ class Reader:
                         n_pages_list.append(n_pages_map[task_id])
 
                         dt_list.append(dt)
-                    print('parent received:{}'.format(msg))
+                    # print('parent received:{}'.format(msg))
             # print('len(task_map):{}'.format(len(task_map)))
             # print('task_map:{}'.format(task_map))
             for i_task in task_map.keys():
@@ -276,10 +274,7 @@ class Reader:
                         readers.append(rEnd)
                         n_workers += 1
                         w = Process(target=work, args=(
-                            n_workers-1, queue, wEnd, './tmp', 'C:/Program Files/LibreOffice/program/soffice.exe',
-                            r'C:\Users\lphilippe\Documents\Agilytic\Daoust\automatch\arc\tesseract-4.0.0-alpha\tesseract.exe',
-                            500,
-                            False))
+                            n_workers-1, queue, wEnd, './tmp', '/usr/bin/libreoffice', '/usr/bin/tesseract', 500, False))
                         workers.append(w)
                         workers[n_workers-1].start()
                         wEnd.close()

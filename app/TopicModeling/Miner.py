@@ -1,3 +1,4 @@
+import nltk
 import pandas as pd
 from copy import deepcopy
 import langdetect
@@ -52,7 +53,7 @@ def cleanDataTier1(data):  # basic cleaning
             data = unidecode.unidecode(data)
             data = data.replace('(', '').replace(')', '').replace('*', '').replace('+', '').replace('[', '').replace(
                 ']', '').replace('|', '').replace('∆', '').replace('?', '')  # remove
-            data = data.replace('\t', ' ').replace('\n', ' ').replace(':', ' ').replace('-', ' ').replace(';',
+            data = data.replace('\t', ' ').replace('\n', ' ').replace(':', ' ').replace('-', ' ').replace('_', ' ').replace(';',
                                                                                                           ' ').replace(
                 '\\', ' ').replace('.', ' ').replace(',', ' ').replace('\'', ' ').replace('/', ' ').replace('<',
                                                                                                             ' ')  # replace by spaces
@@ -68,7 +69,7 @@ def cleanDataTier1(data):  # basic cleaning
                 element = element.replace('(', '').replace(')', '').replace('*', '').replace('+', '').replace('[',
                                                                                                               '').replace(
                     ']', '').replace('|', '').replace('∆', '').replace('?', '')  # remove
-                element = element.replace('\t', ' ').replace('\n', ' ').replace(':', ' ').replace('-', ' ').replace(';',
+                element = element.replace('\t', ' ').replace('\n', ' ').replace(':', ' ').replace('-', ' ').replace('_', ' ').replace(';',
                                                                                                                     ' ').replace(
                     '\\', ' ').replace('.', ' ').replace(',', ' ').replace('\'', ' ').replace('/', ' ').replace('<',
                                                                                                                 ' ')  # replace by spaces
@@ -182,7 +183,8 @@ def transform_to_set(df, column, combination_length):
 
 class Miner:
     def __init__(self):
-        #nltk.download('wordnet')
+        nltk.download('wordnet')
+        nltk.download('stopwords')
         self.lemmatizer = WordNetLemmatizer()
         self.stopWords = {}
         self.stopWords['EN'] = set(stopwords.words('english'))
