@@ -36,7 +36,11 @@ def run():
     # data_root = '../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/'
     # data_root = 'C:/Users/lphilippe/Proximus Cloud/FigSciAndCo/Downloads/'
     # data_root = 'C:/Users/lphilippe/Documents/Henallux/MASI/Cours/TFE/lphPortagePython.SimonBaudart/input/'
-    data_root = './data/'
+    data_root = '../../documents/'
+    # Create the tmp folder
+    if os.path.exists('./tmp'):
+        shutil.rmtree('./tmp')
+    os.makedirs('./tmp')
 
     if 1 == 1:  # Reader
         orig_dir = os.getcwd()
@@ -70,15 +74,19 @@ def run():
         doc_df = doc_df.sort_values(by='creation_time')
 #        doc_df = doc_df.head(120)
 
+        # reader = Reader(cv_file_column='file_path',
+        #                 tesseract_path='C:/Users/lphilippe/Documents/Agilytic/Daoust/automatch/arc/tesseract-4.0.0-alpha/tesseract.exe',
+        #                 image_resolution=150)
+
         reader = Reader(cv_file_column='file_path',
-                        tesseract_path='C:/Users/lphilippe/Documents/Agilytic/Daoust/automatch/arc/tesseract-4.0.0-alpha/tesseract.exe',
-                        image_resolution=150)
+                tesseract_path='/usr/bin/tesseract',
+                image_resolution=150)
 
         doc_df = reader.read(doc_df)
 
-        print(doc_df)
+        # print(doc_df)
 
-        doc_df.to_pickle('./tmp/doc_df.test.pkl')
+        doc_df.to_pickle('./tmp/doc_df.append.pkl')
 
     if 1 == 0:
         # Incremental Reader
@@ -112,7 +120,7 @@ def run():
             old_doc_df = pd.DataFrame().reindex_like(meta_df).head(0)  # copy structure and types but NOT data
             diff_meta_df = meta_df
 
-        print(diff_meta_df)
+        # print(diff_meta_df)
 
         if diff_meta_df.empty:
             print('Nothing to do...')
@@ -123,18 +131,18 @@ def run():
 
             diff_doc_df = reader.read(diff_meta_df)
 
-            print(diff_doc_df)
+            # print(diff_doc_df)
 
             merged_doc_df = pd.concat([old_doc_df, diff_doc_df])
 
             merged_doc_df = merged_doc_df.sort_values(by='creation_time')
             merged_doc_df.to_pickle('./tmp/doc_df.append.pkl')
 
-    if 1 == 0:
+    if 1 == 1:
         # Transformer
-#        doc_df = pd.read_pickle('./tmp/doc_df.append.pkl')
-        doc_df = pd.read_pickle('./tmp/doc_df.test.pkl')
-        print(doc_df)
+        doc_df = pd.read_pickle('./tmp/doc_df.append.pkl')
+        # doc_df = pd.read_pickle('./tmp/doc_df.test.pkl')
+        # print(doc_df)
         doc_df['raw_content'] = doc_df['content']
         doc_df['content'] = doc_df.apply(lambda row: delete_eol(row['raw_content']), axis=1)
         doc_df['file_name'] = doc_df.apply(lambda row: pathlib.PurePosixPath(row['file_path']).stem, axis=1)
@@ -144,7 +152,7 @@ def run():
         doc_df['raw_content_size'] = doc_df.apply(lambda row: get_length(row['raw_content']), axis=1)
         doc_df = doc_df[['file_name', 'file_type', 'creation_time', 'file_size', 'n_pages', 'dt', 'error',
                          'content_size', 'content', 'raw_content_size', 'raw_content']]
-        print(doc_df)
+        # print(doc_df)
         doc_df.to_csv('./tmp/doc_df.test.csv', sep='|', escapechar='\\')
         doc_df.to_pickle('./tmp/doc_df.transf1.pkl')
 
@@ -190,7 +198,7 @@ def run():
             merged_doc_df.to_csv('./tmp/doc_df.transf1.csv', sep='|', escapechar='\\')
             merged_doc_df.to_pickle('./tmp/doc_df.transf1.pkl')
 
-    if 1 == 0:
+    if 1 == 1:
 
         doc_df = pd.read_pickle('./tmp/doc_df.transf1.pkl')
         # doc_df = doc_df.head(100)
@@ -206,18 +214,18 @@ def run():
 #
         transf_doc_df.to_pickle('./tmp/doc_df.transf2.pkl', protocol=4)
 
-    if 1 == 0:
+    if 1 == 1:
 
         np.set_printoptions(precision=3)
         np.set_printoptions(suppress=True)
 
-        data_root = '..'
+        # data_root = '..'
 
-        transf_doc_df = pd.read_csv(data_root + '/topicModeling/tmp/doc_df.transf2.csv', sep='|')
+        transf_doc_df = pd.read_csv('./tmp/doc_df.transf2.csv', sep='|')
 
         transf_doc_df.count()
 
-        print(transf_doc_df.tail(10)['without_stop_words'])
+        # print(transf_doc_df.tail(10)['without_stop_words'])
 
         from sklearn.feature_extraction.text import CountVectorizer
 
@@ -229,7 +237,7 @@ def run():
 
         X = vectorizer.fit_transform(corpus)
 
-        print(vectorizer.get_feature_names())
+        print(vectorizer.get_feature_names_out())
 
         doc_topic_prior = 0.085
         topic_word_prior = 0.225
@@ -242,9 +250,9 @@ def run():
                                         max_iter=100)
         lda.fit(X.toarray())
         perplexity = lda.perplexity(X.toarray())
-        print(perplexity)
+        print("Perplexity", perplexity)
 
-    print("That's All, Folks!!!")
+    # print("That's All, Folks!!!")
 
 
 if __name__ == '__main__':
