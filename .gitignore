@@ -3,3 +3,6 @@ documents
 *.db
 __pycache__/
 app/__pycache__/
+.vscode*
+.pytest*
+tmp
