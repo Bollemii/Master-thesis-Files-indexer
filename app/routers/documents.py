@@ -1,0 +1,169 @@
+import os
+import uuid
+from datetime import datetime
+from typing import Annotated
+from fastapi import APIRouter, Depends, UploadFile, HTTPException
+from sqlmodel import Session, select
+from app.database import get_session
+from app.models import Document, Topic, DocumentTopicLink
+from app.schemas import DocumentResponse, TopicResponse
+
+# Document storage setup
+DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
+os.makedirs(DOCUMENT_STORAGE_PATH, exist_ok=True)
+
+router = APIRouter()
+
+SessionDep = Annotated[Session, Depends(get_session)]
+
+@router.post("/documents/", response_model=Document)
+async def upload_document(session: SessionDep, file: UploadFile):
+    """Upload a new document"""
+    try:
+        # Save document to local storage
+        file_path = os.path.join(DOCUMENT_STORAGE_PATH, file.filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        with open(file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        
+        # Create document record
+        document = Document(
+            filename=file.filename,
+            upload_date=datetime.now()
+        )
+        
+        # Save to database
+        session.add(document)
+        session.commit()
+        session.refresh(document)
+
+        # Create a fake topic with some words
+        fake_topic = Topic(
+            name="Fake Topic",
+            description="This is a fake topic for testing.",
+            words={"word1": 10, "word2": 5, "word3": 2}
+        )
+        
+        # Save topic to database
+        session.add(fake_topic)
+        session.commit()
+        session.refresh(fake_topic)
+        
+        # Create a link between the document and the fake topic
+        document_topic_link = DocumentTopicLink(
+            document_id=document.id,
+            topic_id=fake_topic.id,
+            weight=1.0
+        )
+        
+        # Save the link to the database
+        session.add(document_topic_link)
+        session.commit()
+        
+        return Document(
+            id=document.id,
+            filename=document.filename,
+            upload_date=document.upload_date,
+            processed=document.processed
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/documents/{document_id}", response_model=DocumentResponse)
+async def get_document(document_id: uuid.UUID, session: SessionDep):
+    """Retrieve document information by ID"""
+    try:
+        document = session.get(Document, document_id)
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        # Retrieve topics associated with the document
+        topics = session.exec(
+            select(Topic)
+            .join(DocumentTopicLink)
+            .where(DocumentTopicLink.document_id == document.id)
+        ).all()
+        
+        topic_responses = [
+            TopicResponse(
+                id=topic.id,
+                name=topic.name,
+                description=topic.description,
+                words=topic.words
+            ) for topic in topics
+        ]
+        
+        document_response = DocumentResponse(
+            id=document.id,
+            filename=document.filename,
+            upload_date=document.upload_date,
+            processed=document.processed,
+            topics=topic_responses
+        )
+        
+        return document_response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# @router.post("/documents/process")
+# async def process_document(session: SessionDep):
+#     """Process documents and extract topics"""
+#     global process_running
+#     if process_running:
+#         raise HTTPException(status_code=409, detail="Process is already running")
+    
+#     process_running = True
+#     try:
+#         topics, doc_topics = topic_modeling_v2.run()
+
+#         # Store topics in database and associate with documents
+#         for topic in topics:
+#             topic_record = Topics(topics=topic)
+#             session.add(topic_record)
+#             session.commit()
+#             session.refresh(topic_record)
+#             for doc_topic in doc_topics[topic]:
+#                 document = session.get(Document, doc_topic)
+#                 if document:
+#                     topic_record.document = document.id
+#                     session.commit()
+                    
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+#     finally:
+#         process_running = False
+
+# List all documents with their topics
+@router.get("/documents/", response_model=list[DocumentResponse])
+async def list_documents(session: SessionDep):
+    """List all documents with topics for each document"""
+    try:
+        result = []
+        documents = session.exec(select(Document)).all()
+        for document in documents:
+            topics = session.exec(
+                select(Topic)
+                .join(DocumentTopicLink)
+                .where(DocumentTopicLink.document_id == document.id)
+            ).all()
+            topic_responses = [
+                TopicResponse(
+                    id=topic.id,
+                    name=topic.name,
+                    description=topic.description,
+                    words=topic.words
+                ) for topic in topics
+            ]
+            document_response = DocumentResponse(
+                id=document.id,
+                filename=document.filename,
+                upload_date=document.upload_date,
+                processed=document.processed,
+                topics=topic_responses
+            )
+            result.append(document_response)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return result
