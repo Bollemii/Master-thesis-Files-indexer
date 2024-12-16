@@ -30,8 +30,9 @@ class DocumentTopicLink(SQLModel, table=True):
 
 class DocumentBase(SQLModel):
     filename: str = Field(unique=True, index=True)
+    path: str
     processed: bool = False
-    upload_date: datetime
+    upload_date: datetime = Field(default=datetime.now())
 
 class Document(DocumentBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
