@@ -1,16 +1,16 @@
 import os
+import pathlib
 import uuid
 import pandas as pd
 from datetime import datetime
 from typing import Annotated
-from fastapi import APIRouter, Depends, UploadFile, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, HTTPException, BackgroundTasks
 from sqlmodel import Session, select
 from app.database import get_session
 from app.models import Document, Topic, DocumentTopicLink
 from app.schemas import DocumentResponse, TopicResponse
 from app.TopicModeling import topic_modeling_v3
 
-# Document storage setup
 DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
 os.makedirs(DOCUMENT_STORAGE_PATH, exist_ok=True)
 
@@ -20,7 +20,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 process_running = False
 
-@router.post("/documents/", response_model=Document)
+@router.post("/documents/", response_model=Document, status_code=201)
 async def upload_document(session: SessionDep, file: UploadFile):
     """Upload a new document"""
     try:
@@ -39,31 +39,9 @@ async def upload_document(session: SessionDep, file: UploadFile):
             path=file_path
         )
         
-        # Save to database
         session.add(document)
         session.commit()
         session.refresh(document)
-
-        # Create a fake topic with some words
-        fake_topic = Topic(
-            name="Fake Topic",
-            description="This is a fake topic for testing.",
-            words={"word1": 10, "word2": 5, "word3": 2}
-        )
-        
-        session.add(fake_topic)
-        session.commit()
-        session.refresh(fake_topic)
-        
-        # Create a link between the document and the fake topic
-        document_topic_link = DocumentTopicLink(
-            document_id=document.id,
-            topic_id=fake_topic.id,
-            weight=1.0
-        )
-        
-        session.add(document_topic_link)
-        session.commit()
         
         return Document(
             id=document.id,
@@ -83,7 +61,6 @@ async def get_document(document_id: uuid.UUID, session: SessionDep):
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
         
-        # Retrieve topics associated with the document
         topics = session.exec(
             select(Topic)
             .join(DocumentTopicLink)
@@ -111,50 +88,67 @@ async def get_document(document_id: uuid.UUID, session: SessionDep):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/documents/process")
-async def process_document(session: SessionDep):
+@router.post("/documents/process", status_code=202)
+async def process_document(session: SessionDep, background_tasks: BackgroundTasks):
     """Process documents and extract topics"""
     global process_running
     if process_running:
-        raise HTTPException(status_code=409, detail="Process is already running")
+        raise HTTPException(status_code=500, detail="Process is already running")
     
     process_running = True
     try:
-        doc_df = pd.DataFrame()
         documents = session.exec(select(Document)).all()
+        if not documents:
+            raise HTTPException(status_code=500, detail="No documents available")
+
+        elif all(document.processed for document in documents):
+            raise HTTPException(status_code=500, detail="All documents are already processed")
+
+        file_list = []
+        time_list = []
+        size_list = []
         for document in documents:
-            doc_df = doc_df.append({
-                "file_path": document.path,
-                "creation_time": datetime.timestamp(document.upload_date),
-                "file_size": os.path.getsize(document.path)
-            }, ignore_index=True)
+            if os.path.isfile(document.path) and pathlib.Path(document.path).suffix in ['.pdf']:
+                file_list.append(document.path)
+                time_list.append(datetime.timestamp(document.upload_date))
+                size_list.append(os.path.getsize(document.path))
+        doc_df = pd.DataFrame()
+        doc_df['file_path'] = file_list
+        doc_df['creation_time'] = time_list
+        doc_df['file_size'] = size_list
+
         topics, doc_topics = topic_modeling_v3.run(doc_df)
+
+        # # topics, doc_topics = background_tasks.add_task(topic_modeling_v3.run, doc_df)
 
         # Store topics in database and associate with documents
         for topic_idx, topic_words_frequencies in enumerate(topics):
             topic = Topic(
-                name=f"Topic {topic_idx}",
-                words={word: frequency for word, frequency in topic_words_frequencies}
+            name=f"Topic {topic_idx}",
+            words={word: int(frequency) for word, frequency in topic_words_frequencies.items()}
             )
             session.add(topic)
             session.commit()
             session.refresh(topic)
 
-            for doc_idx, topic_dist in enumerate(doc_topics):
-                document = session.get(Document, doc_idx)
-                if topic_dist[1][topic_idx] > 0.1:
-                    document_topic_link = DocumentTopicLink(
-                        document_id=document.id,
-                        topic_id=topic.id,
-                        weight=topic_dist[1][topic_idx]
-                    )
-                    session.add(document_topic_link)
-                    session.commit()
+        for file_name, topic_dists in enumerate(doc_topics):
+            document = session.exec(select(Document).where(Document.filename == file_name)).first()
+            for topic_idx, weight in enumerate(topic_dists):
+                topic = session.exec(select(Topic).where(Topic.name == f"Topic {topic_idx}")).first()
+                document_topic_link = DocumentTopicLink(
+                    document_id=document.id,
+                    topic_id=topic.id,
+                    weight=float(weight)
+                )
+                session.add(document_topic_link)
+                session.commit()
+                Session.refresh(document_topic_link)
                     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         process_running = False
+    return {"message": "Processing started"}
 
 @router.get("/documents/", response_model=list[DocumentResponse])
 async def list_documents(session: SessionDep):
