@@ -29,7 +29,7 @@ def process_documents(doc_df):
 
     doc_df = reader.read(doc_df)
 
-    doc_df.to_pickle('./tmp/doc_df.reader.pkl', protocol=4)
+    doc_df.to_pickle('./tmp/doc_df.reader.pkl')
 
     doc_df['raw_content'] = doc_df['content']
     doc_df['content'] = doc_df.apply(lambda row: delete_eol(row['raw_content']), axis=1)
@@ -41,18 +41,17 @@ def process_documents(doc_df):
     doc_df = doc_df[['file_name', 'file_type', 'creation_time', 'file_size', 'n_pages', 'dt', 'error',
                      'content_size', 'content', 'raw_content_size', 'raw_content']]
 
-    doc_df.to_pickle('./tmp/doc_df.transformer.pkl', protocol=4)
+    doc_df.to_pickle('./tmp/doc_df.transformer.pkl')
 
     miner = Miner()
     transf_doc_df = miner.mine(doc_df)
     transf_doc_df = transf_doc_df[['file_name', 'file_type', 'creation_time', 'file_size', 'n_pages', 'dt', 'error',
                                    'language', 'without_stop_words']]
-    transf_doc_df.to_csv('./tmp/doc_df.miner.csv', sep='|', escapechar='\\')
-    transf_doc_df.to_pickle('./tmp/doc_df.miner.pkl', protocol=4)
+    transf_doc_df.to_pickle('./tmp/doc_df.miner.pkl')
 
     return transf_doc_df
 
-def run_lda(transf_doc_df, doc_df):
+def run_lda(transf_doc_df):
 
     no_error_df = transf_doc_df[transf_doc_df['error'].isnull()]
     corpus = no_error_df['without_stop_words']
@@ -69,43 +68,42 @@ def run_lda(transf_doc_df, doc_df):
                                     evaluate_every=10, n_jobs=-1, max_iter=100)
     lda.fit(X)
 
-    # Extract topics and their weights
+    # Extract topics and their frequencies
     topic_words = vectorizer.get_feature_names_out()
     topics = []
-    for topic_idx, topic in enumerate(lda.components_):
+    for topic in lda.components_:
         topic_words_frequencies = [(topic_words[i], X[:, i].sum()) for i in topic.argsort()[:-11:-1]]
         topic_words_frequencies.sort(key=lambda x: x[1], reverse=True)
         topics.append(topic_words_frequencies)
-        print(f"Topic #{topic_idx}:")
-        for word, frequency in topic_words_frequencies:
-            print(f"  {word}: {frequency}")
 
     # Extract document-topic distribution
     doc_topic_dist = lda.transform(X)
     doc_topics = []
     for doc_idx, topic_dist in enumerate(doc_topic_dist):
-        doc_topics.append((doc_idx, topic_dist))
-        print(f"Document #{doc_idx} topic distribution:")
-        for topic_idx, topic_prob in enumerate(topic_dist):
-            print(f"  Topic #{topic_idx}: {topic_prob}")
+        doc_file_name = no_error_df.iloc[doc_idx]['file_name']
+        doc_topics.append((doc_file_name, topic_dist.tolist()))
+
 
     return topics, doc_topics
 
 def run(doc_df):
     # Check for new documents
+    if not os.path.exists('./tmp'):
+        os.makedirs('./tmp')
     if not os.path.exists('./tmp/doc_df.miner.pkl'):
         transf_doc_df = process_documents(doc_df)
     else:
         existing_df = pd.read_pickle('./tmp/doc_df.miner.pkl')
+        doc_df['file_name'] = doc_df.apply(lambda row: pathlib.PurePosixPath(row['file_path']).stem, axis=1)
         new_docs = doc_df[~doc_df['file_name'].isin(existing_df['file_name'])]
         if not new_docs.empty:
             new_transf_doc_df = process_documents(new_docs)
             transf_doc_df = pd.concat([existing_df, new_transf_doc_df])
-            transf_doc_df.to_pickle('./tmp/doc_df.miner.pkl', protocol=4)
+            transf_doc_df.to_pickle('./tmp/doc_df.miner.pkl')
         else:
             transf_doc_df = existing_df
 
-    topics, doc_topics = run_lda(transf_doc_df, doc_df)
+    topics, doc_topics = run_lda(transf_doc_df)
     return topics, doc_topics
 
 if __name__ == '__main__':
