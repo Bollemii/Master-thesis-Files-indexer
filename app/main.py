@@ -4,12 +4,13 @@ import uvicorn
 
 # from app.TopicModeling import topic_modeling_v2
 from app.routers import documents, users
-from app.database import create_db_and_tables
+from app.database import create_db_and_tables, add_existing_documents
 
 # Initialize database
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
+    add_existing_documents()
     yield
 
 # Initialize FastAPI
