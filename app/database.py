@@ -17,9 +17,11 @@ def get_session():
 
 def add_existing_documents():
     with Session(engine) as session:
-        for file_name in os.listdir(DOCUMENT_STORAGE_PATH):
+        for file_path in os.listdir(DOCUMENT_STORAGE_PATH):
+            file_name = os.path.splitext(file_path)[0]
             if not session.exec(select(Document).where(Document.filename == file_name)).first():
-                document = Document(filename=file_name, path=os.path.join(DOCUMENT_STORAGE_PATH, file_name))
+                document = Document(filename=file_name,
+                                    path=os.path.join(DOCUMENT_STORAGE_PATH, file_path))
                 session.add(document)
                 session.commit()
                 session.refresh(document)
