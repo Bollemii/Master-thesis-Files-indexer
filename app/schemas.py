@@ -6,6 +6,7 @@ class TopicResponse(BaseModel):
     id: uuid.UUID
     name: str
     description: str | None
+    weight: float
     words: dict[str, int]
 
 class DocumentResponse(BaseModel):
