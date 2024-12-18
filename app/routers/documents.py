@@ -20,6 +20,69 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 process_running = False
 
+def run_process_document(documents, session: Session):
+    file_path_list = []
+    file_name_list = []
+    time_list = []
+    size_list = []
+    for document in documents:
+        if os.path.isfile(document.path) and pathlib.Path(document.path).suffix in ['.pdf']:
+            file_path_list.append(document.path)
+            file_name_list.append(document.filename)
+            time_list.append(datetime.timestamp(document.upload_date))
+            size_list.append(os.path.getsize(document.path))
+    doc_df = pd.DataFrame()
+    doc_df['file_path'] = file_path_list
+    doc_df['file_name'] = file_name_list
+    doc_df['creation_time'] = time_list
+    doc_df['file_size'] = size_list
+
+    topics, doc_topics = topic_modeling_v3.run(doc_df)
+
+    # Store topics in database and associate with documents
+    for topic_idx, topic_words_frequencies in enumerate(topics):
+        topic = session.exec(select(Topic).where(Topic.name == f"Topic {topic_idx}")).first()
+        if topic:
+            topic.words = {word: int(frequency) for word, frequency in topic_words_frequencies}
+        else:
+            topic = Topic(
+                name=f"Topic {topic_idx}",
+                words={word: int(frequency) for word, frequency in topic_words_frequencies}
+            )
+            session.add(topic)
+        session.commit()
+        session.refresh(topic)
+    
+    for doc_topic in doc_topics:
+        document = session.exec(select(Document).where(Document.filename == doc_topic[0])).first()
+        if document:
+            for topic_idx, weight in enumerate(doc_topic[1]):
+                topic = session.exec(select(Topic).where(Topic.name == f"Topic {topic_idx}")).first()
+                document_topic_link = session.exec(
+                    select(DocumentTopicLink)
+                    .where(DocumentTopicLink.document_id == document.id)
+                    .where(DocumentTopicLink.topic_id == topic.id)
+                ).first()
+                if document_topic_link:
+                    document_topic_link.weight = float(weight)
+                else:
+                    document_topic_link = DocumentTopicLink(
+                        document_id=document.id,
+                        topic_id=topic.id,
+                        weight=float(weight)
+                    )
+                    session.add(document_topic_link)
+                session.commit()
+                session.refresh(document_topic_link)
+
+            document.processed = True
+            session.add(document)
+            session.commit()
+            session.refresh(document)
+
+    session.close()
+    print("Processing completed")
+
 @router.post("/documents/", response_model=Document, status_code=201)
 async def upload_document(session: SessionDep, file: UploadFile):
     """Upload a new document"""
@@ -35,7 +98,7 @@ async def upload_document(session: SessionDep, file: UploadFile):
         
         # Create document record
         document = Document(
-            filename=file.filename,
+            filename=os.path.splitext(file.filename)[0],
             path=file_path
         )
         
@@ -104,45 +167,7 @@ async def process_document(session: SessionDep, background_tasks: BackgroundTask
         elif all(document.processed for document in documents):
             raise HTTPException(status_code=500, detail="All documents are already processed")
 
-        file_list = []
-        time_list = []
-        size_list = []
-        for document in documents:
-            if os.path.isfile(document.path) and pathlib.Path(document.path).suffix in ['.pdf']:
-                file_list.append(document.path)
-                time_list.append(datetime.timestamp(document.upload_date))
-                size_list.append(os.path.getsize(document.path))
-        doc_df = pd.DataFrame()
-        doc_df['file_path'] = file_list
-        doc_df['creation_time'] = time_list
-        doc_df['file_size'] = size_list
-
-        topics, doc_topics = topic_modeling_v3.run(doc_df)
-
-        # # topics, doc_topics = background_tasks.add_task(topic_modeling_v3.run, doc_df)
-
-        # Store topics in database and associate with documents
-        for topic_idx, topic_words_frequencies in enumerate(topics):
-            topic = Topic(
-            name=f"Topic {topic_idx}",
-            words={word: int(frequency) for word, frequency in topic_words_frequencies.items()}
-            )
-            session.add(topic)
-            session.commit()
-            session.refresh(topic)
-
-        for file_name, topic_dists in enumerate(doc_topics):
-            document = session.exec(select(Document).where(Document.filename == file_name)).first()
-            for topic_idx, weight in enumerate(topic_dists):
-                topic = session.exec(select(Topic).where(Topic.name == f"Topic {topic_idx}")).first()
-                document_topic_link = DocumentTopicLink(
-                    document_id=document.id,
-                    topic_id=topic.id,
-                    weight=float(weight)
-                )
-                session.add(document_topic_link)
-                session.commit()
-                Session.refresh(document_topic_link)
+        background_tasks.add_task(run_process_document, documents, session)
                     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -162,14 +187,22 @@ async def list_documents(session: SessionDep):
                 .join(DocumentTopicLink)
                 .where(DocumentTopicLink.document_id == document.id)
             ).all()
-            topic_responses = [
-                TopicResponse(
-                    id=topic.id,
-                    name=topic.name,
-                    description=topic.description,
-                    words=topic.words
-                ) for topic in topics
-            ]
+            topic_responses = []
+            for topic in topics:
+                document_topic_link = session.exec(
+                    select(DocumentTopicLink)
+                    .where(DocumentTopicLink.document_id == document.id)
+                    .where(DocumentTopicLink.topic_id == topic.id)
+                ).first()
+                if document_topic_link:
+                    topic_response = TopicResponse(
+                        id=topic.id,
+                        name=topic.name,
+                        description=topic.description,
+                        weight=document_topic_link.weight,
+                        words=topic.words
+                    )
+                    topic_responses.append(topic_response)
             document_response = DocumentResponse(
                 id=document.id,
                 filename=document.filename,
