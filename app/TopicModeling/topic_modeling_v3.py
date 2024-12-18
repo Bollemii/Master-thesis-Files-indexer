@@ -1,8 +1,6 @@
 import os
 import pathlib
-import shutil
 import pandas as pd
-import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 from app.TopicModeling.Reader import Reader
@@ -33,7 +31,6 @@ def process_documents(doc_df):
 
     doc_df['raw_content'] = doc_df['content']
     doc_df['content'] = doc_df.apply(lambda row: delete_eol(row['raw_content']), axis=1)
-    doc_df['file_name'] = doc_df.apply(lambda row: pathlib.PurePosixPath(row['file_path']).stem, axis=1)
     doc_df['file_type'] = doc_df.apply(lambda row: pathlib.PurePosixPath(row['file_path']).suffix.replace('.', ''), axis=1)
     doc_df = doc_df.drop(columns=['file_path'])
     doc_df['content_size'] = doc_df.apply(lambda row: get_length(row['content']), axis=1)
@@ -94,7 +91,6 @@ def run(doc_df):
         transf_doc_df = process_documents(doc_df)
     else:
         existing_df = pd.read_pickle('./tmp/doc_df.miner.pkl')
-        doc_df['file_name'] = doc_df.apply(lambda row: pathlib.PurePosixPath(row['file_path']).stem, axis=1)
         new_docs = doc_df[~doc_df['file_name'].isin(existing_df['file_name'])]
         if not new_docs.empty:
             new_transf_doc_df = process_documents(new_docs)
@@ -105,6 +101,3 @@ def run(doc_df):
 
     topics, doc_topics = run_lda(transf_doc_df)
     return topics, doc_topics
-
-if __name__ == '__main__':
-    topics, doc_topics = run()
