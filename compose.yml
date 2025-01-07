@@ -1,7 +1,8 @@
 services:
-  api:
-    build: .
-    container_name: api
+  backend:
+    build:
+      context: ./backend
+    container_name: backend
     environment:
       - PORT=8000
       - DATABASE_URL=${DATABASE_URL}
@@ -13,8 +14,20 @@ services:
       - db
     restart: unless-stopped
 
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
   db:
-    container_name: postgres
+    container_name: postgres-db
     image: postgres:latest
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
