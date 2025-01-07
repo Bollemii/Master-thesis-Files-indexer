@@ -65,7 +65,6 @@ def run_lda(transf_doc_df):
                                     evaluate_every=10, n_jobs=-1, max_iter=100)
     lda.fit(X)
 
-    # Extract topics and their frequencies
     topic_words = vectorizer.get_feature_names_out()
     topics = []
     for topic in lda.components_:
@@ -73,7 +72,6 @@ def run_lda(transf_doc_df):
         topic_words_frequencies.sort(key=lambda x: x[1], reverse=True)
         topics.append(topic_words_frequencies)
 
-    # Extract document-topic distribution
     doc_topic_dist = lda.transform(X)
     doc_topics = []
     for doc_idx, topic_dist in enumerate(doc_topic_dist):
@@ -84,7 +82,6 @@ def run_lda(transf_doc_df):
     return topics, doc_topics
 
 def run(doc_df):
-    # Check for new documents
     if not os.path.exists('./tmp'):
         os.makedirs('./tmp')
     if not os.path.exists('./tmp/doc_df.miner.pkl'):
