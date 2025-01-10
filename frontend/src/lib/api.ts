@@ -16,8 +16,9 @@ export interface Topic {
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 
-export async function getDocuments(): Promise<Document[]> {
-  const response = await fetch(`${API_BASE_URL}/documents/`);
+export async function getDocuments(query?: string): Promise<Document[]> {
+  const url = query ? `${API_BASE_URL}/documents/?q=${encodeURIComponent(query)}` : `${API_BASE_URL}/documents/`;
+  const response = await fetch(url);
   if (!response.ok) {
     throw new Error("Failed to fetch documents");
   }
