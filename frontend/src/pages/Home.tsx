@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { FileText } from "lucide-react";
-import { getDocuments, Document } from "../lib/api";
+import { FileText, Plus } from "lucide-react";
+import { getDocuments, uploadDocument, Document } from "../lib/api";
 
 export function Home() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -25,13 +27,33 @@ export function Home() {
     fetchDocuments();
   }, [query]);
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploading(true);
+      setError(null);
+      await uploadDocument(file);
+      const data = await getDocuments(query);
+      setDocuments(data);
+    } catch (err) {
+      setError("Failed to upload document");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center text-gray-900 dark:text-gray-100">
         Loading...
       </div>
-    );
-  }
+    )
+  };
 
   if (error) {
     return (
@@ -45,16 +67,8 @@ export function Home() {
           Retry
         </button>
       </div>
-    );
-  }
-
-  // if (documents.length === 0) {
-  //   return (
-  //     <div className="text-center text-gray-900 dark:text-gray-100">
-  //       No documents found
-  //     </div>
-  //   );
-  // }
+    )
+  };
 
   return (
     <div>
@@ -96,6 +110,32 @@ export function Home() {
           </div>
         </div>
       )}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileUpload}
+        className="hidden"
+        accept=".pdf"
+      />
+
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+        className="fixed bottom-8 right-8 p-4 bg-blue-500 dark:bg-blue-600 
+                 text-white rounded-full shadow-lg hover:bg-blue-600 
+                 dark:hover:bg-blue-700 transition-colors duration-200
+                 disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-label="Upload document"
+      >
+        {uploading ? (
+          <div
+            className="w-6 h-6 border-2 border-white border-t-transparent 
+                        rounded-full animate-spin"
+          />
+        ) : (
+          <Plus className="w-6 h-6" />
+        )}
+      </button>
     </div>
   );
 }
