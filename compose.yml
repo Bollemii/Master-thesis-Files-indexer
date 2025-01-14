@@ -4,10 +4,9 @@ services:
       context: ./backend
     container_name: backend
     environment:
-      - PORT=8000
       - DATABASE_URL=${DATABASE_URL}
     ports:
-      - "8000:80"
+      - "8000:8000"
     volumes:
       - document-storage:/documents
     depends_on:
@@ -17,11 +16,11 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        - VITE_API_URL=${VITE_API_URL}
     container_name: frontend
-    environment:
-      - VITE_API_URL=${VITE_API_URL}
     ports:
-      - "3000:3000"
+      - "3000:80"
     depends_on:
       - backend
     restart: unless-stopped
