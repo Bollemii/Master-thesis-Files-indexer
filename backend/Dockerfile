@@ -10,4 +10,4 @@ COPY ./app /app
 
 EXPOSE 8000
 
-CMD ["fastapi", "run", "main.py", "--port", "80"]
+CMD ["fastapi", "run", "main.py", "--port", "8000"]
