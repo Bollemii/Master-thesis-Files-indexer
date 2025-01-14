@@ -45,3 +45,12 @@ export async function uploadDocument(file: File): Promise<Document> {
   }
   return response.json();
 }
+
+export async function processDocument(): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/documents/process/`, {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to process document");
+  }
+}

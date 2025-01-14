@@ -1,14 +1,16 @@
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Home as HomeIcon, Search, User, Sun, Moon } from "lucide-react";
+import { Home as HomeIcon, Search, User, Sun, Moon, Play } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import debounce from "lodash.debounce";
+import { processDocument } from "../lib/api";
 
 export function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const debouncedSearch = useCallback(
     debounce((query: string) => {
@@ -25,6 +27,17 @@ export function Navbar() {
     const query = event.target.value;
     setSearchQuery(query);
     debouncedSearch(query);
+  };
+
+  const handleProcess = async () => {
+    try {
+      setIsProcessing(true);
+      await processDocument();
+    } catch (error) {
+      console.error("Failed to process document", error);
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   return (
@@ -56,6 +69,17 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
+            <button
+              onClick={handleProcess}
+              disabled={isProcessing}
+              className="text-gray-800 dark:text-gray-200 hover:text-gray-600 dark:hover:text-gray-400
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Process documents"
+            >
+              <Play
+                className={`h-6 w-6 ${isProcessing ? "animate-pulse" : ""}`}
+              />
+            </button>
             <button
               onClick={toggleTheme}
               className="text-gray-800 dark:text-gray-200 hover:text-gray-600 dark:hover:text-gray-400"
