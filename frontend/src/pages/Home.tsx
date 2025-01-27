@@ -1,31 +1,47 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { FileText, Plus } from "lucide-react";
-import { getDocuments, uploadDocument, Document } from "../lib/api";
+import { getDocuments, uploadDocument, Documents } from "../lib/api";
+import { BottomBar } from "../components/BottomBar";
 
 export function Home() {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<Documents[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
   const query = searchParams.get("q") || "";
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const limit = 50;
 
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const data = await getDocuments(query);
-        setDocuments(data);
-        setLoading(false);
+        setLoading(true);
+        setError(null);
+        const data = await getDocuments(query, page, limit);
+        setDocuments(data.items || []);
+        setTotal(data.total || 0);
       } catch (err) {
         setError("Failed to load documents");
+        setDocuments([]);
+        setTotal(0);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchDocuments();
-  }, [query]);
+  }, [query, page]);
+
+  const totalPages = Math.ceil(total / limit);
+  const currentPage = page + 1;
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -35,8 +51,8 @@ export function Home() {
       setUploading(true);
       setError(null);
       await uploadDocument(file);
-      const data = await getDocuments(query);
-      setDocuments(data);
+      const data = await getDocuments(query, page, limit);
+      setDocuments(data.items);
     } catch (err) {
       setError("Failed to upload document");
     } finally {
@@ -71,7 +87,7 @@ export function Home() {
   };
 
   return (
-    <div>
+    <div className="pb-6">
       {query && (
         <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
           Search results for "{query}"
@@ -121,7 +137,7 @@ export function Home() {
       <button
         onClick={() => fileInputRef.current?.click()}
         disabled={uploading}
-        className="fixed bottom-8 right-8 p-4 bg-blue-500 dark:bg-blue-600 
+        className="fixed bottom-20 right-8 p-4 bg-blue-500 dark:bg-blue-600 
                  text-white rounded-full shadow-lg hover:bg-blue-600 
                  dark:hover:bg-blue-700 transition-colors duration-200
                  disabled:opacity-50 disabled:cursor-not-allowed"
@@ -136,6 +152,14 @@ export function Home() {
           <Plus className="w-6 h-6" />
         )}
       </button>
+      <BottomBar
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        limit={limit}
+        page={page}
+        total={total}
+      />
     </div>
   );
 }

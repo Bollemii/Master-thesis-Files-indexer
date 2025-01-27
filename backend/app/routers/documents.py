@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, UploadFile, HTTPException, BackgroundTas
 from sqlmodel import Session, select
 from app.database import get_session
 from app.models import Document, Topic, DocumentTopicLink
-from app.schemas import DocumentResponse, TopicResponse
+from app.schemas import DocumentList, DocumentDetail, DocumentsPagination, TopicResponse
 from app.utils.process_manager import ProcessManager
 
 DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
@@ -52,7 +52,7 @@ async def upload_document(session: SessionDep, file: UploadFile):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/documents/{document_id}", response_model=DocumentResponse)
+@router.get("/documents/{document_id}", response_model=DocumentDetail)
 async def get_document(document_id: uuid.UUID, session: SessionDep):
     """Retrieve document information by ID"""
     try:
@@ -83,7 +83,7 @@ async def get_document(document_id: uuid.UUID, session: SessionDep):
                 )
                 topic_responses.append(topic_response)
         
-        document_response = DocumentResponse(
+        document_response = DocumentDetail(
             id=document.id,
             filename=document.filename,
             upload_date=document.upload_date,
@@ -125,8 +125,11 @@ async def get_process_status():
     """Get the status of the document processing task"""
     return await process_manager.get_status()
 
-@router.get("/documents/", response_model=list[DocumentResponse])
-async def list_documents(session: SessionDep, q: str | None = None):
+@router.get("/documents/", response_model=DocumentsPagination)
+async def list_documents(session: SessionDep,
+                         q: str | None = None,
+                         page: int = 0,
+                         limit: int = 50):
     """List all documents with topics for each document"""
     try:
         query = select(Document)
@@ -135,38 +138,25 @@ async def list_documents(session: SessionDep, q: str | None = None):
             search = f"%{q}%"
             query = query.where(Document.filename.ilike(search))
 
+        total = len(session.exec(query).all())
+        query = query.offset(page * limit).limit(limit)
+
         result = []
-        documents = session.exec(query).all()
+        documents = session.exec(query)
         for document in documents:
-            topics = session.exec(
-                select(Topic)
-                .join(DocumentTopicLink)
-                .where(DocumentTopicLink.document_id == document.id)
-            ).all()
-            topic_responses = []
-            for topic in topics:
-                document_topic_link = session.exec(
-                    select(DocumentTopicLink)
-                    .where(DocumentTopicLink.document_id == document.id)
-                    .where(DocumentTopicLink.topic_id == topic.id)
-                ).first()
-                if document_topic_link:
-                    topic_response = TopicResponse(
-                        id=topic.id,
-                        name=topic.name,
-                        description=topic.description,
-                        weight=document_topic_link.weight,
-                        words=topic.words
-                    )
-                    topic_responses.append(topic_response)
-            document_response = DocumentResponse(
+            document_response = DocumentList(
                 id=document.id,
                 filename=document.filename,
                 upload_date=document.upload_date,
                 processed=document.processed,
-                topics=topic_responses
             )
             result.append(document_response)
+        
+        return {
+            "items": result,
+            "total": total,
+            "page": page,
+            "limit": limit
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    return result
