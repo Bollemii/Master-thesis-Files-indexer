@@ -58,19 +58,19 @@ def run_lda(transf_doc_df):
 
     doc_topic_prior = 0.085
     topic_word_prior = 0.225
-    n_topics = 5
+    n_topics = 10
 
     lda = LatentDirichletAllocation(n_components=n_topics, random_state=0, verbose=1,
                                     doc_topic_prior=doc_topic_prior, topic_word_prior=topic_word_prior,
-                                    evaluate_every=10, n_jobs=-1, max_iter=100)
+                                    evaluate_every=10, n_jobs=-1, max_iter=200)
     lda.fit(X)
 
     topic_words = vectorizer.get_feature_names_out()
     topics = []
     for topic in lda.components_:
-        topic_words_frequencies = [(topic_words[i], X[:, i].sum()) for i in topic.argsort()[:-11:-1]]
-        topic_words_frequencies.sort(key=lambda x: x[1], reverse=True)
-        topics.append(topic_words_frequencies)
+        words_in_topic = zip(topic_words, topic)
+        sorted_words = sorted(words_in_topic, key=lambda x: float(x[1]), reverse=True)[:10]
+        topics.append(sorted_words)
 
     doc_topic_dist = lda.transform(X)
     doc_topics = []

@@ -44,7 +44,7 @@ class Document(DocumentBase, table=True):
 class TopicBase(SQLModel):
     name: str = Field(unique=True, index=True)
     description: str | None = None
-    words: dict[str, int] = Field(default={}, sa_column=Column("words",JSON))
+    words: dict[str, float] = Field(default={}, sa_column=Column("words",JSON))
 
 class Topic(TopicBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)

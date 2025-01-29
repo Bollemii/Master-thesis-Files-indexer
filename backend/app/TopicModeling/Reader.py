@@ -380,221 +380,221 @@ class Reader:
             return encoded_content
 
 
-def test_read_one_external_file():
-#    test_file_path_list = ['data/QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June2019.pdf']
-    print(os.getcwd())
-#    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/FastAndAccurateModelingOfMolecularAtomizationEnergiesWithMachineLearning.pdf']
-#    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/FastAndAccurateModelingOfMolecularAtomizationEnergiesWithMachineLearning.PhysRevLett.108.058301.pdf']
-#    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/FastAndAccurateModelingOfMolecularAtomizationEnergiesWithMachineLearning                   .pdf']
-#    test_file_path_list = [                                                    './data/FastAndAccurateModelingOfMolecularAtomizationEnergiesWithMachineLearning.PhysRevLett.108.058301.pdf']
-#    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/laughlin-lecture.pdf']
-#    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/FarmersHelpCreateVirtualSafeSpaceToSaveBumblebees.13August2021.pdf']
-#    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/TowardsTheSystematicReportingOfTheEnergyAndCarbonFootprintsOfMachineLearning.arXiv.28November2022.pdf']
-#    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/FasterBigDataAnalysisWithWorldClassPatternMiningTechnologies.fromACMTechNews.09July2018.pdf']
-    test_file_path_list = ['C:/Users/lphilippe/Documents/Henallux/MASI/Cours/TFE/lphPortagePython.SimonBaudart/input/RapportEvaluation HENALLUX-UNamur.pdf']
-    for file_path in test_file_path_list:
-        try:
-            reader = Reader(cv_file_column = 'cv_file', cv_content_column = 'cv_content_base64',
-                            doc_reader_path = 'C:/Program Files/LibreOffice/program/soffice.exe',
-                            tesseract_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe',
-                            image_resolution=200)
-            content = reader.read_one_file(file_path)
-            print('content:{}'.format(content))
-        except Exception as exception:
-            print(exception.__str__())
+# def test_read_one_external_file():
+# #    test_file_path_list = ['data/QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June2019.pdf']
+#     print(os.getcwd())
+# #    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/FastAndAccurateModelingOfMolecularAtomizationEnergiesWithMachineLearning.pdf']
+# #    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/FastAndAccurateModelingOfMolecularAtomizationEnergiesWithMachineLearning.PhysRevLett.108.058301.pdf']
+# #    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/FastAndAccurateModelingOfMolecularAtomizationEnergiesWithMachineLearning                   .pdf']
+# #    test_file_path_list = [                                                    './data/FastAndAccurateModelingOfMolecularAtomizationEnergiesWithMachineLearning.PhysRevLett.108.058301.pdf']
+# #    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/laughlin-lecture.pdf']
+# #    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/FarmersHelpCreateVirtualSafeSpaceToSaveBumblebees.13August2021.pdf']
+# #    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/TowardsTheSystematicReportingOfTheEnergyAndCarbonFootprintsOfMachineLearning.arXiv.28November2022.pdf']
+# #    test_file_path_list = ['../../../../../../../../Proximus Cloud/FigSciAndCo/Downloads/FasterBigDataAnalysisWithWorldClassPatternMiningTechnologies.fromACMTechNews.09July2018.pdf']
+#     test_file_path_list = ['C:/Users/lphilippe/Documents/Henallux/MASI/Cours/TFE/lphPortagePython.SimonBaudart/input/RapportEvaluation HENALLUX-UNamur.pdf']
+#     for file_path in test_file_path_list:
+#         try:
+#             reader = Reader(cv_file_column = 'cv_file', cv_content_column = 'cv_content_base64',
+#                             doc_reader_path = 'C:/Program Files/LibreOffice/program/soffice.exe',
+#                             tesseract_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe',
+#                             image_resolution=200)
+#             content = reader.read_one_file(file_path)
+#             print('content:{}'.format(content))
+#         except Exception as exception:
+#             print(exception.__str__())
 
-def test_read():
-    data_root = './data'
-    test_cv_file_list = [#'GeneratingParticlelikeScatteringStatesInWaveTransport.PhysRevLett.106.120602.pdf',
-                         #'2018_01_17_CV_Ayumi_Mizutani.txt',
-                         #'CV_SALES_MANAGER_2017_OK.doc',
-                         #'GustinTyfanieCvVendeuse.docx',
-                         #'piqueray_michel_cv_op.png', # pas trop bon... à voir quand on extrapole sur la résolution!!!
-                         #'4SinisterThreatsThatLoomForTheCashlessSociety.NS6June2015.xps',
-                         #'2018_01_17_CV_Ayumi_Mizutani.pdf',
-                         #'WhatWeCanLearnFromTheEpicFailureOfGoogleFluTrends.Wired.01Oct2015.xps', # for timeout testing
-                         'QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June2019.pdf'
-                         ]
-    test_cv_content_list = []
-    for test_cv_file in test_cv_file_list:
-        test_cv_content_list.append(Reader.convert(data_root+'/'+test_cv_file))
+# def test_read():
+#     data_root = './data'
+#     test_cv_file_list = [#'GeneratingParticlelikeScatteringStatesInWaveTransport.PhysRevLett.106.120602.pdf',
+#                          #'2018_01_17_CV_Ayumi_Mizutani.txt',
+#                          #'CV_SALES_MANAGER_2017_OK.doc',
+#                          #'GustinTyfanieCvVendeuse.docx',
+#                          #'piqueray_michel_cv_op.png', # pas trop bon... à voir quand on extrapole sur la résolution!!!
+#                          #'4SinisterThreatsThatLoomForTheCashlessSociety.NS6June2015.xps',
+#                          #'2018_01_17_CV_Ayumi_Mizutani.pdf',
+#                          #'WhatWeCanLearnFromTheEpicFailureOfGoogleFluTrends.Wired.01Oct2015.xps', # for timeout testing
+#                          'QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June2019.pdf'
+#                          ]
+#     test_cv_content_list = []
+#     for test_cv_file in test_cv_file_list:
+#         test_cv_content_list.append(Reader.convert(data_root+'/'+test_cv_file))
 
-    doc_df = pd.DataFrame()
-    doc_df['cv_file'] = test_cv_file_list
-    doc_df['cv_content_base64'] = test_cv_content_list
+#     doc_df = pd.DataFrame()
+#     doc_df['cv_file'] = test_cv_file_list
+#     doc_df['cv_content_base64'] = test_cv_content_list
 
-    try:
-        reader = Reader(cv_file_column='cv_file', cv_content_column='cv_content_base64',
-                        doc_reader_path='C:/Program Files/LibreOffice/program/soffice.exe',
-                        tesseract_path=r'C:\Users\lphilippe\Documents\Agilytic\Daoust\automatch\arc\tesseract-4.0.0-alpha\tesseract.exe')
+#     try:
+#         reader = Reader(cv_file_column='cv_file', cv_content_column='cv_content_base64',
+#                         doc_reader_path='C:/Program Files/LibreOffice/program/soffice.exe',
+#                         tesseract_path=r'C:\Users\lphilippe\Documents\Agilytic\Daoust\automatch\arc\tesseract-4.0.0-alpha\tesseract.exe')
 
-        doc_df = reader.read(doc_df)
-    except Exception as exception:
-        print(exception.__str__())
+#         doc_df = reader.read(doc_df)
+#     except Exception as exception:
+#         print(exception.__str__())
 
-    print(doc_df)
+#     print(doc_df)
 
-# def test_mupdf_conversion():
-#     doc = fitz.open('./data/WhatWeCanLearnFromTheEpicFailureOfGoogleFluTrends.Wired.01Oct2015.xps')
-#     b = doc.convertToPDF()
-#     pdf = fitz.open("pdf",b)
-#     pdf.save('./tmp/test.pdf')
-
-
-def test_mupdf():
-    print(fitz.version)
-    #doc = fitz.open('./data/4SinisterThreatsThatLoomForTheCashlessSociety.NS6June2015.xps')
-    doc = fitz.open('./data/197864924-Matthew-Hutson-Artificial-Intelligence-and-Musical-Creativity-Computing-Beethoven-s-Tenth.pdf')
-    text = ''
-#    for i_page in range(doc.pageCount()):
-    for i_page in range(doc.page_count):
-        page = doc[i_page]
-#        text += page.getText()
-        text += page.get_text()
-    print('text:{}'.format(text))
+# # def test_mupdf_conversion():
+# #     doc = fitz.open('./data/WhatWeCanLearnFromTheEpicFailureOfGoogleFluTrends.Wired.01Oct2015.xps')
+# #     b = doc.convertToPDF()
+# #     pdf = fitz.open("pdf",b)
+# #     pdf.save('./tmp/test.pdf')
 
 
-# def test_mupdf_convert_to_image():
-#     reader = Reader(cv_file_column='cv_file', cv_content_column='cv_content_base64',
-#                     doc_reader_path='C:/Program Files/LibreOffice/program/soffice.exe',
-#                     tesseract_path=r'C:\Users\lphilippe\Documents\Agilytic\Daoust\automatch\arc\tesseract-4.0.0-alpha\tesseract.exe')
-#
-#     fname = './data/QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June209.pdf'
-#     tmp_directory = './tmp'
-#     doc = fitz.open(fname)  # open document
+# def test_mupdf():
+#     print(fitz.version)
+#     #doc = fitz.open('./data/4SinisterThreatsThatLoomForTheCashlessSociety.NS6June2015.xps')
+#     doc = fitz.open('./data/197864924-Matthew-Hutson-Artificial-Intelligence-and-Musical-Creativity-Computing-Beethoven-s-Tenth.pdf')
 #     text = ''
-#     zoom_x = 2.0  # horizontal zoom
-#     zomm_y = 2.0  # vertical zoom
-#     mat = fitz.Matrix(zoom_x, zomm_y)  # zoom factor 2 in each dimension
-#     for page in doc:  # iterate through the pages
-#         pix = page.getPixmap(alpha=False, matrix=mat)  # render page to an image
-#         image_path = tmp_directory+'/'+'page-%i.png' % page.number
-#         pix.writePNG(image_path)  # store image as a PNG
-#         text += reader.read_image(image_path)
+# #    for i_page in range(doc.pageCount()):
+#     for i_page in range(doc.page_count):
+#         page = doc[i_page]
+# #        text += page.getText()
+#         text += page.get_text()
 #     print('text:{}'.format(text))
 
-def test_simple_text():
-    content = ''
-    try:
-        file_path='./data/'+'2018_01_17_CV_Ayumi_Mizutani.txt'
-        content = open(file_path, encoding='utf-8').read()
-        print('content:{}'.format(content))
-    except Exception as exception:
-        print('exception:{}'.format(exception.__str__()))
-    print('content:{}'.format(content))
-    content = ''
-    try:
-        file_path='./data/'+'2018_01_17_CV_Ayumi_Mizutani.txt'
-        with open(file_path, encoding='utf-8') as open_file:
-            content = open_file.read()
-            print('content:{}'.format(content))
-    except Exception as exception:
-        print('exception:{}'.format(exception.__str__()))
-        try:
-            with open(file_path, encoding='latin-1') as open_file:
-                content = open_file.read()
-                print('content:{}'.format(content))
-        except Exception as exception:
-            print('exception:{}'.format(exception.__str__()))
-    print('content:{}'.format(content))
 
-def test_multiprocess():
-    test_cv_file_list = [
-         # 'GeneratingParticlelikeScatteringStatesInWaveTransport.PhysRevLett.106.120602.pdf',
-         # '2018_01_17_CV_Ayumi_Mizutani.txt',
-         # 'CV_SALES_MANAGER_2017_OK.doc',
-         # 'GustinTyfanieCvVendeuse.docx',
-         # 'piqueray_michel_cv_op.png', # pas trop bon... à voir quand on extrapole sur la résolution!!!
-         # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
-         # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
-         # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
-         # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
-         # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
-         # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
-         # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
-         # '4SinisterThreatsThatLoomForTheCashlessSociety.NS6June2015.xps',
-         # '2018_01_17_CV_Ayumi_Mizutani.pdf',
-         # 'WhatWeCanLearnFromTheEpicFailureOfGoogleFluTrends.Wired.01Oct2015.xps', # for timeout testing
-         # 'QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June2019.pdf',
-         # 'QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June2019.pdf',
-         # #'QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June2019.pdf',
-         #'QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June2019.pdf',
-        'ImperceptibleAudioCommunication.fromACMTechNews.12July2019.pdf'
-    ]
+# # def test_mupdf_convert_to_image():
+# #     reader = Reader(cv_file_column='cv_file', cv_content_column='cv_content_base64',
+# #                     doc_reader_path='C:/Program Files/LibreOffice/program/soffice.exe',
+# #                     tesseract_path=r'C:\Users\lphilippe\Documents\Agilytic\Daoust\automatch\arc\tesseract-4.0.0-alpha\tesseract.exe')
+# #
+# #     fname = './data/QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June209.pdf'
+# #     tmp_directory = './tmp'
+# #     doc = fitz.open(fname)  # open document
+# #     text = ''
+# #     zoom_x = 2.0  # horizontal zoom
+# #     zomm_y = 2.0  # vertical zoom
+# #     mat = fitz.Matrix(zoom_x, zomm_y)  # zoom factor 2 in each dimension
+# #     for page in doc:  # iterate through the pages
+# #         pix = page.getPixmap(alpha=False, matrix=mat)  # render page to an image
+# #         image_path = tmp_directory+'/'+'page-%i.png' % page.number
+# #         pix.writePNG(image_path)  # store image as a PNG
+# #         text += reader.read_image(image_path)
+# #     print('text:{}'.format(text))
 
-    queue = Queue()
-    readers = []
-    workers = []
-    n_workers = 4
-    for i_worker in range(n_workers):
-        rEnd, wEnd = Pipe(duplex=False)
-        readers.append(rEnd)
-        w = Process(target=work, args=(i_worker, queue, wEnd, './tmp', 'C:/Program Files/LibreOffice/program/soffice.exe', r'C:\Users\lphilippe\Documents\Agilytic\Daoust\automatch\arc\tesseract-4.0.0-alpha\tesseract.exe', 500, False))
-        workers.append(w)
-        workers[i_worker].start()
-        wEnd.close()
+# def test_simple_text():
+#     content = ''
+#     try:
+#         file_path='./data/'+'2018_01_17_CV_Ayumi_Mizutani.txt'
+#         content = open(file_path, encoding='utf-8').read()
+#         print('content:{}'.format(content))
+#     except Exception as exception:
+#         print('exception:{}'.format(exception.__str__()))
+#     print('content:{}'.format(content))
+#     content = ''
+#     try:
+#         file_path='./data/'+'2018_01_17_CV_Ayumi_Mizutani.txt'
+#         with open(file_path, encoding='utf-8') as open_file:
+#             content = open_file.read()
+#             print('content:{}'.format(content))
+#     except Exception as exception:
+#         print('exception:{}'.format(exception.__str__()))
+#         try:
+#             with open(file_path, encoding='latin-1') as open_file:
+#                 content = open_file.read()
+#                 print('content:{}'.format(content))
+#         except Exception as exception:
+#             print('exception:{}'.format(exception.__str__()))
+#     print('content:{}'.format(content))
 
-    task_process_map = {}
-    task_map = {}
-    for i_task in range(test_cv_file_list.__len__()):
-        queue.put(['READ', i_task, './data/'+test_cv_file_list[i_task]])
+# def test_multiprocess():
+#     test_cv_file_list = [
+#          # 'GeneratingParticlelikeScatteringStatesInWaveTransport.PhysRevLett.106.120602.pdf',
+#          # '2018_01_17_CV_Ayumi_Mizutani.txt',
+#          # 'CV_SALES_MANAGER_2017_OK.doc',
+#          # 'GustinTyfanieCvVendeuse.docx',
+#          # 'piqueray_michel_cv_op.png', # pas trop bon... à voir quand on extrapole sur la résolution!!!
+#          # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
+#          # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
+#          # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
+#          # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
+#          # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
+#          # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
+#          # 'piqueray_michel_cv_op.png',  # pas trop bon... à voir quand on extrapole sur la résolution!!!
+#          # '4SinisterThreatsThatLoomForTheCashlessSociety.NS6June2015.xps',
+#          # '2018_01_17_CV_Ayumi_Mizutani.pdf',
+#          # 'WhatWeCanLearnFromTheEpicFailureOfGoogleFluTrends.Wired.01Oct2015.xps', # for timeout testing
+#          # 'QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June2019.pdf',
+#          # 'QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June2019.pdf',
+#          # #'QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June2019.pdf',
+#          #'QuantumAmplificationOfMechanicalOscillatorMotion.Science.21June2019.pdf',
+#         'ImperceptibleAudioCommunication.fromACMTechNews.12July2019.pdf'
+#     ]
 
-    for i_worker in range(n_workers):
-        queue.put(['STOP', None, None])
+#     queue = Queue()
+#     readers = []
+#     workers = []
+#     n_workers = 4
+#     for i_worker in range(n_workers):
+#         rEnd, wEnd = Pipe(duplex=False)
+#         readers.append(rEnd)
+#         w = Process(target=work, args=(i_worker, queue, wEnd, './tmp', 'C:/Program Files/LibreOffice/program/soffice.exe', r'C:\Users\lphilippe\Documents\Agilytic\Daoust\automatch\arc\tesseract-4.0.0-alpha\tesseract.exe', 500, False))
+#         workers.append(w)
+#         workers[i_worker].start()
+#         wEnd.close()
 
-    wait_timeout = 1.
-    task_timeout = 300.
-    while readers:
-        #print('readers:{}'.format(readers))
-        #print('workers:{}'.format(workers))
-        for r in wait(readers, timeout=wait_timeout):
-            try:
-                msg = r.recv()
-            except EOFError:
-                readers.remove(r)
-            else:
-                if msg[0] == 'START':
-                    task_id = msg[3]
-                    timestamp = msg[1]
-                    task_map[task_id] = timestamp
-                    task_process_map[task_id] = msg[2]
-                if msg[0] == 'STOP':
-                    task_id = msg[3]
-                    timestamp = msg[1]
-                    dt = (timestamp-task_map[task_id]).total_seconds()
-                    task_map[task_id] = dt
-                print('parent received:{}'.format(msg))
-        #print('len(task_map):{}'.format(len(task_map)))
-        #print('task_map:{}'.format(task_map))
-        for i_task in range(len(task_map)):
-            t = task_map[i_task]
-            if type(t) is not float:
-                t1 = datetime.now()
-                dt = (t1-t).total_seconds()
-                if dt > task_timeout:
-                    task_map[i_task] = dt
-                    # kill process associated to this task
-                    worker_id = task_process_map[i_task]
-                    print('worker_id:{}'.format(worker_id))
-                    pid = workers[worker_id].pid
-                    print('parent: task_id[{}]:{} is in timeout...'.format(i_task, pid))
-                    os.kill(pid, signal.SIGTERM)  # or signal.SIGKILL (linux only) # process continues processing but pipe is broken => not possible to receive any update => safe
-                    #os.kill(pid, -9)
-                    # create a new fresh process to add to process list
-    #time.sleep(20)
+#     task_process_map = {}
+#     task_map = {}
+#     for i_task in range(test_cv_file_list.__len__()):
+#         queue.put(['READ', i_task, './data/'+test_cv_file_list[i_task]])
 
-if __name__ == '__main__':
-    t0 = datetime.now()
-    #test_multiprocess()
-    #test_mupdf()
-    test_read_one_external_file()
-    t1 = datetime.now()
-    dt = (t1-t0).total_seconds()
-    print('dt:{}'.format(dt))
-    #test_read()
-    #test_simple_text()
-    #test_read_one_external_file()
-    #test_mupdf_convert_to_image()
-    #test_mupdf()
-    #test_mupdf_conversion()
+#     for i_worker in range(n_workers):
+#         queue.put(['STOP', None, None])
+
+#     wait_timeout = 1.
+#     task_timeout = 300.
+#     while readers:
+#         #print('readers:{}'.format(readers))
+#         #print('workers:{}'.format(workers))
+#         for r in wait(readers, timeout=wait_timeout):
+#             try:
+#                 msg = r.recv()
+#             except EOFError:
+#                 readers.remove(r)
+#             else:
+#                 if msg[0] == 'START':
+#                     task_id = msg[3]
+#                     timestamp = msg[1]
+#                     task_map[task_id] = timestamp
+#                     task_process_map[task_id] = msg[2]
+#                 if msg[0] == 'STOP':
+#                     task_id = msg[3]
+#                     timestamp = msg[1]
+#                     dt = (timestamp-task_map[task_id]).total_seconds()
+#                     task_map[task_id] = dt
+#                 print('parent received:{}'.format(msg))
+#         #print('len(task_map):{}'.format(len(task_map)))
+#         #print('task_map:{}'.format(task_map))
+#         for i_task in range(len(task_map)):
+#             t = task_map[i_task]
+#             if type(t) is not float:
+#                 t1 = datetime.now()
+#                 dt = (t1-t).total_seconds()
+#                 if dt > task_timeout:
+#                     task_map[i_task] = dt
+#                     # kill process associated to this task
+#                     worker_id = task_process_map[i_task]
+#                     print('worker_id:{}'.format(worker_id))
+#                     pid = workers[worker_id].pid
+#                     print('parent: task_id[{}]:{} is in timeout...'.format(i_task, pid))
+#                     os.kill(pid, signal.SIGTERM)  # or signal.SIGKILL (linux only) # process continues processing but pipe is broken => not possible to receive any update => safe
+#                     #os.kill(pid, -9)
+#                     # create a new fresh process to add to process list
+#     #time.sleep(20)
+
+# if __name__ == '__main__':
+#     t0 = datetime.now()
+#     #test_multiprocess()
+#     #test_mupdf()
+#     test_read_one_external_file()
+#     t1 = datetime.now()
+#     dt = (t1-t0).total_seconds()
+#     print('dt:{}'.format(dt))
+#     #test_read()
+#     #test_simple_text()
+#     #test_read_one_external_file()
+#     #test_mupdf_convert_to_image()
+#     #test_mupdf()
+#     #test_mupdf_conversion()
 

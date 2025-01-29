@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import perf_counter
 import os
 import pathlib
 import pandas as pd
@@ -9,6 +10,7 @@ from app.models import Document, DocumentTopicLink, Topic
 
 
 def run_process_document(documents, session: Session):
+    start_time = perf_counter()
     try:
         file_path_list = []
         file_name_list = []
@@ -31,15 +33,15 @@ def run_process_document(documents, session: Session):
 
         topics, doc_topics = topic_modeling_v3.run(doc_df)
 
-        for topic_idx, topic_words_frequencies in enumerate(topics):
+        for topic_idx, topic_words_weights in enumerate(topics):
             try:
                 topic = session.exec(select(Topic).where(Topic.name == f"Topic {topic_idx}")).first()
                 if topic:
-                    topic.words = {word: int(frequency) for word, frequency in topic_words_frequencies}
+                    topic.words = {word: weight for word, weight in topic_words_weights}
                 else:
                     topic = Topic(
                         name=f"Topic {topic_idx}",
-                        words={word: int(frequency) for word, frequency in topic_words_frequencies}
+                        words={word: weight for word, weight in topic_words_weights}
                     )
                     session.add(topic)
                 session.commit()
@@ -83,5 +85,6 @@ def run_process_document(documents, session: Session):
         print(f"Process error: {str(e)}")
         session.rollback()
     finally:
+        end_time = perf_counter()
         session.close()
-        print("Processing completed")
+        print(f"Processing completed in: {end_time - start_time:.2f}s")
