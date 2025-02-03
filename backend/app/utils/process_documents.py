@@ -3,13 +3,19 @@ from time import perf_counter
 import os
 import pathlib
 import pandas as pd
+from sqlalchemy import create_engine
 from sqlmodel import Session, select
 
 from app.TopicModeling import topic_modeling_v3
 from app.models import Document, DocumentTopicLink, Topic
 
 
-def run_process_document(documents, session: Session):
+def run_process_document():
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
+    engine = create_engine(DATABASE_URL)
+    with Session(engine) as session:
+        documents = session.exec(select(Document)).all()
+
     start_time = perf_counter()
     try:
         file_path_list = []

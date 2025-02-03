@@ -150,7 +150,7 @@ def process_document(session: SessionDep):
         elif all(document.processed for document in documents):
             raise HTTPException(status_code=500, detail="All documents are already processed")
         
-        process_manager.run_process(documents=documents, session=session)
+        process_manager.run_process()
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -160,4 +160,8 @@ def process_document(session: SessionDep):
 @router.get("/documents/process/status")
 async def get_process_status():
     """Get the status of the document processing task"""
-    return process_manager.is_running()
+    response = {
+        "status": process_manager.status.value,
+        "last_run_time": process_manager.last_run_time
+    }
+    return response
