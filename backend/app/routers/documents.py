@@ -1,3 +1,4 @@
+from concurrent.futures import ProcessPoolExecutor
 import os
 import pathlib
 import uuid
@@ -95,36 +96,6 @@ async def get_document(document_id: uuid.UUID, session: SessionDep):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/documents/process", status_code=202)
-async def process_document(session: SessionDep, background_tasks: BackgroundTasks):
-    """Process documents and extract topics"""
-    
-    if await process_manager.is_process_running():
-        raise HTTPException(
-            status_code=409,
-            detail="Process is already running"
-        )
-    
-    try:
-        documents = session.exec(select(Document)).all()
-        if not documents:
-            raise HTTPException(status_code=500, detail="No documents available")
-
-        elif all(document.processed for document in documents):
-            raise HTTPException(status_code=500, detail="All documents are already processed")
-
-        background_tasks.add_task(process_manager.run_process, documents, session)
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    return {"message": "Processing started"}
-
-@router.get("/documents/process/status")
-async def get_process_status():
-    """Get the status of the document processing task"""
-    return await process_manager.get_status()
-
 @router.get("/documents/", response_model=DocumentsPagination)
 async def list_documents(session: SessionDep,
                          q: str | None = None,
@@ -160,3 +131,33 @@ async def list_documents(session: SessionDep,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/documents/process", status_code=202)
+def process_document(session: SessionDep):
+    """Process documents and extract topics"""
+    
+    if process_manager.is_running():
+        raise HTTPException(
+            status_code=409,
+            detail="Process is already running"
+        )
+    
+    try:
+        documents = session.exec(select(Document)).all()
+        if not documents:
+            raise HTTPException(status_code=500, detail="No documents available")
+
+        elif all(document.processed for document in documents):
+            raise HTTPException(status_code=500, detail="All documents are already processed")
+        
+        process_manager.run_process(documents=documents, session=session)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {"message": "Processing started"}
+
+@router.get("/documents/process/status")
+async def get_process_status():
+    """Get the status of the document processing task"""
+    return process_manager.is_running()

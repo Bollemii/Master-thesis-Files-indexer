@@ -1,41 +1,26 @@
-import asyncio
 from datetime import datetime
 from typing import Optional
-from fastapi import HTTPException
+from concurrent.futures import wait
+from concurrent.futures import ProcessPoolExecutor
 from app.utils.process_documents import run_process_document
 
 
 class ProcessManager:
     def __init__(self):
-        self._lock = asyncio.Lock()
-        self._is_running = False
+        self._future = None
+        self._result = None
+        self._executor = ProcessPoolExecutor(max_workers=1)
         self._last_run_time: Optional[datetime] = None
         
-    async def is_process_running(self) -> bool:
-        async with self._lock:
-            return self._is_running
+    def is_running(self) -> bool:
+        if self._future is None:
+            return False
+        else:
+            return self._future.running()
             
-    async def get_status(self):
-        async with self._lock:
-            return {
-                "is_running": self._is_running,
-                "last_run_time": self._last_run_time,
-            }
-            
-    async def run_process(self, documents, session):
-        if await self.is_process_running():
-            raise HTTPException(
-                status_code=409,
-                detail="Process is already running"
-            )
-            
-        try:
-            async with self._lock:
-                self._is_running = True
-                
-            run_process_document(documents, session)
-            
-        finally:
-            async with self._lock:
-                self._is_running = False
-                self._last_run_time = datetime.now()
+    def run_process(self, documents, session):            
+        self._future = self._executor.submit(run_process_document, documents, session)
+
+    def get_result(self):
+        wait([self._future])
+        return self._future.result()
