@@ -96,12 +96,12 @@ export function DocumentDetails() {
                   </p>
                 )}
                 <div className="flex flex-wrap gap-2">
-                  {Object.entries(topic.words).map(([word, count]) => (
+                  {Object.entries(topic.words).map(([word, weight]) => (
                     <span
                       key={word}
                       className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 text-sm px-2 py-1 rounded"
                     >
-                      {word} ({count})
+                      {word} ({(weight).toFixed(1)})
                     </span>
                   ))}
                 </div>

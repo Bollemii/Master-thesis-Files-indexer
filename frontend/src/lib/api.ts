@@ -28,7 +28,12 @@ export interface PaginatedResponse<T> {
   limit: number;
 }
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+export interface ProcessStatus {
+  status: "idle" | "running" | "completed" | "failed" | "cancelled";
+  last_run_time: string | null;
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 export async function getDocuments(
   query?: string,
@@ -75,4 +80,12 @@ export async function processDocument(): Promise<void> {
   if (!response.ok) {
     throw new Error("Failed to process document");
   }
+}
+
+export async function getProcessStatus(): Promise<ProcessStatus> {
+  const response = await fetch(`${API_BASE_URL}/documents/process/status`);
+  if (!response.ok) {
+    throw new Error("Failed to get process status");
+  }
+  return response.json();
 }
