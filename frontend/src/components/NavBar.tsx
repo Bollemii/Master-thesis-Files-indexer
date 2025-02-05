@@ -30,16 +30,16 @@ export function Navbar() {
     return () => clearInterval(interval);
   }, []);
 
-  const debouncedSearch = useCallback(
-    debounce((query: string) => {
+  const debouncedSearch = useCallback((query: string) => {
+    const delayedSearch = debounce(() => {
       if (query) {
         navigate(`/?q=${encodeURIComponent(query)}`);
       } else {
         navigate("/");
       }
-    }, 300),
-    [navigate]
-  );
+    }, 300);
+    delayedSearch();
+  }, [navigate]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
