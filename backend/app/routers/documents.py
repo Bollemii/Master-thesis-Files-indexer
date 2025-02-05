@@ -11,6 +11,7 @@ from app.database import get_session
 from app.models import Document, Topic, DocumentTopicLink
 from app.schemas import DocumentList, DocumentDetail, DocumentsPagination, TopicResponse
 from app.utils.process_manager import ProcessManager
+from app.utils.space_word import space_between_word
 
 DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
 os.makedirs(DOCUMENT_STORAGE_PATH, exist_ok=True)
@@ -34,8 +35,11 @@ async def upload_document(session: SessionDep, file: UploadFile):
             content = await file.read()
             f.write(content)
         
+        base_filename = os.path.splitext(file.filename)[0]
+        spaced_filename = space_between_word(base_filename)
+
         document = Document(
-            filename=os.path.splitext(file.filename)[0],
+            filename=spaced_filename,
             path=file_path
         )
         
