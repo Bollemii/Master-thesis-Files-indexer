@@ -15,10 +15,18 @@ $ git clone https://gitlab.com/Masi-s-Matcas/tfe.git
 
 ## Utilisation
 
+Attention, due à l'utilisation de Tesseract et de LibreOffice, le container backend nécessite 4GB d'espace disque minimum.
+
 Pour lancer le projet, lancer la commande suivante :
 
 ```console
 $ docker compose -f compose.yml up -d
+```
+
+Pour arrêter le projet, lancer la commande suivante :
+
+```console
+$ docker compose -f compose.yml down
 ```
 
 ## Auteur
