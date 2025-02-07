@@ -22,6 +22,8 @@ Pour lancer le projet, lancer la commande suivante :
 ```console
 $ docker compose -f compose.yml up -d
 ```
+Puis rendez-vous sur [http://localhost:3000](http://localhost:3000) pour accéder à l'application.
+
 
 Pour arrêter le projet, lancer la commande suivante :
 
