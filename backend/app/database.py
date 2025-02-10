@@ -21,7 +21,7 @@ def add_existing_documents():
         for file_path in os.listdir(DOCUMENT_STORAGE_PATH):
             file_name = os.path.splitext(file_path)[0]
             spaced_filename = space_between_word(file_name)
-            if not session.exec(select(Document).where(Document.filename == file_name)).first():
+            if not session.exec(select(Document).where(Document.filename == spaced_filename)).first():
                 document = Document(filename=spaced_filename,
                                     path=os.path.join(DOCUMENT_STORAGE_PATH, file_path))
                 session.add(document)
