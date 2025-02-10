@@ -1,6 +1,9 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 import uuid
+
+from app.utils.process_manager import ProcessStatus
 
 class TopicResponse(BaseModel):
     id: uuid.UUID
@@ -23,3 +26,10 @@ class DocumentsPagination(BaseModel):
     total: int
     page: int
     limit: int
+
+class DocumentProcess(BaseModel):
+    message: str
+
+class DocumentProcessStatus(BaseModel):
+    status: ProcessStatus
+    last_run_time: Optional[datetime] = None
