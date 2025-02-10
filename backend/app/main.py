@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
+import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from anyio.streams.file import FileWriteStream
 import uvicorn
 
 # from app.TopicModeling import topic_modeling_v2
@@ -12,6 +14,9 @@ from app.database import create_db_and_tables, add_existing_documents
 async def lifespan(app: FastAPI):
     create_db_and_tables()
     add_existing_documents()
+    path = "./openapi.json"
+    async with await FileWriteStream.from_path(path) as stream:
+        await stream.send(json.dumps(app.openapi()).encode("utf-8"))
     yield
 
 # Initialize FastAPI
