@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, UploadFile, HTTPException, BackgroundTas
 from sqlmodel import Session, select
 from app.database import get_session
 from app.models import Document, Topic, DocumentTopicLink
-from app.schemas import DocumentList, DocumentDetail, DocumentsPagination, TopicResponse
+from app.schemas import DocumentList, DocumentDetail, DocumentProcess, DocumentProcessStatus, DocumentsPagination, TopicResponse
 from app.utils.process_manager import ProcessManager
 from app.utils.space_word import space_between_word
 
@@ -136,7 +136,7 @@ async def list_documents(session: SessionDep,
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@router.post("/documents/process", status_code=202)
+@router.post("/documents/process", status_code=202, response_model=DocumentProcess)
 def process_document(session: SessionDep):
     """Process documents and extract topics"""
     
@@ -161,7 +161,7 @@ def process_document(session: SessionDep):
 
     return {"message": "Processing started"}
 
-@router.get("/documents/process/status")
+@router.get("/documents/process/status", status_code=200, response_model=DocumentProcessStatus)
 async def get_process_status():
     """Get the status of the document processing task"""
     response = {
