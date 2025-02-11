@@ -33,3 +33,19 @@ class DocumentProcess(BaseModel):
 class DocumentProcessStatus(BaseModel):
     status: ProcessStatus
     last_run_time: Optional[datetime] = None
+
+class UserBase(BaseModel):
+    username: str
+    is_active: bool = True
+    is_superuser: bool = False
+    creation_date: datetime
+
+class UserDetail(UserBase):
+    id: uuid.UUID
+
+class UserCreate(UserBase):
+    password: str
+
+class UserUpdate(UserBase):
+    username: str
+    password: str

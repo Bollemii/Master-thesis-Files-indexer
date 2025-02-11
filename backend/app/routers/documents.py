@@ -1,11 +1,7 @@
-from concurrent.futures import ProcessPoolExecutor
 import os
-import pathlib
 import uuid
-import pandas as pd
-from datetime import datetime
 from typing import Annotated
-from fastapi import APIRouter, Depends, UploadFile, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, UploadFile, HTTPException
 from sqlmodel import Session, select
 from app.database import get_session
 from app.models import Document, Topic, DocumentTopicLink
