@@ -17,6 +17,7 @@ class DocumentList(BaseModel):
     filename: str
     upload_date: datetime
     processed: bool
+    preview_url: str | None
 
 class DocumentDetail(DocumentList):
     topics: list[TopicResponse]

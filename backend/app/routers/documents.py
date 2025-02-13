@@ -2,12 +2,14 @@ import os
 import uuid
 from typing import Annotated
 from fastapi import APIRouter, Depends, UploadFile, HTTPException
+from fastapi.responses import FileResponse
 from sqlmodel import Session, select
 from app.database import get_session
 from app.models import Document, Topic, DocumentTopicLink
 from app.schemas import DocumentList, DocumentDetail, DocumentProcess, DocumentProcessStatus, DocumentsPagination, TopicResponse
 from app.utils.process_manager import ProcessManager
 from app.utils.space_word import space_between_word
+from app.utils.preview import generate_preview
 
 DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
 os.makedirs(DOCUMENT_STORAGE_PATH, exist_ok=True)
@@ -17,6 +19,24 @@ router = APIRouter()
 SessionDep = Annotated[Session, Depends(get_session)]
 
 process_manager = ProcessManager()
+
+# Add before the other endpoints
+
+@router.get("/documents/{document_id}/preview", status_code=200)
+async def get_document_preview(document_id: uuid.UUID, session: SessionDep):
+    """Get the preview image for a document"""
+    try:
+        document = session.get(Document, document_id)
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+            
+        preview_path = generate_preview(document.path, str(document_id))
+        if not preview_path:
+            raise HTTPException(status_code=404, detail="Preview not available")
+            
+        return FileResponse(preview_path, media_type="image/png")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/documents/", response_model=Document, status_code=201)
 async def upload_document(session: SessionDep, file: UploadFile):
@@ -89,6 +109,7 @@ async def get_document(document_id: uuid.UUID, session: SessionDep):
             filename=document.filename,
             upload_date=document.upload_date,
             processed=document.processed,
+            preview_url=f"/documents/{document.id}/preview" if document.path.lower().endswith('.pdf') else None,
             topics=topic_responses
         )
         
@@ -119,6 +140,7 @@ async def list_documents(session: SessionDep,
                 id=document.id,
                 filename=document.filename,
                 upload_date=document.upload_date,
+                preview_url=f"/documents/{document.id}/preview" if document.path.lower().endswith('.pdf') else None,
                 processed=document.processed,
             )
             result.append(document_response)
