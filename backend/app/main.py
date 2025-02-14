@@ -7,7 +7,7 @@ import uvicorn
 
 # from app.TopicModeling import topic_modeling_v2
 from app.routers import documents, users
-from app.database import create_db_and_tables, add_existing_documents
+from app.database import create_db_and_tables, add_existing_documents, create_admin_user
 
 
 # Initialize database
@@ -15,6 +15,7 @@ from app.database import create_db_and_tables, add_existing_documents
 async def lifespan(app: FastAPI):
     create_db_and_tables()
     add_existing_documents()
+    create_admin_user()
     path = "./openapi.json"
     async with await FileWriteStream.from_path(path) as stream:
         await stream.send(json.dumps(app.openapi()).encode("utf-8"))

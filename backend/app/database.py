@@ -1,13 +1,16 @@
 import os
+from passlib.context import CryptContext
 from sqlmodel import SQLModel, create_engine, Session, select
-from app.models import Document
-from app.utils.space_word import space_between_word
+from app.models import Document, User
+from app.utils.space_word import get_pdf_title, space_between_word
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
 engine = create_engine(DATABASE_URL)
 
 DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
 os.makedirs(DOCUMENT_STORAGE_PATH, exist_ok=True)
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
@@ -19,13 +22,31 @@ def get_session():
 def add_existing_documents():
     with Session(engine) as session:
         for file_path in os.listdir(DOCUMENT_STORAGE_PATH):
-            file_name = os.path.splitext(file_path)[0]
-            spaced_filename = space_between_word(file_name)
+            complete_file_path = os.path.join(DOCUMENT_STORAGE_PATH, file_path)
+
+            if file_path.lower().endswith('.pdf'):
+                pdf_title = get_pdf_title(complete_file_path)
+            if pdf_title:
+                spaced_filename = pdf_title
+            else:
+                base_filename = os.path.splitext(file_path)[0]
+                spaced_filename = space_between_word(base_filename)
+
             if not session.exec(select(Document).where(Document.filename == spaced_filename)).first():
                 document = Document(filename=spaced_filename,
-                                    path=os.path.join(DOCUMENT_STORAGE_PATH, file_path))
+                                    path=complete_file_path)
                 session.add(document)
                 session.commit()
                 session.refresh(document)
 
+    session.close()
+
+def create_admin_user():
+    with Session(engine) as session:
+        admin = session.exec(select(User).where(User.username == "admin")).first()
+        if not admin:
+            admin = User(username="admin", hashed_password=pwd_context.hash("admin"), is_superuser=True)
+            session.add(admin)
+            session.commit()
+            session.refresh(admin)
     session.close()
