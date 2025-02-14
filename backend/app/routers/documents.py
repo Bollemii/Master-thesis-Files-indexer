@@ -8,7 +8,7 @@ from app.database import get_session
 from app.models import Document, Topic, DocumentTopicLink
 from app.schemas import DocumentList, DocumentDetail, DocumentProcess, DocumentProcessStatus, DocumentsPagination, TopicResponse
 from app.utils.process_manager import ProcessManager
-from app.utils.space_word import space_between_word
+from app.utils.space_word import get_pdf_title, space_between_word
 from app.utils.preview import generate_preview
 
 DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
@@ -51,8 +51,16 @@ async def upload_document(session: SessionDep, file: UploadFile):
             content = await file.read()
             f.write(content)
         
-        base_filename = os.path.splitext(file.filename)[0]
-        spaced_filename = space_between_word(base_filename)
+        if file.filename.lower().endswith('.pdf'):
+            pdf_title = get_pdf_title(file_path)
+            if pdf_title:
+                spaced_filename = pdf_title
+            else:
+                base_filename = os.path.splitext(file.filename)[0]
+                spaced_filename = space_between_word(base_filename)
+        else:
+            base_filename = os.path.splitext(file.filename)[0]
+            spaced_filename = space_between_word(base_filename)
 
         document = Document(
             filename=spaced_filename,
