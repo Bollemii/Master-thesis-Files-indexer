@@ -21,8 +21,13 @@ def get_length(content):
         return len(content)
 
 def process_documents(doc_df):
+
+    tesseract_path = os.getenv("TESSERACT_PATH", "/usr/bin/tesseract")
+    libreoffice_path = os.getenv("LIBREOFFICE_PATH", "/usr/bin/libreoffice")
+
     reader = Reader(cv_file_column='file_path',
-                    tesseract_path='/usr/bin/tesseract',
+                    doc_reader_path=libreoffice_path,
+                    tesseract_path=tesseract_path,
                     image_resolution=150)
 
     doc_df = reader.read(doc_df)
