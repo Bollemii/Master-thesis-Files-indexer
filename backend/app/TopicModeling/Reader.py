@@ -110,7 +110,9 @@ class Reader:
         if extension == 'png':
             return 1
         doc = fitz.open(filepath)
-        return doc.page_count
+        n_pages = doc.page_count
+        doc.close()
+        return n_pages
 
     def pdf_to_image_to_text(self, fullpath):
         default_resolution = 96 # dpi
@@ -126,6 +128,7 @@ class Reader:
             text += self.read_image(image_path)
             if self.debug is False:
                 os.remove(image_path)
+        doc.close()
         return text
 
     def read_text(self, file_path):
@@ -170,6 +173,7 @@ class Reader:
             page = doc[i_page]
             text += page.get_text()
         clean_text = text.replace('\n', '')
+        doc.close()
         if len(clean_text) >= self.n_char_min:  # probable better solution: consider this size vs total binary page size
             return unidecode.unidecode(text)
         else:
@@ -208,7 +212,7 @@ class Reader:
             rEnd, wEnd = Pipe(duplex=False)
             readers.append(rEnd)
             w = Process(target=work, args=(
-            i_worker, queue, wEnd, './tmp', '/usr/bin/libreoffice', '/usr/bin/tesseract', 500, False))
+            i_worker, queue, wEnd, './tmp', self.doc_reader_path, self.tesseract_bin_path, 500, False))
             workers.append(w)
             workers[i_worker].start()
             wEnd.close()
@@ -274,7 +278,7 @@ class Reader:
                         readers.append(rEnd)
                         n_workers += 1
                         w = Process(target=work, args=(
-                            n_workers-1, queue, wEnd, './tmp', '/usr/bin/libreoffice', '/usr/bin/tesseract', 500, False))
+                            n_workers-1, queue, wEnd, './tmp', self.doc_reader_path, self.tesseract_bin_path, 500, False))
                         workers.append(w)
                         workers[n_workers-1].start()
                         wEnd.close()

@@ -5,11 +5,12 @@ from fastapi import APIRouter, Depends, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models import Document, Topic, DocumentTopicLink
+from app.models import Document, Topic, DocumentTopicLink, User
 from app.schemas import DocumentList, DocumentDetail, DocumentProcess, DocumentProcessStatus, DocumentsPagination, TopicResponse
 from app.utils.process_manager import ProcessManager
 from app.utils.space_word import get_pdf_title, space_between_word
 from app.utils.preview import generate_preview
+from app.utils.security import get_current_user
 
 DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
 os.makedirs(DOCUMENT_STORAGE_PATH, exist_ok=True)
@@ -20,10 +21,8 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 process_manager = ProcessManager()
 
-# Add before the other endpoints
-
 @router.get("/documents/{document_id}/preview", status_code=200)
-async def get_document_preview(document_id: uuid.UUID, session: SessionDep):
+async def get_document_preview(document_id: uuid.UUID, session: SessionDep, current_user: User = Depends(get_current_user)):
     """Get the preview image for a document"""
     try:
         document = session.get(Document, document_id)
@@ -39,7 +38,7 @@ async def get_document_preview(document_id: uuid.UUID, session: SessionDep):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/documents/", response_model=Document, status_code=201)
-async def upload_document(session: SessionDep, file: UploadFile):
+async def upload_document(session: SessionDep, file: UploadFile, current_user: User = Depends(get_current_user)):
     """Upload a new document"""
     try:
         # Save document to local storage
@@ -51,16 +50,16 @@ async def upload_document(session: SessionDep, file: UploadFile):
             content = await file.read()
             f.write(content)
         
-        if file.filename.lower().endswith('.pdf'):
-            pdf_title = get_pdf_title(file_path)
-            if pdf_title:
-                spaced_filename = pdf_title
-            else:
-                base_filename = os.path.splitext(file.filename)[0]
-                spaced_filename = space_between_word(base_filename)
-        else:
-            base_filename = os.path.splitext(file.filename)[0]
-            spaced_filename = space_between_word(base_filename)
+        # if file.filename.lower().endswith('.pdf'):
+        #     pdf_title = get_pdf_title(file_path)
+        #     if pdf_title:
+        #         spaced_filename = pdf_title
+        #     else:
+        #         base_filename = os.path.splitext(file.filename)[0]
+        #         spaced_filename = space_between_word(base_filename)
+        # else:
+        base_filename = os.path.splitext(file.filename)[0]
+        spaced_filename = space_between_word(base_filename)
 
         document = Document(
             filename=spaced_filename,
@@ -82,7 +81,7 @@ async def upload_document(session: SessionDep, file: UploadFile):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/documents/{document_id}", response_model=DocumentDetail)
-async def get_document(document_id: uuid.UUID, session: SessionDep):
+async def get_document(document_id: uuid.UUID, session: SessionDep, current_user: User = Depends(get_current_user)):
     """Retrieve document information by ID"""
     try:
         document = session.get(Document, document_id)
@@ -129,7 +128,8 @@ async def get_document(document_id: uuid.UUID, session: SessionDep):
 async def list_documents(session: SessionDep,
                          q: str | None = None,
                          page: int = 0,
-                         limit: int = 50):
+                         limit: int = 50,
+                         current_user: User = Depends(get_current_user)):
     """List all documents with topics for each document"""
     try:
         query = select(Document)
@@ -163,7 +163,7 @@ async def list_documents(session: SessionDep,
         raise HTTPException(status_code=500, detail=str(e))
     
 @router.post("/documents/process", status_code=202, response_model=DocumentProcess)
-def process_document(session: SessionDep):
+def process_document(session: SessionDep, current_user: User = Depends(get_current_user)):
     """Process documents and extract topics"""
     
     if process_manager.is_running():
@@ -188,7 +188,7 @@ def process_document(session: SessionDep):
     return {"message": "Processing started"}
 
 @router.get("/documents/process/status", status_code=200, response_model=DocumentProcessStatus)
-async def get_process_status():
+async def get_process_status(current_user: User = Depends(get_current_user)):
     """Get the status of the document processing task"""
     response = {
         "status": process_manager.status.value,
