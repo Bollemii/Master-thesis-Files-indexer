@@ -3,6 +3,7 @@
     "autoflush",
     "fastapi",
     "fitz",
+    "ilike",
     "iterrows",
     "langdetect",
     "lemmatize",
