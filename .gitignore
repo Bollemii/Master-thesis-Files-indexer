@@ -8,3 +8,4 @@ app/__pycache__/
 tmp
 openapi.json
 .DS_Store
+test_document.txt
