@@ -25,7 +25,7 @@ export function Home() {
         setDocuments(data.items || []);
         setTotal(data.total || 0);
       } catch (err) {
-        setError("Failed to load documents");
+        setError(`Failed to load documents: ${err instanceof Error ? err.message : String(err)}`);
         setDocuments([]);
         setTotal(0);
       } finally {
@@ -54,7 +54,7 @@ export function Home() {
       const data = await getDocuments(query, page, limit);
       setDocuments(data.items);
     } catch (err) {
-      setError("Failed to upload document");
+      setError(`Failed to upload document: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
