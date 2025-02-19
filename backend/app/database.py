@@ -24,13 +24,13 @@ def add_existing_documents():
         for file_path in os.listdir(DOCUMENT_STORAGE_PATH):
             complete_file_path = os.path.join(DOCUMENT_STORAGE_PATH, file_path)
 
-            if file_path.lower().endswith('.pdf'):
-                pdf_title = get_pdf_title(complete_file_path)
-            if pdf_title:
-                spaced_filename = pdf_title
-            else:
-                base_filename = os.path.splitext(file_path)[0]
-                spaced_filename = space_between_word(base_filename)
+            # if file_path.lower().endswith('.pdf'):
+            #     pdf_title = get_pdf_title(complete_file_path)
+            # if pdf_title:
+            #     spaced_filename = pdf_title
+            # else:
+            base_filename = os.path.splitext(file_path)[0]
+            spaced_filename = space_between_word(base_filename)
 
             if not session.exec(select(Document).where(Document.filename == spaced_filename)).first():
                 document = Document(filename=spaced_filename,
