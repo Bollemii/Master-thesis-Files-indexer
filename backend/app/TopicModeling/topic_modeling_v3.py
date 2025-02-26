@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
 from app.TopicModeling.Reader import Reader
-from app.TopicModeling.Miner import Miner
+from app.TopicModeling.miner_v2 import Miner
 
 def delete_eol(content):
     if type(content) is str:
@@ -22,7 +22,7 @@ def get_length(content):
 
 def process_documents(doc_df):
 
-    tesseract_path = os.getenv("TESSERACT_PATH", "/usr/bin/tesseract")
+    tesseract_path = os.getenv("TESSERACT_PATH", "/opt/homebrew/bin/tesseract")
     libreoffice_path = os.getenv("LIBREOFFICE_PATH", "/usr/bin/libreoffice")
 
     reader = Reader(cv_file_column='file_path',
@@ -58,16 +58,16 @@ def run_lda(transf_doc_df):
     no_error_df = transf_doc_df[transf_doc_df['error'].isnull()]
     corpus = no_error_df['without_stop_words']
 
-    vectorizer = CountVectorizer(ngram_range=(1, 2), max_df=0.8, min_df=0.01)
+    vectorizer = CountVectorizer(ngram_range=(1, 2), max_df=0.8, min_df=0.05)
     X = vectorizer.fit_transform(corpus)
 
     doc_topic_prior = 0.085
     topic_word_prior = 0.225
-    n_topics = 10
+    n_topics = 5
 
     lda = LatentDirichletAllocation(n_components=n_topics, random_state=0, verbose=1,
                                     doc_topic_prior=doc_topic_prior, topic_word_prior=topic_word_prior,
-                                    evaluate_every=10, n_jobs=-1, max_iter=200)
+                                    evaluate_every=50, n_jobs=-1, max_iter=500)
     lda.fit(X)
 
     topic_words = vectorizer.get_feature_names_out()
