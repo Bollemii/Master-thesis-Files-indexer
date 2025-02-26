@@ -4,7 +4,7 @@ import os
 import pathlib
 import subprocess
 import base64
-from multiprocessing import Process, Queue, Lock, Pipe
+from multiprocessing import Process, Queue, Lock, Pipe, cpu_count
 from multiprocessing.connection import wait
 from datetime import datetime
 import time
@@ -207,7 +207,7 @@ class Reader:
         queue = Queue()
         readers = []
         workers = []
-        n_workers = 4
+        n_workers = cpu_count()
         for i_worker in range(n_workers):
             rEnd, wEnd = Pipe(duplex=False)
             readers.append(rEnd)
