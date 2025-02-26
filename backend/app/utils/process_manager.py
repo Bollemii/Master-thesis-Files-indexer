@@ -1,13 +1,9 @@
 from datetime import datetime
 from enum import Enum
-import os
-from time import sleep
-from sqlmodel import Session, create_engine, select
-from typing import Optional, Any, List
-from concurrent.futures import Future, wait
+from typing import Optional, Any
+from concurrent.futures import Future
 from concurrent.futures import ProcessPoolExecutor
 from app.utils.process_documents import run_process_document
-from app.models import Document
 
 
 class ProcessStatus(Enum):
