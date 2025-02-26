@@ -2,8 +2,11 @@ import re
 import fitz
 
 def space_between_word(text):
+    # Replace underscores with spaces
+    result = text.replace('_', ' ')
+    
     # Split on uppercase letters, numbers, and dots
-    result = re.sub(r'([a-z])([A-Z])|([0-9])([A-Z])|([A-Z])([0-9])|\.', r'\1\3\5 \2\4\6', text)
+    result = re.sub(r'([a-z])([A-Z])|([0-9])([A-Z])|([A-Z])([0-9])|\.', r'\1\3\5 \2\4\6', result)
     
     # Add space between numbers and letters
     result = re.sub(r'([a-zA-Z])([0-9])', r'\1 \2', result)
