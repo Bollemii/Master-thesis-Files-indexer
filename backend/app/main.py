@@ -5,7 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from anyio.streams.file import FileWriteStream
 import uvicorn
 
-# from app.TopicModeling import topic_modeling_v2
+from app.utils.preview import PreviewManager
+from app.database import get_session
 from app.routers import documents, users
 from app.database import create_db_and_tables, add_existing_documents, create_admin_user
 
@@ -16,6 +17,9 @@ async def lifespan(app: FastAPI):
     create_db_and_tables()
     add_existing_documents()
     create_admin_user()
+    preview_manager = PreviewManager()
+    session = next(get_session())
+    await preview_manager.generate_all_previews(session)
     path = "./openapi.json"
     async with await FileWriteStream.from_path(path) as stream:
         await stream.send(json.dumps(app.openapi()).encode("utf-8"))

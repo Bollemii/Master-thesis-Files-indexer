@@ -9,7 +9,7 @@ from app.models import Document, Topic, DocumentTopicLink, User
 from app.schemas import DocumentList, DocumentDetail, DocumentProcess, DocumentProcessStatus, DocumentsPagination, TopicResponse
 from app.utils.process_manager import ProcessManager
 from app.utils.space_word import get_pdf_title, space_between_word
-from app.utils.preview import generate_preview
+from app.utils.preview import PreviewManager
 from app.utils.security import get_current_user
 
 DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
@@ -19,21 +19,26 @@ router = APIRouter()
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
+preview_manager = PreviewManager()
 process_manager = ProcessManager()
 
 @router.get("/documents/{document_id}/preview", status_code=200)
+@router.head("/documents/{document_id}/preview", status_code=200)
 async def get_document_preview(document_id: uuid.UUID, session: SessionDep, current_user: User = Depends(get_current_user)):
     """Get the preview image for a document"""
     try:
         document = session.get(Document, document_id)
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
-            
-        preview_path = generate_preview(document.path, str(document_id))
+        
+        preview_path = preview_manager.preview_cache.get(str(document_id))
+        if not preview_path or not os.path.exists(preview_path):
+            preview_path = preview_manager.generate_preview(document.path, str(document_id))
+
         if not preview_path:
             raise HTTPException(status_code=404, detail="Preview not available")
             
-        return FileResponse(preview_path, media_type="image/png")
+        return FileResponse(preview_path, media_type="image/webp")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -69,6 +74,8 @@ async def upload_document(session: SessionDep, file: UploadFile, current_user: U
         session.add(document)
         session.commit()
         session.refresh(document)
+
+        preview_manager.generate_preview(document.path, str(document.id))
         
         return Document(
             id=document.id,
@@ -121,6 +128,8 @@ async def get_document(document_id: uuid.UUID, session: SessionDep, current_user
         )
         
         return document_response
+    except HTTPException as e:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -128,7 +137,7 @@ async def get_document(document_id: uuid.UUID, session: SessionDep, current_user
 async def list_documents(session: SessionDep,
                          q: str | None = None,
                          page: int = 0,
-                         limit: int = 50,
+                         limit: int = 20,
                          current_user: User = Depends(get_current_user)):
     """List all documents with topics for each document"""
     try:
