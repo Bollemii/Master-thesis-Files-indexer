@@ -206,6 +206,10 @@ class Miner:
         return final_text
 
     def mine(self,doc_df,content_column_name='content'):
+        # original order index
+        doc_df = doc_df.reset_index(drop=True)
+        doc_df['original_order'] = doc_df.index
+
         # strip doc_df already on error
         with_error_df = deepcopy(doc_df[doc_df['error'].notnull()])
         without_error_df = deepcopy(doc_df[doc_df['error'].isnull()])
@@ -254,9 +258,9 @@ class Miner:
         without_error_df = tmp_without_error_df
 
         if with_error_df.empty:
-            return without_error_df
+            return without_error_df.sort_values('original_order').drop('original_order', axis=1)
         else:
-            return pd.concat([with_error_df, without_error_df], axis=0)
+            return pd.concat([with_error_df, without_error_df], axis=0).sort_values('original_order').drop('original_order', axis=1)
 
 
 # def test_mine():
