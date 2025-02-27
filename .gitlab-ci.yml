@@ -1,33 +1,43 @@
 stages:
   - build
 
-variables:
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-
 services:
   - docker:dind
 
 build-frontend:
+  variables:
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG
   stage: build
   image: docker:latest
-  script:
+  before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG ./frontend
-    - docker tag $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/frontend:latest
-    - docker push $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG
+  script:
+    - docker build --pull -t "$DOCKER_IMAGE_NAME" ./frontend
+    - docker push "$DOCKER_IMAGE_NAME"
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        docker tag "$DOCKER_IMAGE_NAME" "$CI_REGISTRY_IMAGE:latest"
+        docker push "$CI_REGISTRY_IMAGE:latest"
+      fi
   only:
     - main
     - develop
 
 build-backend:
+  variables:
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG
   stage: build
   image: docker:latest
-  script:
+  before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG ./backend
-    - docker tag $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/backend:latest
-    - docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG
+  script:
+    - docker build --pull -t "$DOCKER_IMAGE_NAME" ./backend
+    - docker push "$DOCKER_IMAGE_NAME"
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        docker tag "$DOCKER_IMAGE_NAME" "$CI_REGISTRY_IMAGE:latest"
+        docker push "$CI_REGISTRY_IMAGE:latest"
+      fi
   only:
     - main
     - develop
