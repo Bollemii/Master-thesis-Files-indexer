@@ -1,5 +1,7 @@
 # TFE
 
+[![pipeline status](https://gitlab.com/Masi-s-Matcas/tfe/badges/main/pipeline.svg)](https://gitlab.com/Masi-s-Matcas/tfe/-/commits/main)
+
 Code source du projet TFE de l'année académique 2024-2025.
 
 ## Installation
