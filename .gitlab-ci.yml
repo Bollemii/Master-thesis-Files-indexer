@@ -1,5 +1,26 @@
 stages:
+  - test
   - build
+
+test-backend:
+  stage: test
+  image: python:3.11
+  before_script:
+    - cd backend
+    - pip install -r requirements.txt
+  script:
+    - pytest --cov=. --cov-report=term
+  only:
+    - main
+    - develop
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/coverage.xml
+    paths:
+      - backend/htmlcov
+    expire_in: 1 week
 
 build-frontend:
   variables:
