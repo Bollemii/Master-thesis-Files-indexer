@@ -21,7 +21,7 @@ def detect_language(text):
         return None
 
 
-def substitute_url(text, substitutedURL='URL'):
+# def substitute_url(text, substitutedURL='URL'):
     #
     # https://regexr.com/3au3g
     #
@@ -29,7 +29,7 @@ def substitute_url(text, substitutedURL='URL'):
     #
     # https://www.regextester.com/94502
     #
-    return re.sub('(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&\'\(\)\*\+,;=.]+', substitutedURL, text)
+    # return re.sub('(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&\'\(\)\*\+,;=.]+', substitutedURL, text)
 
 def normalize(text):
     normalized = ''
