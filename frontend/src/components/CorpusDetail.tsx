@@ -57,16 +57,16 @@ export function CorpusDetail() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white shadow rounded-lg p-6 min-h-[100px]">
-        <h2 className="text-2xl font-bold mb-4">{document.filename}</h2>
-        <div className="text-sm text-gray-500">
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 min-h-[100px]">
+        <h2 className="text-2xl font-bold mb-4 dark:text-white">{document.filename}</h2>
+        <div className="text-sm text-gray-500 dark:text-gray-400">
           Uploaded on {new Date(document.upload_date).toLocaleDateString()}
         </div>
       </div>
 
       {topicData && topicData.length > 0 && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium mb-4">Topic Distribution</h3>
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium mb-4 dark:text-white">Topic Distribution</h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -93,11 +93,15 @@ export function CorpusDetail() {
                       `${(Number(value) * 100).toFixed(1)}%`,
                       "Weight",
                     ]}
+                    contentStyle={{ backgroundColor: 'var(--tooltip-bg, #fff)', color: 'var(--tooltip-text, #000)', borderColor: 'var(--tooltip-border, #ccc)' }}
                   />
                   <Legend
                     layout="vertical"
                     align="right"
                     verticalAlign="middle"
+                    formatter={(value) => (
+                      <span className="dark:text-white">{value}</span>
+                    )}
                   />
                 </PieChart>
               </ResponsiveContainer>

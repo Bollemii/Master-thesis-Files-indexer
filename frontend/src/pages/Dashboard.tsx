@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { DocumentsPagination, ProcessStatus } from "../types/api";
 import { CorpusList } from "../components/CorpusList";
@@ -8,6 +8,7 @@ import { TopicDetail } from "../components/TopicDetail";
 import { fetchWithAuth, AuthError } from "../services/api";
 import { Upload } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Dashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -21,7 +22,15 @@ export function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const { token, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const itemsPerPage = 21;
+
+  const isDetailPage = () => {
+    return (
+      location.pathname.includes("/corpus/") ||
+      location.pathname.includes("/topic/")
+    );
+  };
 
   const handleAuthError = useCallback(
     (error: Error) => {
@@ -108,28 +117,28 @@ export function Dashboard() {
   const getStatusColor = (status: ProcessStatus["status"]) => {
     switch (status) {
       case "running":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-400 dark:text-yellow-900";
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 dark:bg-green-400 dark:text-green-900";
       case "failed":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 dark:bg-red-400 dark:text-red-900";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-400 dark:text-gray-900";
     }
   };
 
   const totalPages = Math.ceil((documents?.total || 0) / itemsPerPage) - 1;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <nav className="bg-white shadow-sm flex-none h-16">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      <nav className="bg-white dark:bg-gray-800 shadow-sm flex-none h-16">
         <div className="max-w-7xl mx-auto lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Logo />
             <div className="flex-shrink-0 w-32">
               <button
                 onClick={() => navigate("/")}
-                className="text-xl font-bold hover:text-gray-700"
+                className="text-xl cursor-pointer font-bold hover:text-gray-700 dark:text-white dark:hover:text-gray-300"
               >
                 Codex
               </button>
@@ -145,7 +154,7 @@ export function Dashboard() {
                     id="search"
                     type="search"
                     placeholder="Search documents..."
-                    className="block w-full pl-4 pr-12 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full pl-4 pr-12 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -163,7 +172,7 @@ export function Dashboard() {
                   processStatus.status.slice(1)}
               </div>
               {processStatus.last_run_time && (
-                <div className="mt-1 text-xs text-gray-500">
+                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Last run:{" "}
                   {new Date(processStatus.last_run_time).toLocaleString()}
                 </div>
@@ -172,18 +181,20 @@ export function Dashboard() {
               <button
                 onClick={startProcess}
                 disabled={processStatus.status === "running"}
-                className={`px-4 py-2 rounded-md text-sm font-medium ${
+                className={`px-4 py-2 cursor-pointer rounded-md text-sm font-medium ${
                   processStatus.status === "running"
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-500 text-white hover:bg-blue-600"
+                    ? "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                    : "bg-blue-500 text-white hover:bg-blue-600 dark:hover:bg-blue-400"
                 }`}
               >
                 Start Process
               </button>
 
+              <ThemeToggle />
+
               <button
                 onClick={logout}
-                className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
+                className="px-4 py-2 cursor-pointer rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 Logout
               </button>
@@ -223,19 +234,21 @@ export function Dashboard() {
           e.target.value = "";
         }}
       />
-      <button
-        onClick={() => fileInputRef.current?.click()}
-        disabled={isUploading}
-        className={`fixed bottom-8 right-8 p-4 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center group ${
-          isUploading ? "opacity-50 cursor-not-allowed" : ""
-        }`}
-        aria-label="Upload document"
-      >
-        <Upload className={`w-6 h-6 ${isUploading ? "animate-pulse" : ""}`} />
-        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:ml-2 transition-all duration-200 ease-in-out">
-          {isUploading ? "Uploading..." : "Upload"}
-        </span>
-      </button>
+      {!isDetailPage() && (
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          className={`fixed bottom-8 right-8 p-4 bg-blue-500 text-white dark:bg-blue-600 dark:hover:bg-blue-500 rounded-full cursor-pointer shadow-lg transition-colors duration-200 flex items-center justify-center group ${
+            isUploading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          aria-label="Upload document"
+        >
+          <Upload className={`w-6 h-6 ${isUploading ? "animate-pulse" : ""}`} />
+          <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:ml-2 transition-all duration-200 ease-in-out">
+            {isUploading ? "Uploading..." : "Upload"}
+          </span>
+        </button>
+      )}
     </div>
   );
 }

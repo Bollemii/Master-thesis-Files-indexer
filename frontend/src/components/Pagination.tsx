@@ -44,15 +44,15 @@ export function Pagination({
   };
 
   return (
-    <div className="flex items-center justify-center bg-white px-4 py-3 sm:px-6">
+    <div className="flex items-center justify-center bg-white dark:bg-gray-800 px-4 py-3 sm:px-6">
       <div className="flex flex-1 justify-center sm:hidden">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           className={`relative inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ${
             currentPage === 1
-              ? "bg-gray-100 text-gray-400"
-              : "bg-white text-gray-700 hover:bg-gray-50"
+              ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
+              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
           }`}
         >
           Previous
@@ -62,8 +62,8 @@ export function Pagination({
           disabled={currentPage === totalPages}
           className={`relative ml-3 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ${
             currentPage === totalPages
-              ? "bg-gray-100 text-gray-400"
-              : "bg-white text-gray-700 hover:bg-gray-50"
+              ? "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
+              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
           }`}
         >
           Next
@@ -77,7 +77,7 @@ export function Pagination({
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${
+            className={`relative inline-flex cursor-pointer items-center rounded-l-md px-2 py-2 text-gray-400 dark:text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 ${
               currentPage === 1 ? "cursor-not-allowed" : ""
             }`}
           >
@@ -96,10 +96,10 @@ export function Pagination({
               <button
                 key={index}
                 onClick={() => onPageChange(page)}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                className={`relative inline-flex cursor-pointer items-center px-4 py-2 text-sm font-semibold ${
                   page === currentPage
-                    ? "z-10 bg-blue-600 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                    : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+                    ? "z-10 bg-blue-600 dark:bg-blue-700 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-blue-700"
+                    : "text-gray-900 dark:text-gray-300 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0"
                 }`}
               >
                 {page}
@@ -107,7 +107,7 @@ export function Pagination({
             ) : (
               <span
                 key={index}
-                className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300"
+                className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-gray-600"
               >
                 ...
               </span>
@@ -117,7 +117,7 @@ export function Pagination({
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${
+            className={`relative inline-flex cursor-pointer items-center rounded-r-md px-2 py-2 text-gray-400 dark:text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 ${
               currentPage === totalPages ? "cursor-not-allowed" : ""
             }`}
           >
