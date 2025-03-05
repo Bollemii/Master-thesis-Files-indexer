@@ -18,6 +18,7 @@ export function Dashboard() {
     status: "idle",
     last_run_time: null,
   });
+  const previousStatusRef = useRef<string>(processStatus.status);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { token, logout } = useAuth();
@@ -60,12 +61,18 @@ export function Dashboard() {
   const fetchProcessStatus = useCallback(async () => {
     try {
       const status = await fetchWithAuth("/documents/process/status", token);
+      
+      if (previousStatusRef.current === "running" && status.status === "completed") {
+        fetchDocuments();
+      }
+
+      previousStatusRef.current = status.status;
       setProcessStatus(status);
     } catch (err) {
       console.error("Failed to fetch process status:", err);
       handleAuthError(err as Error);
     }
-  }, [token, handleAuthError]);
+  }, [token, handleAuthError, fetchDocuments]);
 
   const startProcess = useCallback(async () => {
     try {
