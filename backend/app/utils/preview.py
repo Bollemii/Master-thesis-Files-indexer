@@ -45,7 +45,7 @@ class PreviewManager:
                     target_height = int(target_width * aspect_ratio)
                     img = img.resize((target_width, target_height), Image.Resampling.LANCZOS)
 
-                    img.save(preview_path, 'WEBP', quality=50, method=6)
+                    img.save(preview_path, 'WEBP', quality=20, method=6)
                     self.preview_cache[document_id] = preview_path
                     return preview_path
             return None

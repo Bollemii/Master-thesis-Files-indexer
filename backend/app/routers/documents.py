@@ -136,7 +136,7 @@ async def get_document(document_id: uuid.UUID, session: SessionDep, current_user
 @router.get("/documents/", response_model=DocumentsPagination)
 async def list_documents(session: SessionDep,
                          q: str | None = None,
-                         page: int = 0,
+                         page: int = 1,
                          limit: int = 20,
                          current_user: User = Depends(get_current_user)):
     """List all documents with topics for each document"""
@@ -148,8 +148,8 @@ async def list_documents(session: SessionDep,
             query = query.where(Document.filename.ilike(search))
 
         total = len(session.exec(query).all())
-        query = query.offset(page * limit).limit(limit)
-
+        query = query.offset((page - 1) * limit).limit(limit)
+        
         result = []
         documents = session.exec(query)
         for document in documents:
