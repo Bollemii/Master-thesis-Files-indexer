@@ -20,7 +20,7 @@ test-backend:
         coverage_format: cobertura
         path: backend/coverage.xml
     paths:
-      - backend/htmlcov
+      - backend/coverage.xml
     expire_in: 1 week
 
 build-frontend:
