@@ -2,10 +2,10 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlmodel import Session, select
+from sqlmodel import Session
 from app.database import get_session
 from app.models import User
-from app.schemas import UserDetail, UserCreate, UserUpdate
+from app.schemas import UserDetail, UserCreate
 from app.utils.security import (
     Token,
     authenticate_user,

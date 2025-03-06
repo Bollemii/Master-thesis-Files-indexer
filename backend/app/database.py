@@ -2,7 +2,7 @@ import os
 from passlib.context import CryptContext
 from sqlmodel import SQLModel, create_engine, Session, select
 from app.models import Document, User
-from app.utils.space_word import get_pdf_title, space_between_word
+from app.utils.space_word import space_between_word
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
 engine = create_engine(DATABASE_URL)

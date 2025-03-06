@@ -15,7 +15,7 @@ from app.schemas import (
     TopicResponse,
 )
 from app.utils.process_manager import ProcessManager
-from app.utils.space_word import get_pdf_title, space_between_word
+from app.utils.space_word import space_between_word
 from app.utils.preview import PreviewManager
 from app.utils.security import get_current_user
 
@@ -154,7 +154,7 @@ async def get_document(
 
         return document_response
     except HTTPException as e:
-        raise
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

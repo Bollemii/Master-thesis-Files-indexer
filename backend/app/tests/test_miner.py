@@ -1,4 +1,3 @@
-import pytest
 import pandas as pd
 from app.TopicModeling.miner_v2 import Miner
 
