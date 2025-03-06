@@ -37,7 +37,7 @@ lint-backend:
     - cd backend
     - pip install flake8 black
   script:
-    - flake8 .
+    - flake8 --max-line-length=100 .
     - black --check .
 
 lint-frontend:
