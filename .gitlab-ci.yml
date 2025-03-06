@@ -1,19 +1,74 @@
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"  # Security for Docker-in-Docker
+  DOCKER_BUILDKIT: "1"          # Enable BuildKit for faster builds
+  CACHE_DIR: ".cache"           # Cache directory
+
+# Only run pipeline on main branch
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
 stages:
+  - lint
   - test
   - build
 
+# Reusable templates
+.docker-setup: &docker-setup
+  image: docker:24.0
+  services:
+    - docker:24.0-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker buildx create --name mybuilder --driver docker-container --use
+    - docker buildx inspect --bootstrap
+
+# Linting jobs
+lint-backend:
+  stage: lint
+  image: python:3.11-slim
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-python
+    paths:
+      - ${CACHE_DIR}/pip
+  variables:
+    PIP_CACHE_DIR: ${CACHE_DIR}/pip
+  before_script:
+    - cd backend
+    - pip install flake8 black
+  script:
+    - flake8 .
+    - black --check .
+
+lint-frontend:
+  stage: lint
+  image: node:20-alpine
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-node
+    paths:
+      - frontend/node_modules
+  before_script:
+    - cd frontend
+    - npm ci
+  script:
+    - npm run lint
+
+# Test jobs
 test-backend:
   stage: test
-  image: python:3.11
+  image: python:3.11-slim
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-python
+    paths:
+      - ${CACHE_DIR}/pip
+  variables:
+    PIP_CACHE_DIR: ${CACHE_DIR}/pip
   before_script:
     - cd backend
     - pip install -r requirements.txt
   script:
-    - pytest --cov=. --cov-report=xml:coverage.xml
-  allow_failure: true
-  only:
-    - main
-    - develop
+    - pytest --cov=. --cov-report=xml:coverage.xml --cov-report=term
+  coverage: '/TOTAL.+?(\d+\%)/'
   artifacts:
     reports:
       coverage_report:
@@ -23,72 +78,40 @@ test-backend:
       - backend/coverage.xml
     expire_in: 1 week
 
-build-frontend:
-  variables:
-    DOCKER_IMAGE_BASE: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG
-  stage: build
-  image: docker:latest
-  services:
-    - docker:dind
+test-frontend:
+  stage: test
+  image: node:20-alpine
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-node
+    paths:
+      - frontend/node_modules
   before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker buildx create --use
+    - cd frontend
+    - npm ci
+  script:
+    - npm test
+
+# Build jobs with multi-platform support
+build-frontend:
+  <<: *docker-setup
+  stage: build
   script:
     - |
-      docker buildx build --push \
-        --platform linux/amd64 \
-        -t "${DOCKER_IMAGE_BASE}-amd64" \
+      docker buildx build \
+        --platform linux/amd64,linux/arm64 \
+        --push \
+        -t $CI_REGISTRY_IMAGE/frontend:latest \
+        -t $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA \
         ./frontend
-      docker buildx build --push \
-        --platform linux/arm64 \
-        -t "${DOCKER_IMAGE_BASE}-arm64" \
-        ./frontend
-    - |
-      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
-        docker buildx build --push \
-          --platform linux/amd64 \
-          -t "$CI_REGISTRY_IMAGE/frontend:latest-amd64" \
-          ./frontend
-        docker buildx build --push \
-          --platform linux/arm64 \
-          -t "$CI_REGISTRY_IMAGE/frontend:latest-arm64" \
-          ./frontend
-      fi
-  only:
-    - main
-    - develop
 
 build-backend:
-  variables:
-    DOCKER_IMAGE_BASE: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG
+  <<: *docker-setup
   stage: build
-  image: docker:latest
-  services:
-    - docker:dind
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker buildx create --use
   script:
     - |
-      docker buildx build --push \
-        --platform linux/amd64 \
-        -t "${DOCKER_IMAGE_BASE}-amd64" \
+      docker buildx build \
+        --platform linux/amd64,linux/arm64 \
+        --push \
+        -t $CI_REGISTRY_IMAGE/backend:latest \
+        -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA \
         ./backend
-      docker buildx build --push \
-        --platform linux/arm64 \
-        -t "${DOCKER_IMAGE_BASE}-arm64" \
-        ./backend
-    - |
-      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
-        docker buildx build --push \
-          --platform linux/amd64 \
-          -t "$CI_REGISTRY_IMAGE/backend:latest-amd64" \
-          ./backend
-        docker buildx build --push \
-          --platform linux/arm64 \
-          -t "$CI_REGISTRY_IMAGE/backend:latest-arm64" \
-          ./backend
-      fi
-  only:
-    - main
-    - develop
