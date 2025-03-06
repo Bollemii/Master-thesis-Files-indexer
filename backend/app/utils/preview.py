@@ -7,6 +7,7 @@ from sqlmodel import Session, select
 from app.models import Document
 from multiprocessing import Pool, cpu_count
 
+
 class PreviewManager:
     def __init__(self):
         self.preview_cache: Dict[str, str] = {}
@@ -28,11 +29,11 @@ class PreviewManager:
         try:
             preview_filename = f"{document_id}.webp"
             preview_path = os.path.join(self.PREVIEW_PATH, preview_filename)
-            
+
             if document_id in self.preview_cache:
                 return self.preview_cache[document_id]
-            
-            if document_path.lower().endswith('.pdf'):
+
+            if document_path.lower().endswith(".pdf"):
                 doc = fitz.open(document_path)
                 if doc.page_count > 0:
                     page = doc[0]
@@ -43,9 +44,11 @@ class PreviewManager:
                     target_width = 500
                     aspect_ratio = img.height / img.width
                     target_height = int(target_width * aspect_ratio)
-                    img = img.resize((target_width, target_height), Image.Resampling.LANCZOS)
+                    img = img.resize(
+                        (target_width, target_height), Image.Resampling.LANCZOS
+                    )
 
-                    img.save(preview_path, 'WEBP', quality=20, method=6)
+                    img.save(preview_path, "WEBP", quality=20, method=6)
                     self.preview_cache[document_id] = preview_path
                     return preview_path
             return None
@@ -82,7 +85,9 @@ class PreviewManager:
                 return
 
             num_processes = min(cpu_count(), len(preview_tasks))
-            print(f"Generating {len(preview_tasks)} previews using {num_processes} processes")
+            print(
+                f"Generating {len(preview_tasks)} previews using {num_processes} processes"
+            )
 
             with Pool(processes=num_processes) as pool:
                 results = pool.map(self._generate_preview_worker, preview_tasks)

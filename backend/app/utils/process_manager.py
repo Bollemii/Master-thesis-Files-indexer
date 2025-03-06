@@ -13,6 +13,7 @@ class ProcessStatus(Enum):
     FAILED = "failed"
     CANCELLED = "cancelled"
 
+
 class ProcessManager:
     def __init__(self):
         self._future: Optional[Future] = None
@@ -23,10 +24,10 @@ class ProcessManager:
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.shutdown()
-    
+
     def __del__(self):
         self.shutdown()
 
@@ -38,7 +39,7 @@ class ProcessManager:
         if self._executor:
             self._executor.shutdown(wait=False, cancel_futures=True)
             self._executor = None
-        
+
     def is_running(self) -> bool:
         try:
             if self._future is None:
@@ -46,11 +47,11 @@ class ProcessManager:
             return not self._future.done()
         except Exception:
             return False
-            
-    def run_process(self) -> None:            
+
+    def run_process(self) -> None:
         if self.is_running():
             raise RuntimeError("Process already running")
-            
+
         try:
             print("Process starting")
             self._last_run_time = datetime.now()
@@ -61,7 +62,7 @@ class ProcessManager:
             self.shutdown()
             self._status = ProcessStatus.FAILED
             raise RuntimeError(f"Failed to start process: {str(e)}")
-    
+
     def _process_completed(self, future: Future) -> None:
         """Callback handler for process completion."""
         try:
@@ -86,7 +87,7 @@ class ProcessManager:
     def status(self) -> ProcessStatus:
         """Returns the current status of the process."""
         return self._status
-        
+
     @property
     def last_run_time(self) -> Optional[datetime]:
         """Returns the timestamp of the last process execution."""

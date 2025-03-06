@@ -24,30 +24,36 @@ def run_process_document():
         size_list = []
 
         for document in documents:
-            if os.path.isfile(document.path) and pathlib.Path(document.path).suffix in ['.pdf']:
+            if os.path.isfile(document.path) and pathlib.Path(document.path).suffix in [
+                ".pdf"
+            ]:
                 file_path_list.append(document.path)
                 file_name_list.append(document.filename)
                 time_list.append(datetime.timestamp(document.upload_date))
                 size_list.append(os.path.getsize(document.path))
 
-        doc_df = pd.DataFrame({
-                'file_path': file_path_list,
-                'file_name': file_name_list, 
-                'creation_time': time_list,
-                'file_size': size_list
-            })
+        doc_df = pd.DataFrame(
+            {
+                "file_path": file_path_list,
+                "file_name": file_name_list,
+                "creation_time": time_list,
+                "file_size": size_list,
+            }
+        )
 
         topics, doc_topics = topic_modeling_v3.run(doc_df)
 
         for topic_idx, topic_words_weights in enumerate(topics):
             try:
-                topic = session.exec(select(Topic).where(Topic.name == f"Topic {topic_idx}")).first()
+                topic = session.exec(
+                    select(Topic).where(Topic.name == f"Topic {topic_idx}")
+                ).first()
                 if topic:
                     topic.words = {word: weight for word, weight in topic_words_weights}
                 else:
                     topic = Topic(
                         name=f"Topic {topic_idx}",
-                        words={word: weight for word, weight in topic_words_weights}
+                        words={word: weight for word, weight in topic_words_weights},
                     )
                     session.add(topic)
                 session.commit()
@@ -56,13 +62,17 @@ def run_process_document():
                 print(f"Error processing topic {topic_idx}: {str(e)}")
                 session.rollback()
                 continue
-        
+
         for doc_topic in doc_topics:
             try:
-                document = session.exec(select(Document).where(Document.filename == doc_topic[0])).first()
+                document = session.exec(
+                    select(Document).where(Document.filename == doc_topic[0])
+                ).first()
                 if document:
                     for topic_idx, weight in enumerate(doc_topic[1]):
-                        topic = session.exec(select(Topic).where(Topic.name == f"Topic {topic_idx}")).first()
+                        topic = session.exec(
+                            select(Topic).where(Topic.name == f"Topic {topic_idx}")
+                        ).first()
                         document_topic_link = session.exec(
                             select(DocumentTopicLink)
                             .where(DocumentTopicLink.document_id == document.id)
@@ -74,7 +84,7 @@ def run_process_document():
                             document_topic_link = DocumentTopicLink(
                                 document_id=document.id,
                                 topic_id=topic.id,
-                                weight=float(weight)
+                                weight=float(weight),
                             )
                             session.add(document_topic_link)
                         session.commit()

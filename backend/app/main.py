@@ -25,6 +25,7 @@ async def lifespan(app: FastAPI):
         await stream.send(json.dumps(app.openapi()).encode("utf-8"))
     yield
 
+
 # Initialize FastAPI
 app = FastAPI(title="Document Processing API", lifespan=lifespan)
 

@@ -6,7 +6,14 @@ from fastapi.responses import FileResponse
 from sqlmodel import Session, select
 from app.database import get_session
 from app.models import Document, Topic, DocumentTopicLink, User
-from app.schemas import DocumentList, DocumentDetail, DocumentProcess, DocumentProcessStatus, DocumentsPagination, TopicResponse
+from app.schemas import (
+    DocumentList,
+    DocumentDetail,
+    DocumentProcess,
+    DocumentProcessStatus,
+    DocumentsPagination,
+    TopicResponse,
+)
 from app.utils.process_manager import ProcessManager
 from app.utils.space_word import get_pdf_title, space_between_word
 from app.utils.preview import PreviewManager
@@ -22,28 +29,40 @@ SessionDep = Annotated[Session, Depends(get_session)]
 preview_manager = PreviewManager()
 process_manager = ProcessManager()
 
+
 @router.get("/documents/{document_id}/preview", status_code=200)
 @router.head("/documents/{document_id}/preview", status_code=200)
-async def get_document_preview(document_id: uuid.UUID, session: SessionDep, current_user: User = Depends(get_current_user)):
+async def get_document_preview(
+    document_id: uuid.UUID,
+    session: SessionDep,
+    current_user: User = Depends(get_current_user),
+):
     """Get the preview image for a document"""
     try:
         document = session.get(Document, document_id)
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
-        
+
         preview_path = preview_manager.preview_cache.get(str(document_id))
         if not preview_path or not os.path.exists(preview_path):
-            preview_path = preview_manager.generate_preview(document.path, str(document_id))
+            preview_path = preview_manager.generate_preview(
+                document.path, str(document_id)
+            )
 
         if not preview_path:
             raise HTTPException(status_code=404, detail="Preview not available")
-            
+
         return FileResponse(preview_path, media_type="image/webp")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/documents/", response_model=Document, status_code=201)
-async def upload_document(session: SessionDep, file: UploadFile, current_user: User = Depends(get_current_user)):
+async def upload_document(
+    session: SessionDep,
+    file: UploadFile,
+    current_user: User = Depends(get_current_user),
+):
     """Upload a new document"""
     try:
         # Save document to local storage
@@ -54,7 +73,7 @@ async def upload_document(session: SessionDep, file: UploadFile, current_user: U
         with open(file_path, "wb") as f:
             content = await file.read()
             f.write(content)
-        
+
         # if file.filename.lower().endswith('.pdf'):
         #     pdf_title = get_pdf_title(file_path)
         #     if pdf_title:
@@ -66,47 +85,49 @@ async def upload_document(session: SessionDep, file: UploadFile, current_user: U
         base_filename = os.path.splitext(file.filename)[0]
         spaced_filename = space_between_word(base_filename)
 
-        document = Document(
-            filename=spaced_filename,
-            path=file_path
-        )
-        
+        document = Document(filename=spaced_filename, path=file_path)
+
         session.add(document)
         session.commit()
         session.refresh(document)
 
         preview_manager.generate_preview(document.path, str(document.id))
-        
+
         return Document(
             id=document.id,
             filename=document.filename,
             upload_date=document.upload_date,
             processed=document.processed,
-            path=document.path
+            path=document.path,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/documents/{document_id}", response_model=DocumentDetail)
-async def get_document(document_id: uuid.UUID, session: SessionDep, current_user: User = Depends(get_current_user)):
+async def get_document(
+    document_id: uuid.UUID,
+    session: SessionDep,
+    current_user: User = Depends(get_current_user),
+):
     """Retrieve document information by ID"""
     try:
         document = session.get(Document, document_id)
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
-        
+
         topics = session.exec(
             select(Topic)
             .join(DocumentTopicLink)
             .where(DocumentTopicLink.document_id == document.id)
         ).all()
-        
+
         topic_responses = []
         for topic in topics:
             document_topic_link = session.exec(
-            select(DocumentTopicLink)
-            .where(DocumentTopicLink.document_id == document.id)
-            .where(DocumentTopicLink.topic_id == topic.id)
+                select(DocumentTopicLink)
+                .where(DocumentTopicLink.document_id == document.id)
+                .where(DocumentTopicLink.topic_id == topic.id)
             ).first()
             if document_topic_link:
                 topic_response = TopicResponse(
@@ -114,31 +135,38 @@ async def get_document(document_id: uuid.UUID, session: SessionDep, current_user
                     name=topic.name,
                     description=topic.description,
                     weight=document_topic_link.weight,
-                    words=topic.words
+                    words=topic.words,
                 )
                 topic_responses.append(topic_response)
-        
+
         document_response = DocumentDetail(
             id=document.id,
             filename=document.filename,
             upload_date=document.upload_date,
             processed=document.processed,
-            preview_url=f"/documents/{document.id}/preview" if document.path.lower().endswith('.pdf') else None,
-            topics=topic_responses
+            preview_url=(
+                f"/documents/{document.id}/preview"
+                if document.path.lower().endswith(".pdf")
+                else None
+            ),
+            topics=topic_responses,
         )
-        
+
         return document_response
     except HTTPException as e:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/documents/", response_model=DocumentsPagination)
-async def list_documents(session: SessionDep,
-                         q: str | None = None,
-                         page: int = 1,
-                         limit: int = 20,
-                         current_user: User = Depends(get_current_user)):
+async def list_documents(
+    session: SessionDep,
+    q: str | None = None,
+    page: int = 1,
+    limit: int = 20,
+    current_user: User = Depends(get_current_user),
+):
     """List all documents with topics for each document"""
     try:
         query = select(Document)
@@ -149,7 +177,7 @@ async def list_documents(session: SessionDep,
 
         total = len(session.exec(query).all())
         query = query.offset((page - 1) * limit).limit(limit)
-        
+
         result = []
         documents = session.exec(query)
         for document in documents:
@@ -157,38 +185,39 @@ async def list_documents(session: SessionDep,
                 id=document.id,
                 filename=document.filename,
                 upload_date=document.upload_date,
-                preview_url=f"/documents/{document.id}/preview" if document.path.lower().endswith('.pdf') else None,
+                preview_url=(
+                    f"/documents/{document.id}/preview"
+                    if document.path.lower().endswith(".pdf")
+                    else None
+                ),
                 processed=document.processed,
             )
             result.append(document_response)
-        
-        return {
-            "items": result,
-            "total": total,
-            "page": page,
-            "limit": limit
-        }
+
+        return {"items": result, "total": total, "page": page, "limit": limit}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+
 @router.post("/documents/process", status_code=202, response_model=DocumentProcess)
-def process_document(session: SessionDep, current_user: User = Depends(get_current_user)):
+def process_document(
+    session: SessionDep, current_user: User = Depends(get_current_user)
+):
     """Process documents and extract topics"""
-    
+
     if process_manager.is_running():
-        raise HTTPException(
-            status_code=409,
-            detail="Process is already running"
-        )
-    
+        raise HTTPException(status_code=409, detail="Process is already running")
+
     try:
         documents = session.exec(select(Document)).all()
         if not documents:
             raise HTTPException(status_code=500, detail="No documents available")
 
         elif all(document.processed for document in documents):
-            raise HTTPException(status_code=500, detail="All documents are already processed")
-        
+            raise HTTPException(
+                status_code=500, detail="All documents are already processed"
+            )
+
         process_manager.run_process()
 
     except Exception as e:
@@ -196,11 +225,14 @@ def process_document(session: SessionDep, current_user: User = Depends(get_curre
 
     return {"message": "Processing started"}
 
-@router.get("/documents/process/status", status_code=200, response_model=DocumentProcessStatus)
+
+@router.get(
+    "/documents/process/status", status_code=200, response_model=DocumentProcessStatus
+)
 async def get_process_status(current_user: User = Depends(get_current_user)):
     """Get the status of the document processing task"""
     response = {
         "status": process_manager.status.value,
-        "last_run_time": process_manager.last_run_time
+        "last_run_time": process_manager.last_run_time,
     }
     return response

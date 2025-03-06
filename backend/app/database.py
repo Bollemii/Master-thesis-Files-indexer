@@ -12,12 +12,15 @@ os.makedirs(DOCUMENT_STORAGE_PATH, exist_ok=True)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
+
 
 def get_session():
     with Session(engine) as session:
         yield session
+
 
 def add_existing_documents():
     with Session(engine) as session:
@@ -26,26 +29,32 @@ def add_existing_documents():
 
             if os.path.isdir(complete_file_path):
                 continue
-            if file_path.startswith('.'):
+            if file_path.startswith("."):
                 continue
 
             base_filename = os.path.splitext(file_path)[0]
             spaced_filename = space_between_word(base_filename)
 
-            if not session.exec(select(Document).where(Document.filename == spaced_filename)).first():
-                document = Document(filename=spaced_filename,
-                                    path=complete_file_path)
+            if not session.exec(
+                select(Document).where(Document.filename == spaced_filename)
+            ).first():
+                document = Document(filename=spaced_filename, path=complete_file_path)
                 session.add(document)
                 session.commit()
                 session.refresh(document)
 
     session.close()
 
+
 def create_admin_user():
     with Session(engine) as session:
         admin = session.exec(select(User).where(User.username == "admin")).first()
         if not admin:
-            admin = User(username="admin", hashed_password=pwd_context.hash("admin"), is_superuser=True)
+            admin = User(
+                username="admin",
+                hashed_password=pwd_context.hash("admin"),
+                is_superuser=True,
+            )
             session.add(admin)
             session.commit()
             session.refresh(admin)

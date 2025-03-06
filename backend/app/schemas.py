@@ -5,12 +5,14 @@ import uuid
 
 from app.utils.process_manager import ProcessStatus
 
+
 class TopicResponse(BaseModel):
     id: uuid.UUID
     name: str
     description: str | None
     weight: float
     words: dict[str, float]
+
 
 class DocumentList(BaseModel):
     id: uuid.UUID
@@ -19,8 +21,10 @@ class DocumentList(BaseModel):
     processed: bool
     preview_url: str | None
 
+
 class DocumentDetail(DocumentList):
     topics: list[TopicResponse]
+
 
 class DocumentsPagination(BaseModel):
     items: list[DocumentList]
@@ -28,12 +32,15 @@ class DocumentsPagination(BaseModel):
     page: int
     limit: int
 
+
 class DocumentProcess(BaseModel):
     message: str
+
 
 class DocumentProcessStatus(BaseModel):
     status: ProcessStatus
     last_run_time: Optional[datetime] = None
+
 
 class UserBase(BaseModel):
     username: str
@@ -41,11 +48,14 @@ class UserBase(BaseModel):
     is_superuser: bool = False
     creation_date: datetime
 
+
 class UserDetail(UserBase):
     id: uuid.UUID
 
+
 class UserCreate(UserBase):
     password: str
+
 
 class UserUpdate(UserBase):
     username: str

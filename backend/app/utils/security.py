@@ -22,20 +22,25 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 class TokenData(BaseModel):
     username: Optional[str] = None
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against a hashed password."""
     return pwd_context.verify(plain_password, hashed_password)
 
+
 def get_password_hash(password: str) -> str:
     """Generate a hash from a plain password."""
     return pwd_context.hash(password)
+
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Create a JWT access token."""
@@ -44,10 +49,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.now() + expires_delta
     else:
         expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    
+
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
 
 async def verify_token(token: str = Depends(oauth2_scheme)) -> TokenData:
     """Verify a JWT token and return the token data."""
@@ -66,12 +72,18 @@ async def verify_token(token: str = Depends(oauth2_scheme)) -> TokenData:
         raise credentials_exception
     return token_data
 
-def get_current_user(session: SessionDep, token_data: TokenData = Depends(verify_token)) -> User:
+
+def get_current_user(
+    session: SessionDep, token_data: TokenData = Depends(verify_token)
+) -> User:
     """Get the current authenticated user based on the token."""
-    user = session.exec(select(User).where(User.username == token_data.username)).first()
+    user = session.exec(
+        select(User).where(User.username == token_data.username)
+    ).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
 
 def authenticate_user(session: Session, username: str, password: str) -> User:
     """Authenticate a user based on username and password."""
@@ -81,6 +93,7 @@ def authenticate_user(session: Session, username: str, password: str) -> User:
     if not verify_password(password, user.hashed_password):
         return False
     return user
+
 
 # def create_user(session: Session, user: User) -> User:
 
