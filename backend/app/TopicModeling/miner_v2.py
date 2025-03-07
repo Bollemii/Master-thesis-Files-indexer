@@ -125,6 +125,4 @@ class Miner:
             "Miner:Cannot lemmatize"
         )
 
-        print(result_df.columns)
-
         return result_df

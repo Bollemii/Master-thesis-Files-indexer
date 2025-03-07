@@ -1,6 +1,6 @@
 services:
   backend:
-    image: registry.gitlab.com/masi-s-matcas/tfe/backend:latest-arm64
+    image: registry.gitlab.com/masi-s-matcas/tfe/backend:latest
     container_name: backend
     environment:
       - DATABASE_URL=${DATABASE_URL}
@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: registry.gitlab.com/masi-s-matcas/tfe/frontend:latest-arm64
+    image: registry.gitlab.com/masi-s-matcas/tfe/frontend:latest
     container_name: frontend
     ports:
       - "3000:80"
