@@ -20,7 +20,8 @@ stages:
     - docker:24.0-dind
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker buildx create --name mybuilder --driver docker-container --use
+    - docker context create builder-context
+    - docker buildx create --name mybuilder --driver docker-container --use builder-context
     - docker buildx inspect --bootstrap
 
 # Linting jobs
