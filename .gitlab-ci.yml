@@ -1,7 +1,7 @@
 variables:
-  DOCKER_TLS_CERTDIR: "/certs"  # Security for Docker-in-Docker
-  DOCKER_BUILDKIT: "1"          # Enable BuildKit for faster builds
-  CACHE_DIR: ".cache"           # Cache directory
+  DOCKER_TLS_CERTDIR: "/certs" # Security for Docker-in-Docker
+  DOCKER_BUILDKIT: "1"         # Enable BuildKit for faster builds
+  CACHE_DIR: ".cache"          # Cache directory
 
 # Only run pipeline on main branch
 workflow:
@@ -20,6 +20,7 @@ stages:
     - docker:24.0-dind
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
     - docker context create builder-context
     - docker buildx create --name mybuilder --driver docker-container --use builder-context
     - docker buildx inspect --bootstrap
@@ -103,6 +104,8 @@ build-frontend:
         --push \
         -t $CI_REGISTRY_IMAGE/frontend:latest \
         -t $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA \
+        -t $DOCKERHUB_USERNAME/tfe-frontend:latest \
+        -t $DOCKERHUB_USERNAME/tfe-frontend:$CI_COMMIT_SHORT_SHA \
         ./frontend
 
 build-backend:
@@ -115,4 +118,6 @@ build-backend:
         --push \
         -t $CI_REGISTRY_IMAGE/backend:latest \
         -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA \
+        -t $DOCKERHUB_USERNAME/tfe-backend:latest \
+        -t $DOCKERHUB_USERNAME/tfe-backend:$CI_COMMIT_SHORT_SHA \
         ./backend
