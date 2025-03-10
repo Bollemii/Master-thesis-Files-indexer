@@ -24,13 +24,14 @@ class PreviewManager:
             return preview_path
         return None
 
-    def generate_preview(self, document_path: str, document_id: str, force: bool = False) -> str | None:
+    def generate_preview(
+        self, document_path: str, document_id: str, force: bool = False
+    ) -> str | None:
         """Generate a preview image for a document"""
         try:
             preview_filename = f"{document_id}.webp"
             preview_path = os.path.join(self.PREVIEW_PATH, preview_filename)
 
-            # Return cached preview unless force is True
             if document_id in self.preview_cache and not force:
                 return self.preview_cache[document_id]
 
