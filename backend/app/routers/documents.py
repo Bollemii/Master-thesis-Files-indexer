@@ -1,7 +1,7 @@
 import os
 import uuid
 from typing import Annotated
-from fastapi import APIRouter, Depends, UploadFile, HTTPException
+from fastapi import APIRouter, Depends, Form, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 from sqlmodel import Session, select
 from app.database import get_session
@@ -236,3 +236,74 @@ async def get_process_status(current_user: User = Depends(get_current_user)):
         "last_run_time": process_manager.last_run_time,
     }
     return response
+
+
+@router.delete("/documents/{document_id}")
+async def delete_document(
+    document_id: uuid.UUID,
+    session: SessionDep,
+    current_user: User = Depends(get_current_user),
+):
+    """Delete a document by ID"""
+    try:
+        document = session.get(Document, document_id)
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        session.delete(document)
+        session.commit()
+
+        return {"message": "Document deleted"}
+    except Exception:
+        raise
+
+
+@router.put("/documents/{document_id}", response_model=Document)
+async def update_document(
+    session: SessionDep,
+    document_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    file: UploadFile = None,
+):
+    """Update a document's filename or content"""
+    try:
+        document = session.get(Document, document_id)
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        if file:
+            file_path = document.path
+            with open(file_path, "wb") as f:
+                content = await file.read()
+                f.write(content)
+            preview_manager.generate_preview(document.path, str(document.id))
+            document.processed = False
+
+        session.commit()
+        session.refresh(document)
+
+        return document
+    except Exception:
+        raise
+
+
+@router.put("/documents/{document_id}/name", response_model=Document)
+async def update_document_name(
+    session: SessionDep,
+    document_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    name: str = Form(None),
+):
+    """Update a document's filename"""
+    try:
+        document = session.get(Document, document_id)
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        document.filename = name
+        session.commit()
+        session.refresh(document)
+
+        return document
+    except Exception:
+        raise
