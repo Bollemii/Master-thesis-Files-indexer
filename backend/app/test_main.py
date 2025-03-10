@@ -321,6 +321,143 @@ async def test_invalid_file_upload(auth_headers):
         assert response.status_code == 422
 
 
+@pytest.mark.anyio
+async def test_delete_document(auth_headers):
+    """Test deleting a document"""
+    unique_suffix = str(uuid.uuid4())[:8]
+    file_path = f"test_document_{unique_suffix}.txt"
+
+    with open(file_path, "w") as f:
+        f.write("This is a test document for deletion.")
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        with open(file_path, "rb") as f:
+            upload_response = await client.post(
+                "/documents/", files={"file": f}, headers=auth_headers
+            )
+
+        assert upload_response.status_code == 201
+        document_id = upload_response.json()["id"]
+
+        delete_response = await client.delete(
+            f"/documents/{document_id}", headers=auth_headers
+        )
+
+        assert delete_response.status_code == 200
+        assert delete_response.json()["message"] == "Document deleted"
+
+        get_response = await client.get(
+            f"/documents/{document_id}", headers=auth_headers
+        )
+        assert get_response.status_code == 404
+
+
+@pytest.mark.anyio
+async def test_update_document_filename(auth_headers):
+    """Test updating a document's filename"""
+    unique_suffix = str(uuid.uuid4())[:8]
+    file_path = f"test_document_{unique_suffix}.txt"
+
+    with open(file_path, "w") as f:
+        f.write("This is a test document for updating.")
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        with open(file_path, "rb") as f:
+            upload_response = await client.post(
+                "/documents/", files={"file": f}, headers=auth_headers
+            )
+
+        assert upload_response.status_code == 201
+        document_id = upload_response.json()["id"]
+
+        new_filename = f"Updated Document {unique_suffix}"
+        update_response = await client.put(
+            f"/documents/{document_id}/name",
+            data={"name": new_filename},
+            headers=auth_headers,
+        )
+        assert update_response.status_code == 200
+        assert update_response.json()["filename"] == new_filename
+
+        get_response = await client.get(
+            f"/documents/{document_id}", headers=auth_headers
+        )
+        assert get_response.status_code == 200
+        assert get_response.json()["filename"] == new_filename
+
+
+@pytest.mark.anyio
+async def test_update_document_content(auth_headers):
+    """Test updating a document's content"""
+    unique_suffix = str(uuid.uuid4())[:8]
+    file_path = f"test_document_{unique_suffix}.txt"
+    new_file_path = f"updated_document_{unique_suffix}.txt"
+
+    with open(file_path, "w") as f:
+        f.write("This is a test document for content updating.")
+
+    with open(new_file_path, "w") as f:
+        f.write("This is the updated content for testing.")
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        with open(file_path, "rb") as f:
+            upload_response = await client.post(
+                "/documents/", files={"file": f}, headers=auth_headers
+            )
+
+        assert upload_response.status_code == 201
+        document_id = upload_response.json()["id"]
+
+        # Check if document is processed
+        get_response = await client.get(
+            f"/documents/{document_id}", headers=auth_headers
+        )
+        assert get_response.json()["processed"] is False
+
+        # Update the document content
+        with open(new_file_path, "rb") as f:
+            files = {"file": (new_file_path, f, "text/plain")}
+            update_response = await client.put(
+                f"/documents/{document_id}",
+                files=files,
+                headers=auth_headers,
+            )
+
+        assert update_response.status_code == 200
+
+        # Verify the processed flag has been reset
+        get_response_after = await client.get(
+            f"/documents/{document_id}", headers=auth_headers
+        )
+        assert get_response_after.status_code == 200
+        assert get_response_after.json()["processed"] is False
+
+        os.remove(new_file_path)
+
+
+@pytest.mark.anyio
+async def test_update_nonexistent_document(auth_headers):
+    """Test updating a document that doesn't exist"""
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        # Try to update a non-existent document
+        nonexistent_id = "00000000-0000-0000-0000-000000000000"
+        update_response = await client.put(
+            f"/documents/{nonexistent_id}/name",
+            data={"name": "This Should Fail"},
+            headers=auth_headers,
+        )
+        print(update_response.json())
+        assert update_response.status_code == 404
+
+
 class TestMainIntegration:
     """Integration tests for main application"""
 
