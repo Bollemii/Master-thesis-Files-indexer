@@ -274,16 +274,24 @@ async def update_document(
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
 
-        if file:
-            file_path = document.path
-            with open(file_path, "wb") as f:
-                content = await file.read()
-                f.write(content)
-            preview_manager.generate_preview(document.path, str(document.id))
-            document.processed = False
+        file_path = os.path.join(DOCUMENT_STORAGE_PATH, file.filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        with open(file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+
+        base_filename = os.path.splitext(file.filename)[0]
+        spaced_filename = space_between_word(base_filename)
+
+        document.filename = spaced_filename
+        document.path = file_path
+        document.processed = False
 
         session.commit()
         session.refresh(document)
+
+        preview_manager.generate_preview(document.path, str(document.id), force=True)
 
         return document
     except Exception:
