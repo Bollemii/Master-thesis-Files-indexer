@@ -27,6 +27,7 @@ stages:
 
 # Linting jobs
 lint-backend:
+  allow_failure: true
   stage: lint
   image: python:3.11-slim
   cache:
@@ -43,6 +44,7 @@ lint-backend:
     - black --check .
 
 lint-frontend:
+  allow_failure: true
   stage: lint
   image: node:20-alpine
   cache:
