@@ -139,7 +139,7 @@ def run(doc_df):
         transf_doc_df = process_documents(doc_df)
     else:
         existing_df = pd.read_pickle("./tmp/doc_df.miner.pkl")
-        new_docs = doc_df[~doc_df["file_name"].isin(existing_df["file_name"])]
+        new_docs = doc_df[~doc_df["file_path"].isin(existing_df["file_path"])]
         if not new_docs.empty:
             new_transf_doc_df = process_documents(new_docs)
             transf_doc_df = pd.concat([existing_df, new_transf_doc_df])
@@ -149,3 +149,34 @@ def run(doc_df):
 
     topics, doc_topics = run_lda(transf_doc_df)
     return topics, doc_topics
+
+
+def delete_document_from_cache(filepath: str):
+    if not os.path.exists("./tmp/doc_df.miner.pkl"):
+        return
+
+    try:
+        existing_df = pd.read_pickle("./tmp/doc_df.miner.pkl")
+
+        if filepath in existing_df["file_name"].values:
+            updated_df = existing_df[existing_df["file_name"] != filepath]
+            updated_df.to_pickle("./tmp/doc_df.miner.pkl")
+
+            for cache_file in [
+                "./tmp/doc_df.reader.pkl",
+                "./tmp/doc_df.transformer.pkl",
+            ]:
+                cache_path = f"./tmp/{cache_file}"
+                if os.path.exists(cache_path):
+                    try:
+                        cache_df = pd.read_pickle(cache_path)
+                        if filepath in cache_df["file_name"].values:
+                            cache_df = cache_df[cache_df["file_name"] != filepath]
+                            cache_df.to_pickle(cache_path)
+                    except Exception:
+                        # If there's an error with the other caches, we can still continue
+                        pass
+        return True
+    except Exception as e:
+        print(f"Error deleting document {filepath}: {str(e)}")
+        return False

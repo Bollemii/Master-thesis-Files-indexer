@@ -18,6 +18,7 @@ from app.utils.process_manager import ProcessManager
 from app.utils.space_word import space_between_word
 from app.utils.preview import PreviewManager
 from app.utils.security import get_current_user
+from app.TopicModeling.topic_modeling_v3 import delete_document_from_cache
 
 DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
 os.makedirs(DOCUMENT_STORAGE_PATH, exist_ok=True)
@@ -249,6 +250,8 @@ async def delete_document(
         document = session.get(Document, document_id)
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
+
+        delete_document_from_cache(document.path)
 
         session.delete(document)
         session.commit()
