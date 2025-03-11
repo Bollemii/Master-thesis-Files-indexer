@@ -14,6 +14,9 @@ Pour installer le projet, il suffit de cloner le dépôt avec la commande suivan
 ```console
 $ git clone https://gitlab.com/Masi-s-Matcas/tfe.git
 ```
+```console
+$ cd tfe
+```
 
 ## Utilisation
 
