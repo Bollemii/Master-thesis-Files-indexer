@@ -1,2 +1,14 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --app-background: theme("colors.white");
+}
+
+.dark {
+  --app-background: theme("colors.gray.900");
+}
+
+body {
+  @apply bg-[color:var(--app-background)] transition-colors duration-200;
+}

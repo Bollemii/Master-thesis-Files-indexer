@@ -9,6 +9,10 @@ export function Pagination({
   totalPages,
   onPageChange,
 }: PaginationProps) {
+  if (totalPages < 1) {
+    return null;
+  }
+
   const getPageNumbers = () => {
     if (totalPages <= 10) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);

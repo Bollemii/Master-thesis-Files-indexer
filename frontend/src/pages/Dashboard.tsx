@@ -6,9 +6,8 @@ import { CorpusList } from "../components/CorpusList";
 import { CorpusDetail } from "../components/CorpusDetail";
 import { TopicDetail } from "../components/TopicDetail";
 import { fetchWithAuth, AuthError } from "../services/api";
+import { TopBar } from "@/components/TopBar";
 import { Upload } from "lucide-react";
-import { Logo } from "@/components/Logo";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Dashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,6 +24,14 @@ export function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const itemsPerPage = 21;
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const query = params.get("q");
+    if (query) {
+      setSearchQuery(query);
+    }
+  }, [location.search]);
 
   const isDetailPage = () => {
     return (
@@ -61,8 +68,11 @@ export function Dashboard() {
   const fetchProcessStatus = useCallback(async () => {
     try {
       const status = await fetchWithAuth("/documents/process/status", token);
-      
-      if (previousStatusRef.current === "running" && status.status === "completed") {
+
+      if (
+        previousStatusRef.current === "running" &&
+        status.status === "completed"
+      ) {
         fetchDocuments();
       }
 
@@ -74,15 +84,15 @@ export function Dashboard() {
     }
   }, [token, handleAuthError, fetchDocuments]);
 
-  const startProcess = useCallback(async () => {
+  const startProcess = async () => {
     try {
       await fetchWithAuth("/documents/process", token, { method: "POST" });
-      fetchProcessStatus();
+      await fetchProcessStatus();
     } catch (err) {
       console.error("Failed to start process:", err);
       handleAuthError(err as Error);
     }
-  }, [token, fetchProcessStatus, handleAuthError]);
+  };
 
   const handleUpload = async (file: File) => {
     setIsUploading(true);
@@ -119,98 +129,19 @@ export function Dashboard() {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, fetchDocuments]);
+  }, [searchQuery, fetchDocuments, currentPage]);
 
-  const getStatusColor = (status: ProcessStatus["status"]) => {
-    switch (status) {
-      case "running":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-400 dark:text-yellow-900";
-      case "completed":
-        return "bg-green-100 text-green-800 dark:bg-green-400 dark:text-green-900";
-      case "failed":
-        return "bg-red-100 text-red-800 dark:bg-red-400 dark:text-red-900";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-400 dark:text-gray-900";
-    }
-  };
-
-  const totalPages = Math.ceil((documents?.total || 0) / itemsPerPage) - 1;
+  const totalPages = Math.ceil((documents?.total || 0) / itemsPerPage);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white dark:bg-gray-800 shadow-sm flex-none h-16">
-        <div className="max-w-7xl mx-auto lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Logo />
-            <div className="flex-shrink-0 w-32">
-              <button
-                onClick={() => navigate("/")}
-                className="text-xl cursor-pointer font-bold hover:text-gray-700 dark:text-white dark:hover:text-gray-300"
-              >
-                Codex
-              </button>
-            </div>
-
-            <div className="flex-1 flex justify-center px-2 max-w-3xl mx-auto">
-              <div className="max-w-lg w-full">
-                <label htmlFor="search" className="sr-only">
-                  Search
-                </label>
-                <div className="relative">
-                  <input
-                    id="search"
-                    type="search"
-                    placeholder="Search documents..."
-                    className="block w-full pl-4 pr-12 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div
-                className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                  processStatus.status
-                )}`}
-              >
-                {processStatus.status.charAt(0).toUpperCase() +
-                  processStatus.status.slice(1)}
-              </div>
-              {processStatus.last_run_time && (
-                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Last run:{" "}
-                  {new Date(processStatus.last_run_time).toLocaleString()}
-                </div>
-              )}
-
-              <button
-                onClick={startProcess}
-                disabled={processStatus.status === "running"}
-                className={`px-4 py-2 cursor-pointer rounded-md text-sm font-medium ${
-                  processStatus.status === "running"
-                    ? "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                    : "bg-blue-500 text-white hover:bg-blue-600 dark:hover:bg-blue-400"
-                }`}
-              >
-                Start Process
-              </button>
-
-              <ThemeToggle />
-
-              <button
-                onClick={logout}
-                className="px-4 py-2 cursor-pointer rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="flex-1 max-w-7xl w-full mx-auto py-6 sm:px-6 lg:px-8">
+      <TopBar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        processStatus={processStatus}
+        startProcess={startProcess}
+      />
+      <main className="flex-1 max-w-7xl w-full mx-auto py-6 sm:px-6 lg:px-8 mt-16">
         <Routes>
           <Route
             path="/"
