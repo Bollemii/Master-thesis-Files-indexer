@@ -3,6 +3,7 @@ export interface Document {
   filename: string;
   upload_date: string;
   preview_url: string;
+  detail_preview_url?: string;
   processed: boolean;
   topics?: TopicResponse[];
 }

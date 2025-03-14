@@ -104,11 +104,16 @@ export function CorpusDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white</svg> dark:bg-gray-800 shadow rounded-lg p-6">
-          <div className="aspect-square">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium mb-4 dark:text-white">
+            Document Preview
+          </h3>
+          <div className="w-full flex justify-center">
             <DocumentPreview
-              previewUrl={document.preview_url}
+              previewUrl={document.detail_preview_url || document.preview_url}
               filename={document.filename}
+              size="detail"
+              className="aspect-auto max-h-full"
             />
           </div>
         </div>

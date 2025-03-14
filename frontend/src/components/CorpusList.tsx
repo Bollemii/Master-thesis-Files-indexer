@@ -31,6 +31,8 @@ export const CorpusList = memo(function CorpusList({
             <DocumentPreview
               previewUrl={doc.preview_url}
               filename={doc.filename}
+              size="thumbnail"
+              className="aspect-square"
             />
             <div className="p-4 h-[120px]">
               <div className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">

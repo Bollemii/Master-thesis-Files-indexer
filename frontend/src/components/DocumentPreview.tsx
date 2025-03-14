@@ -5,17 +5,22 @@ import { useAuth } from "@/hooks/useAuth";
 interface DocumentPreviewProps {
   previewUrl: string;
   filename: string;
+  size?: "thumbnail" | "detail";
+  className?: string;
 }
 
 const CACHE_NAME = "document-previews-v1";
 
 async function getCachedImage(
   url: string,
-  token: string
+  token: string,
+  size: string
 ): Promise<Blob | null> {
   try {
     const cache = await caches.open(CACHE_NAME);
-    const request = new Request(url, {
+    const requestUrl = new URL(url);
+    requestUrl.searchParams.set("size", size);
+    const request = new Request(requestUrl.toString(), {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -49,6 +54,8 @@ async function getCachedImage(
 export function DocumentPreview({
   previewUrl,
   filename,
+  size = "thumbnail",
+  className = "",
 }: DocumentPreviewProps) {
   const [error, setError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>("");
@@ -64,7 +71,7 @@ export function DocumentPreview({
       try {
         if (!token) return;
         const fullUrl = `${API_BASE_URL}${previewUrl}`;
-        const cachedBlob = await getCachedImage(fullUrl, token);
+        const cachedBlob = await getCachedImage(fullUrl, token, size);
 
         if (!isMounted) return;
 
@@ -102,15 +109,19 @@ export function DocumentPreview({
         URL.revokeObjectURL(imageUrl);
       }
     };
-  }, [previewUrl, token]);
+  }, [previewUrl, token, size]);
 
   return (
-    <div className="aspect-square w-full bg-gray-100 rounded-t-lg overflow-hidden">
+    <div
+      className={`bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden ${className}`}
+    >
       {error || !previewUrl ? (
         <div className="w-full h-full flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl mb-2">📄</div>
-            <span className="text-sm text-gray-500">Preview not available</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Preview not available
+            </span>
           </div>
         </div>
       ) : imageUrl ? (
@@ -118,11 +129,17 @@ export function DocumentPreview({
           src={imageUrl}
           alt={`Preview of ${filename}`}
           onError={() => setError(true)}
-          className="w-full h-full object-cover"
+          className={`w-full h-full ${
+            size === "thumbnail"
+              ? "object-cover"
+              : "object-contain max-h-[calc(90vh-220px)]"
+          }`}
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center">
-          <div className="text-sm text-gray-500">Loading preview...</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            Loading preview...
+          </div>
         </div>
       )}
     </div>
