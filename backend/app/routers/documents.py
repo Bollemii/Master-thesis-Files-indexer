@@ -31,34 +31,51 @@ preview_manager = PreviewManager()
 process_manager = ProcessManager()
 
 
-@router.get("/documents/{document_id}/preview", status_code=200)
-@router.head("/documents/{document_id}/preview", status_code=200)
+@router.get("/documents/{document_id}/preview", status_code=200, tags=["preview"])
+@router.head("/documents/{document_id}/preview", status_code=200, tags=["preview"])
 async def get_document_preview(
     document_id: uuid.UUID,
     session: SessionDep,
+    size: str = "thumbnail",
     current_user: User = Depends(get_current_user),
 ):
-    """Get the preview image for a document"""
+    """Get the preview image for a document with specified size"""
     try:
         document = session.get(Document, document_id)
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
 
-        preview_path = preview_manager.preview_cache.get(str(document_id))
-        if not preview_path or not os.path.exists(preview_path):
-            preview_path = preview_manager.generate_preview(
-                document.path, str(document_id)
-            )
+        # Validate size parameter
+        if size not in ["thumbnail", "detail"]:
+            size = "thumbnail"  # Default to thumbnail for invalid sizes
+
+        # Get preview from cache
+        if (
+            str(document_id) in preview_manager.preview_cache
+            and size in preview_manager.preview_cache[str(document_id)]
+        ):
+            preview_path = preview_manager.preview_cache[str(document_id)][size]
+            if os.path.exists(preview_path):
+                return FileResponse(preview_path, media_type="image/webp")
+
+        # Generate preview if not cached
+        preview_path = preview_manager.generate_preview(
+            document.path, str(document_id), size
+        )
 
         if not preview_path:
             raise HTTPException(status_code=404, detail="Preview not available")
 
         return FileResponse(preview_path, media_type="image/webp")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/documents/", response_model=Document, status_code=201)
+@router.post(
+    "/documents/", response_model=Document, status_code=201, tags=["documents"]
+)
 async def upload_document(
     session: SessionDep,
     file: UploadFile,
@@ -105,7 +122,9 @@ async def upload_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/documents/{document_id}", response_model=DocumentDetail)
+@router.get(
+    "/documents/{document_id}", response_model=DocumentDetail, tags=["documents"]
+)
 async def get_document(
     document_id: uuid.UUID,
     session: SessionDep,
@@ -160,7 +179,7 @@ async def get_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/documents/", response_model=DocumentsPagination)
+@router.get("/documents/", response_model=DocumentsPagination, tags=["documents"])
 async def list_documents(
     session: SessionDep,
     q: str | None = None,
@@ -200,7 +219,12 @@ async def list_documents(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/documents/process", status_code=202, response_model=DocumentProcess)
+@router.post(
+    "/documents/process",
+    status_code=202,
+    response_model=DocumentProcess,
+    tags=["process"],
+)
 def process_document(
     session: SessionDep, current_user: User = Depends(get_current_user)
 ):
@@ -228,7 +252,10 @@ def process_document(
 
 
 @router.get(
-    "/documents/process/status", status_code=200, response_model=DocumentProcessStatus
+    "/documents/process/status",
+    status_code=200,
+    response_model=DocumentProcessStatus,
+    tags=["process"],
 )
 async def get_process_status(current_user: User = Depends(get_current_user)):
     """Get the status of the document processing task"""
@@ -239,7 +266,7 @@ async def get_process_status(current_user: User = Depends(get_current_user)):
     return response
 
 
-@router.delete("/documents/{document_id}")
+@router.delete("/documents/{document_id}", tags=["documents"])
 async def delete_document(
     document_id: uuid.UUID,
     session: SessionDep,
@@ -261,7 +288,7 @@ async def delete_document(
         raise
 
 
-@router.put("/documents/{document_id}", response_model=Document)
+@router.put("/documents/{document_id}", response_model=Document, tags=["documents"])
 async def update_document(
     session: SessionDep,
     document_id: uuid.UUID,
@@ -298,7 +325,9 @@ async def update_document(
         raise
 
 
-@router.put("/documents/{document_id}/name", response_model=Document)
+@router.put(
+    "/documents/{document_id}/name", response_model=Document, tags=["documents"]
+)
 async def update_document_name(
     session: SessionDep,
     document_id: uuid.UUID,

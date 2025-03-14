@@ -3,6 +3,8 @@ from datetime import datetime
 from typing import Optional
 import uuid
 
+from sqlmodel import SQLModel
+
 from app.utils.process_manager import ProcessStatus
 
 
@@ -40,6 +42,23 @@ class DocumentProcess(BaseModel):
 class DocumentProcessStatus(BaseModel):
     status: ProcessStatus
     last_run_time: Optional[datetime] = None
+
+
+class Document(SQLModel):
+    id: uuid.UUID
+    filename: str
+    upload_date: datetime
+    processed: bool
+
+    @property
+    def preview_url(self) -> str:
+        """URL for thumbnail preview"""
+        return f"/documents/{self.id}/preview?size=thumbnail"
+
+    @property
+    def detail_preview_url(self) -> str:
+        """URL for detailed preview"""
+        return f"/documents/{self.id}/preview?size=detail"
 
 
 class UserBase(BaseModel):
