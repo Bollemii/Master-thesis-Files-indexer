@@ -45,11 +45,9 @@ async def get_document_preview(
         if not document:
             raise HTTPException(status_code=404, detail="Document not found")
 
-        # Validate size parameter
         if size not in ["thumbnail", "detail"]:
-            size = "thumbnail"  # Default to thumbnail for invalid sizes
+            size = "thumbnail"
 
-        # Get preview from cache
         if (
             str(document_id) in preview_manager.preview_cache
             and size in preview_manager.preview_cache[str(document_id)]
@@ -58,7 +56,6 @@ async def get_document_preview(
             if os.path.exists(preview_path):
                 return FileResponse(preview_path, media_type="image/webp")
 
-        # Generate preview if not cached
         preview_path = preview_manager.generate_preview(
             document.path, str(document_id), size
         )
@@ -236,15 +233,17 @@ def process_document(
     try:
         documents = session.exec(select(Document)).all()
         if not documents:
-            raise HTTPException(status_code=500, detail="No documents available")
+            raise HTTPException(status_code=404, detail="No documents available")
 
         elif all(document.processed for document in documents):
             raise HTTPException(
-                status_code=500, detail="All documents are already processed"
+                status_code=409, detail="All documents are already processed"
             )
 
         process_manager.run_process()
 
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
