@@ -10,7 +10,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - document-storage:${DOCUMENT_STORAGE_PATH}
+      - ./document-storage:${DOCUMENT_STORAGE_PATH}
+      - ./tmp-storage:/app/tmp
     depends_on:
       - db
     restart: unless-stopped
@@ -18,6 +19,8 @@ services:
   frontend:
     image: mateofski/tfe-frontend:latest
     container_name: frontend
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
     ports:
       - "3000:80"
     depends_on:
@@ -50,5 +53,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  document-storage:
   db-storage:
