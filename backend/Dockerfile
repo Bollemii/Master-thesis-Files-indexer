@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.13-slim-bookworm
 
 WORKDIR /app
 
@@ -9,17 +9,15 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 # install tesseract and libreoffice
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
-    libreoffice-writer \
-    libreoffice-calc \
-    libreoffice-impress \
-    libreoffice-common \
-    fonts-liberation \
+    libreoffice \
+    default-jre \
+    libreoffice-java-common \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 ARG CACHEBUST=1
 COPY ./app /app
 
-# EXPOSE 8000
+RUN mkdir -p /app/tmp
 
 CMD ["fastapi", "run", "main.py", "--port", "8000"]
