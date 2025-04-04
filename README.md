@@ -36,6 +36,14 @@ Pour arrêter le projet, lancer la commande suivante :
 $ docker compose -f compose.yml down
 ```
 
+## Screenshots
+
+### Dashboard
+![Dashboard](doc/images/dashboard.png)
+
+### Document
+![Document detail](doc/images/document_detail.png)
+
 ## Auteur
 
 - Mateo Castreuil
