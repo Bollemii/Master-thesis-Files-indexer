@@ -15,6 +15,8 @@ export function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      console.log("Logging in with", { username, password });
+      console.log("API_BASE_URL", API_BASE_URL);
       const response = await fetch(`${API_BASE_URL}/token`, {
         method: "POST",
         headers: {
@@ -45,7 +47,7 @@ export function Login() {
         <h1 className="text-3xl font-semibold text-center dark:text-white">Codex</h1>
 
         {error && (
-          <Alert variant="destructive">
+          <Alert variant="red">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
