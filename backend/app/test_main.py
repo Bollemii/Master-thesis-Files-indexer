@@ -250,7 +250,7 @@ async def test_document_preview(auth_headers, create_pdf_file):
 async def test_lifespan():
     """Test the lifespan context manager"""
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test/api"
+        transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         response = await ac.get("/docs")
         assert response.status_code == 200
