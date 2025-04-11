@@ -1,10 +1,8 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlmodel import Session
+
 from app.database import get_session
 from app.models import User
-from app.schemas import UserDetail, UserCreate
+from app.schemas import UserCreate, UserDetail
 from app.utils.security import (
     Token,
     authenticate_user,
@@ -12,6 +10,9 @@ from app.utils.security import (
     get_current_user,
     get_password_hash,
 )
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlmodel import Session
 
 router = APIRouter()
 
@@ -19,7 +20,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 
 @router.post(
-    "/user/new",
+    "/api/user/new",
     response_model=UserDetail,
     status_code=status.HTTP_201_CREATED,
     tags=["users"],
@@ -38,7 +39,7 @@ async def create_user(user: UserCreate, session: SessionDep):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/token", tags=["auth"])
+@router.post("/api/token", tags=["auth"])
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session: SessionDep
 ) -> Token:
@@ -54,7 +55,7 @@ async def login_for_access_token(
 
 
 @router.get(
-    "/user/me",
+    "/api/user/me",
     response_model=UserDetail,
     status_code=status.HTTP_200_OK,
     tags=["users"],

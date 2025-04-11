@@ -1,24 +1,25 @@
 import os
 import uuid
 from typing import Annotated
-from fastapi import APIRouter, Depends, Form, UploadFile, HTTPException
-from fastapi.responses import FileResponse
-from sqlmodel import Session, select
+
 from app.database import get_session
-from app.models import Document, Topic, DocumentTopicLink, User
+from app.models import Document, DocumentTopicLink, Topic, User
 from app.schemas import (
-    DocumentList,
     DocumentDetail,
+    DocumentList,
     DocumentProcess,
     DocumentProcessStatus,
     DocumentsPagination,
     TopicResponse,
 )
-from app.utils.process_manager import ProcessManager
-from app.utils.space_word import space_between_word
-from app.utils.preview import PreviewManager
-from app.utils.security import get_current_user
 from app.TopicModeling.topic_modeling_v3 import delete_document_from_cache
+from app.utils.preview import PreviewManager
+from app.utils.process_manager import ProcessManager
+from app.utils.security import get_current_user
+from app.utils.space_word import space_between_word
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
+from sqlmodel import Session, select
 
 DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
 os.makedirs(DOCUMENT_STORAGE_PATH, exist_ok=True)
@@ -31,8 +32,8 @@ preview_manager = PreviewManager()
 process_manager = ProcessManager()
 
 
-@router.get("/documents/{document_id}/preview", status_code=200, tags=["preview"])
-@router.head("/documents/{document_id}/preview", status_code=200, tags=["preview"])
+@router.get("/api/documents/{document_id}/preview", status_code=200, tags=["preview"])
+@router.head("/api/documents/{document_id}/preview", status_code=200, tags=["preview"])
 async def get_document_preview(
     document_id: uuid.UUID,
     session: SessionDep,
@@ -71,7 +72,7 @@ async def get_document_preview(
 
 
 @router.post(
-    "/documents/", response_model=Document, status_code=201, tags=["documents"]
+    "/api/documents/", response_model=Document, status_code=201, tags=["documents"]
 )
 async def upload_document(
     session: SessionDep,
@@ -120,7 +121,7 @@ async def upload_document(
 
 
 @router.get(
-    "/documents/{document_id}", response_model=DocumentDetail, tags=["documents"]
+    "/api/documents/{document_id}", response_model=DocumentDetail, tags=["documents"]
 )
 async def get_document(
     document_id: uuid.UUID,
@@ -176,7 +177,7 @@ async def get_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/documents/", response_model=DocumentsPagination, tags=["documents"])
+@router.get("/api/documents/", response_model=DocumentsPagination, tags=["documents"])
 async def list_documents(
     session: SessionDep,
     q: str | None = None,
@@ -217,7 +218,7 @@ async def list_documents(
 
 
 @router.post(
-    "/documents/process",
+    "/api/documents/process",
     status_code=202,
     response_model=DocumentProcess,
     tags=["process"],
@@ -251,7 +252,7 @@ def process_document(
 
 
 @router.get(
-    "/documents/process/status",
+    "/api/documents/process/status",
     status_code=200,
     response_model=DocumentProcessStatus,
     tags=["process"],
@@ -265,7 +266,7 @@ async def get_process_status(current_user: User = Depends(get_current_user)):
     return response
 
 
-@router.delete("/documents/{document_id}", tags=["documents"])
+@router.delete("/api/documents/{document_id}", tags=["documents"])
 async def delete_document(
     document_id: uuid.UUID,
     session: SessionDep,
@@ -287,7 +288,7 @@ async def delete_document(
         raise
 
 
-@router.put("/documents/{document_id}", response_model=Document, tags=["documents"])
+@router.put("/api/documents/{document_id}", response_model=Document, tags=["documents"])
 async def update_document(
     session: SessionDep,
     document_id: uuid.UUID,
@@ -325,7 +326,7 @@ async def update_document(
 
 
 @router.put(
-    "/documents/{document_id}/name", response_model=Document, tags=["documents"]
+    "/api/documents/{document_id}/name", response_model=Document, tags=["documents"]
 )
 async def update_document_name(
     session: SessionDep,

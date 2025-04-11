@@ -12,14 +12,27 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
-    host: true,
-    origin: 'http://0.0.0.0:3000',
+    // port: 3000,
+    // host: true,
+    // origin: "http://127.0.0.1:3000",
     proxy: {
-      "^/api": {
+      "/api": {
         target: "http://backend:8000",
         changeOrigin: true,
-        // rewrite: (path) => path.replace(/^\/api/, ""),
+        secure: false,
+        ws: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+        configure: (proxy, _options) => {
+          proxy.on("error", (err, _req, _res) => {
+            console.error("Proxy error:", err);
+          });
+          proxy.on("proxyReq", (_proxyReq, req, _res) => {
+            console.log("Proxy request:", req.method, req.url);
+          });
+          proxy.on("proxyRes", (proxyRes, req, _res) => {
+            console.log("Proxy response:", proxyRes.statusCode, req.url);
+          });
+        },
       },
     },
   },
