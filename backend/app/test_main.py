@@ -24,7 +24,7 @@ def override_get_session():
 
 app.dependency_overrides[get_session] = override_get_session
 
-client = TestClient(app, base_url="http://test")
+client = TestClient(app, base_url="http://test/api")
 
 
 @pytest.fixture(autouse=True)
@@ -75,7 +75,7 @@ def final_cleanup():
 async def auth_headers():
     """Fixture to get authentication headers"""
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as ac:
         response = await ac.post(
             "/token", data={"username": "admin", "password": "admin"}
@@ -110,7 +110,7 @@ async def test_upload_document(auth_headers):
         f.write("This is a test document.")
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as ac:
         with open(file_path, "rb") as f:
             response = await ac.post(
@@ -133,7 +133,7 @@ async def test_get_document(auth_headers):
         f.write("This is a test document.")
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as ac:
         with open(file_path, "rb") as f:
             upload_response = await ac.post(
@@ -145,7 +145,7 @@ async def test_get_document(auth_headers):
     document_id = data["id"]
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as ac:
         get_response = await ac.get(f"/documents/{document_id}", headers=auth_headers)
 
@@ -164,13 +164,13 @@ async def test_list_documents(auth_headers):
         f.write("This is a test document.")
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as client:
         with open(file_path, "rb") as f:
             await client.post("/documents/", files={"file": f}, headers=auth_headers)
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as client:
         response = await client.get("/documents/", headers=auth_headers)
 
@@ -198,7 +198,7 @@ async def test_process_document(auth_headers):
             f.write("This is a test document.")
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test/api"
         ) as client:
             with open(file_path, "rb") as f:
                 await client.post(
@@ -206,7 +206,7 @@ async def test_process_document(auth_headers):
                 )
 
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test/api"
         ) as ac:
             response = await ac.post("/documents/process", headers=auth_headers)
 
@@ -226,7 +226,7 @@ async def test_document_preview(auth_headers, create_pdf_file):
     file_path = create_pdf_file
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as client:
         with open(file_path, "rb") as f:
             response = await client.post(
@@ -250,7 +250,7 @@ async def test_document_preview(auth_headers, create_pdf_file):
 async def test_lifespan():
     """Test the lifespan context manager"""
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as ac:
         response = await ac.get("/docs")
         assert response.status_code == 200
@@ -260,7 +260,7 @@ async def test_lifespan():
 async def test_cors():
     """Test CORS middleware configuration"""
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as ac:
         response = await ac.options(
             "/documents/",
@@ -280,7 +280,7 @@ async def test_cors():
 async def test_admin_user():
     """Test admin user creation and authentication"""
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as ac:
         response = await ac.post(
             "/token", data={"username": "admin", "password": "admin"}
@@ -293,7 +293,7 @@ async def test_admin_user():
 async def test_unauthorized_access():
     """Test unauthorized access to protected endpoints"""
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as ac:
         response = await ac.post("/documents/process")
         assert response.status_code == 401
@@ -303,7 +303,7 @@ async def test_unauthorized_access():
 async def test_invalid_document_id(auth_headers):
     """Test handling of invalid document ID"""
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as ac:
         response = await ac.get(
             "/documents/00000000-0000-0000-0000-000000000000", headers=auth_headers
@@ -315,7 +315,7 @@ async def test_invalid_document_id(auth_headers):
 async def test_invalid_file_upload(auth_headers):
     """Test handling of invalid file upload"""
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as ac:
         response = await ac.post("/documents/", files={}, headers=auth_headers)
         assert response.status_code == 422
@@ -331,7 +331,7 @@ async def test_delete_document(auth_headers):
         f.write("This is a test document for deletion.")
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as client:
         with open(file_path, "rb") as f:
             upload_response = await client.post(
@@ -364,7 +364,7 @@ async def test_update_document_filename(auth_headers):
         f.write("This is a test document for updating.")
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as client:
         with open(file_path, "rb") as f:
             upload_response = await client.post(
@@ -404,7 +404,7 @@ async def test_update_document_content(auth_headers):
         f.write("This is the updated content for testing.")
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as client:
         with open(file_path, "rb") as f:
             upload_response = await client.post(
@@ -445,7 +445,7 @@ async def test_update_document_content(auth_headers):
 async def test_update_nonexistent_document(auth_headers):
     """Test updating a document that doesn't exist"""
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test/api"
     ) as client:
         # Try to update a non-existent document
         nonexistent_id = "00000000-0000-0000-0000-000000000000"
@@ -465,7 +465,7 @@ class TestMainIntegration:
     async def test_full_document_workflow(self):
         """Test complete document workflow: upload, process, retrieve"""
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url="http://test/api"
         ) as ac:
             auth_response = await ac.post(
                 "/token", data={"username": "admin", "password": "admin"}
