@@ -18,7 +18,7 @@ async function getCachedImage(
 ): Promise<Blob | null> {
   try {
     const cache = await caches.open(CACHE_NAME);
-    const requestUrl = new URL(url);
+    const requestUrl = new URL(url, window.location.origin);
     requestUrl.searchParams.set("size", size);
     const request = new Request(requestUrl.toString(), {
       headers: { Authorization: `Bearer ${token}` },
