@@ -53,7 +53,7 @@ export function Dashboard() {
   const fetchDocuments = useCallback(async () => {
     try {
       const documents = await fetchWithAuth(
-        `/documents?q=${encodeURIComponent(
+        `/documents/?q=${encodeURIComponent(
           searchQuery
         )}&page=${currentPage}&limit=${itemsPerPage}`,
         token
@@ -100,7 +100,7 @@ export function Dashboard() {
       const formData = new FormData();
       formData.append("file", file);
 
-      await fetchWithAuth("/documents", token, {
+      await fetchWithAuth("/documents/", token, {
         method: "POST",
         body: formData,
         headers: {

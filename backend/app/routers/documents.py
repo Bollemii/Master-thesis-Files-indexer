@@ -72,7 +72,7 @@ async def get_document_preview(
 
 
 @router.post(
-    "/documents", response_model=Document, status_code=201, tags=["documents"]
+    "/documents/", response_model=Document, status_code=201, tags=["documents"]
 )
 async def upload_document(
     session: SessionDep,
@@ -177,7 +177,7 @@ async def get_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/documents", response_model=DocumentsPagination, tags=["documents"])
+@router.get("/documents/", response_model=DocumentsPagination, tags=["documents"])
 async def list_documents(
     session: SessionDep,
     q: str | None = None,
