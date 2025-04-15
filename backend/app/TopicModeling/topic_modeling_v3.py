@@ -1,7 +1,7 @@
 import os
 import pathlib
-
 from multiprocessing import cpu_count
+
 import pandas as pd
 from app.TopicModeling.miner_v2 import Miner
 from app.TopicModeling.Reader import Reader
@@ -112,7 +112,7 @@ def run_lda(transf_doc_df):
         doc_topic_prior=doc_topic_prior,
         topic_word_prior=topic_word_prior,
         evaluate_every=50,
-        n_jobs=cpu_count()-1,
+        n_jobs=cpu_count() - 1,
         max_iter=500,
     )
     lda.fit(X)
