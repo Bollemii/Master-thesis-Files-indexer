@@ -16,12 +16,12 @@ export default defineConfig({
     // host: true,
     // origin: "http://127.0.0.1:3000",
     proxy: {
-      "/api": {
-        target: "http://backend:8000",
+      "/api/v1": {
+        target: "http://127.0.0.1:8000/api/v1",
         changeOrigin: true,
         secure: false,
         ws: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
+        rewrite: (path) => path.replace(/^\/api\/v1/, ""),
       },
     },
   },
