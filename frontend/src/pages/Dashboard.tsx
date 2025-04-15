@@ -124,12 +124,18 @@ export function Dashboard() {
   }, [fetchProcessStatus]);
 
   useEffect(() => {
+    const isSearchChange = searchQuery !== (new URLSearchParams(location.search).get("q") ?? "");
+    if (isSearchChange && currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
       fetchDocuments();
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, fetchDocuments, currentPage]);
+  }, [searchQuery, fetchDocuments, currentPage, location.search]);
 
   const totalPages = Math.ceil((documents?.total || 0) / itemsPerPage);
 
