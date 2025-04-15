@@ -1,7 +1,8 @@
 import uuid
-from sqlmodel import SQLModel, Field, Relationship, Column
 from datetime import datetime
+
 from sqlalchemy.dialects.postgresql import JSON
+from sqlmodel import Column, Field, Relationship, SQLModel
 
 
 # Association table for many-to-many relationship between Document and Topic

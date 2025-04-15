@@ -1,11 +1,12 @@
 import io
 import os
-import fitz
-from PIL import Image
-from typing import Dict, List, Tuple, Literal
-from sqlmodel import Session, select
-from app.models import Document
 from multiprocessing import Pool, cpu_count
+from typing import Dict, List, Literal, Tuple
+
+import fitz
+from app.models import Document
+from PIL import Image
+from sqlmodel import Session, select
 
 PreviewSize = Literal["thumbnail", "detail"]
 

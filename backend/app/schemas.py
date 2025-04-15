@@ -1,11 +1,10 @@
-from pydantic import BaseModel
+import uuid
 from datetime import datetime
 from typing import Optional
-import uuid
-
-from sqlmodel import SQLModel
 
 from app.utils.process_manager import ProcessStatus
+from pydantic import BaseModel
+from sqlmodel import SQLModel
 
 
 class TopicResponse(BaseModel):

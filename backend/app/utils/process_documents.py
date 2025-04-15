@@ -1,17 +1,18 @@
-from datetime import datetime
-from time import perf_counter
 import os
 import pathlib
+from datetime import datetime
+from time import perf_counter
+
 import pandas as pd
+from app.models import Document, DocumentTopicLink, Topic
+from app.TopicModeling import topic_modeling_v3
 from sqlalchemy import create_engine
 from sqlmodel import Session, select
-
-from app.TopicModeling import topic_modeling_v3
-from app.models import Document, DocumentTopicLink, Topic
+from app.config import settings
 
 
 def run_process_document():
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
+    DATABASE_URL = settings.DATABASE_URL
     engine = create_engine(DATABASE_URL)
     with Session(engine) as session:
         documents = session.exec(select(Document)).all()
