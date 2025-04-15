@@ -20,7 +20,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 
 @router.post(
-    "/api/user/new",
+    "/user/new",
     response_model=UserDetail,
     status_code=status.HTTP_201_CREATED,
     tags=["users"],
@@ -39,7 +39,7 @@ async def create_user(user: UserCreate, session: SessionDep):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/api/token", tags=["auth"])
+@router.post("/token", tags=["auth"])
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session: SessionDep
 ) -> Token:
@@ -55,7 +55,7 @@ async def login_for_access_token(
 
 
 @router.get(
-    "/api/user/me",
+    "/user/me",
     response_model=UserDetail,
     status_code=status.HTTP_200_OK,
     tags=["users"],

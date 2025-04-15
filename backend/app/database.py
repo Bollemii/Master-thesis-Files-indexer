@@ -1,13 +1,19 @@
 import os
-from passlib.context import CryptContext
-from sqlmodel import SQLModel, create_engine, Session, select
+
+from app.config import settings
 from app.models import Document, User
 from app.utils.space_word import space_between_word
+from passlib.context import CryptContext
+from sqlmodel import Session, SQLModel, create_engine, select
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
+DATABASE_URL = settings.DATABASE_URL
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL must be set in environment variables.")
 engine = create_engine(DATABASE_URL)
 
-DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
+DOCUMENT_STORAGE_PATH = settings.DOCUMENT_STORAGE_PATH
+if not DOCUMENT_STORAGE_PATH:
+    raise ValueError("DOCUMENT_STORAGE_PATH must be set in environment variables.")
 os.makedirs(DOCUMENT_STORAGE_PATH, exist_ok=True)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

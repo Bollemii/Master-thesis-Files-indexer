@@ -1,18 +1,15 @@
 from datetime import datetime, timedelta
 from typing import Annotated, Optional
+
+from app.config import settings
+from app.database import get_session
+from app.models import User
+from fastapi import Depends, HTTPException, Security
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import HTTPException, Security, Depends
-from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 from sqlmodel import Session, select
-from app.models import User
-from app.database import get_session
-
-# Configuration
-SECRET_KEY = "740b6ea71528914a03a0404f5a9573236410dd68b4c00de3913575b4aed9a924"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
@@ -20,7 +17,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 scheme
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/token")
 
 
 class Token(BaseModel):
@@ -48,10 +45,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     if expires_delta:
         expire = datetime.now() + expires_delta
     else:
-        expire = datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now() + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
 
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(
+        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+    )
     return encoded_jwt
 
 
@@ -63,7 +64,9 @@ async def verify_token(token: str = Depends(oauth2_scheme)) -> TokenData:
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
