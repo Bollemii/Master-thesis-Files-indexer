@@ -1,0 +1,34 @@
+flowchart LR
+    %% Node definitions with icons and styling
+    Client(["fa:fa-user Client Browser"])
+    Frontend(["fab:fa-react Frontend<br>Vite + React + TypeScript"])
+    Backend(["fa:fa-rocket Backend<br>FastAPI"])
+    DB[("fa:fa-database PostgreSQL")]
+    DocStore[/"fa:fa-file Documents Storage"/]
+    
+    %% Connections with styling
+    Client <---> Frontend
+    Frontend <---> Backend
+    Backend <---> DB
+    Backend <---> DocStore
+    
+    %% Subgraphs with styling
+    subgraph ClientSide["fa:fa-desktop Client Side"]
+        style ClientSide fill:#d4f1f9,stroke:#0077b6,stroke-width:2px,color:black
+        Client
+        Frontend
+    end
+    
+    subgraph ServerSide["fa:fa-server Server Side"]
+        style ServerSide fill:#ffebcd,stroke:#e76f51,stroke-width:2px,color:black
+        Backend
+        DB
+        DocStore
+    end
+    
+    %% Node styling
+    style Client fill:#90e0ef,stroke:#0077b6,stroke-width:2px,color:black
+    style Frontend fill:#90e0ef,stroke:#0077b6,stroke-width:2px,color:black
+    style Backend fill:#ffd166,stroke:#e76f51,stroke-width:2px,color:black
+    style DB fill:#ffd166,stroke:#e76f51,stroke-width:2px,color:black
+    style DocStore fill:#ffd166,stroke:#e76f51,stroke-width:2px,color:black

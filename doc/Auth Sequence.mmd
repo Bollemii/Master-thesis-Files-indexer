@@ -1,0 +1,20 @@
+sequenceDiagram
+    actor User
+    participant Frontend as React Frontend
+    participant AuthAPI as Auth API (/token)
+    participant DB as Database
+    
+    User->>+Frontend: Credentials
+    Frontend->>+AuthAPI: POST /token (form-urlencoded)
+    AuthAPI->>+DB: Check credentials
+    DB-->>-AuthAPI: Data
+    
+    alt Authentication successful
+        AuthAPI-->>Frontend: Token JWT
+        Frontend->>Frontend: Store token
+        Frontend->>Frontend: Dashboard redirect
+        Frontend-->>User: Show Dashboard
+    else Authentication failed
+        AuthAPI-->>-Frontend: 401 Unauthorized
+        Frontend-->>-User: Show error
+    end

@@ -1,0 +1,38 @@
+sequenceDiagram
+    autonumber
+    
+    actor User as User
+    participant Frontend as React<br/>Frontend
+    participant DocAPI as Documents<br/>API
+    participant Storage as File<br/>Storage
+    participant Preview as Preview<br/>Generator
+    participant DB as Database
+
+    Note over User,Frontend: Upload Phase
+    User->>+Frontend: Upload document
+    Frontend->>+DocAPI: POST /documents
+    DocAPI->>+Storage: Save file
+    Storage-->>-DocAPI: Return file path
+    DocAPI->>+DB: Store document metadata
+    DB-->>-DocAPI: Return document ID
+    DocAPI-->>-Frontend: Document created response
+    Frontend-->>User: Upload confirmation
+    
+    Note over DocAPI,Preview: Processing Phase
+    DocAPI->>+Preview: Generate preview request
+    Preview->>+Storage: Read document content
+    Storage-->>-Preview: Return document first page
+    Preview->>Preview: Generate preview image
+    Preview->>+Storage: Save preview image
+    Storage-->>-Preview: Return preview path
+    Preview-->>DocAPI: Preview generation complete
+
+    Note over User,Frontend: Viewing Phase
+    User->>+Frontend: Request document view
+    Frontend->>+DocAPI: GET /documents/{id}/preview
+    DocAPI->>+DB: Query file path & preview ID
+    DB-->>-DocAPI: Return metadata
+    DocAPI->>+Storage: Retrieve preview
+    Storage-->>-DocAPI: Return preview image
+    DocAPI-->>-Frontend: Preview URL response
+    Frontend-->>-User: Display document preview

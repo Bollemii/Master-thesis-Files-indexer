@@ -226,7 +226,6 @@ flowchart TD
 The project uses GitLab CI/CD for continuous integration and deployment, ensuring code quality and automating the build process.
 
 ```mermaid
-%%{ init:{'flowchart':{'curve': 'stepBefore'}}}%%
 flowchart LR
     %% Source code
     Source["fa:fa-code Source Code"]
@@ -274,8 +273,6 @@ flowchart LR
     %% Connections
     Source --> LintB
     Source --> LintF
-    Source --> TestB
-    Source --> TestF
     
     LintB --> TestB
     LintF --> TestF
@@ -292,6 +289,7 @@ flowchart LR
     GitlabRegistry --> FrontendContainer
     DockerHubRegistry --> BackendContainer
     DockerHubRegistry --> FrontendContainer
+    DockerHubRegistry --> PostgreContainer
     
     BackendContainer --> DocumentsVolume
     PostgreContainer --> DBVolume

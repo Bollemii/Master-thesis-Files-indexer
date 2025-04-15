@@ -1,0 +1,76 @@
+flowchart TD
+    %% Main App Components
+    App["fab:fa-react App"] --> AuthProvider["fa:fa-shield-alt Auth Provider"]
+    App --> Router["fa:fa-route React Router"]
+    
+    %% Routes
+    Router --> PublicRoutes["fa:fa-unlock Public Routes"]
+    Router --> ProtectedRoutes["fa:fa-lock Protected Routes"]
+    
+    %% Public Pages
+    PublicRoutes --> LoginPage["fa:fa-sign-in-alt Login Page"]
+    PublicRoutes --> RegisterPage["fa:fa-user-plus Register Page"]
+    
+    %% Protected Pages
+    ProtectedRoutes --> Dashboard["fa:fa-tachometer-alt Dashboard"]
+    ProtectedRoutes --> DocumentsPage["fa:fa-folder-open Documents Page"]
+    ProtectedRoutes --> DocumentViewPage["fa:fa-file-alt Document View Page"]
+    ProtectedRoutes --> UserProfile["fa:fa-user-circle User Profile"]
+    
+    %% State Management
+    subgraph StateManagement["fa:fa-database State Management"]
+        style StateManagement fill:#e8f4f8,stroke:#4dabf7,stroke-width:2px,color:black
+        AuthContext["fa:fa-key Auth Context"]
+        DocumentsContext["fa:fa-file-contract Documents Context"]
+    end
+    
+    %% Page Components
+    Dashboard --> DocumentStats["fa:fa-chart-pie Document Stats"]
+    DocumentsPage --> DocumentList["fa:fa-list Document List"]
+    DocumentsPage --> DocumentFilter["fa:fa-filter Document Filter"]
+    DocumentViewPage --> DocumentPreview["fa:fa-eye Document Preview"]
+    DocumentViewPage --> DocumentDetails["fa:fa-info-circle Document Details"]
+    
+    %% API Integration
+    subgraph ApiIntegration["fa:fa-network-wired API Integration"]
+        style ApiIntegration fill:#fff9db,stroke:#fcc419,stroke-width:2px,color:black
+        ApiService["fa:fa-cogs API Service"]
+        AuthService["fa:fa-user-shield Auth Service"]
+        DocumentsService["fa:fa-file-invoice Documents Service"]
+    end
+    
+    %% Data Flow Connections
+    AuthContext <--> AuthService
+    DocumentsContext <--> DocumentsService
+    AuthService <--> Backend["fa:fa-server Backend API"]
+    DocumentsService <--> Backend
+    
+    %% Component Styling
+    style App fill:#ffdeeb,stroke:#f06595,stroke-width:2px,color:black
+    style AuthProvider fill:#ffdeeb,stroke:#f06595,stroke-width:2px,color:black
+    style Router fill:#ffdeeb,stroke:#f06595,stroke-width:2px,color:black
+    
+    style PublicRoutes fill:#e3fafc,stroke:#22b8cf,stroke-width:2px,color:black
+    style ProtectedRoutes fill:#e3fafc,stroke:#22b8cf,stroke-width:2px,color:black
+    
+    style LoginPage fill:#d3f9d8,stroke:#40c057,stroke-width:2px,color:black
+    style RegisterPage fill:#d3f9d8,stroke:#40c057,stroke-width:2px,color:black
+    style Dashboard fill:#d3f9d8,stroke:#40c057,stroke-width:2px,color:black
+    style DocumentsPage fill:#d3f9d8,stroke:#40c057,stroke-width:2px,color:black
+    style DocumentViewPage fill:#d3f9d8,stroke:#40c057,stroke-width:2px,color:black
+    style UserProfile fill:#d3f9d8,stroke:#40c057,stroke-width:2px,color:black
+    
+    style DocumentStats fill:#f4f6f8,stroke:#adb5bd,stroke-width:2px,color:black
+    style DocumentList fill:#f4f6f8,stroke:#adb5bd,stroke-width:2px,color:black
+    style DocumentFilter fill:#f4f6f8,stroke:#adb5bd,stroke-width:2px,color:black
+    style DocumentPreview fill:#f4f6f8,stroke:#adb5bd,stroke-width:2px,color:black
+    style DocumentDetails fill:#f4f6f8,stroke:#adb5bd,stroke-width:2px,color:black
+    
+    style AuthContext fill:#e8f4f8,stroke:#4dabf7,stroke-width:2px,color:black
+    style DocumentsContext fill:#e8f4f8,stroke:#4dabf7,stroke-width:2px,color:black
+    
+    style ApiService fill:#fff9db,stroke:#fcc419,stroke-width:2px,color:black
+    style AuthService fill:#fff9db,stroke:#fcc419,stroke-width:2px,color:black
+    style DocumentsService fill:#fff9db,stroke:#fcc419,stroke-width:2px,color:black
+    
+    style Backend fill:#f8f0fc,stroke:#cc5de8,stroke-width:2px,color:black

@@ -1,0 +1,89 @@
+flowchart LR
+    %% Source code
+    Source["fa:fa-code Source Code"]
+    
+    %% Stage: Lint
+    subgraph LintStage["fa:fa-search-plus Lint Stage"]
+        style LintStage fill:#e0f7fa,stroke:#0277bd,stroke-width:2px,color:black
+        LintB["fab:fa-python Backend Linting<br><i>flake8, black</i>"]
+        LintF["fab:fa-js Frontend Linting<br><i>eslint</i>"]
+    end
+    
+    %% Stage: Test
+    subgraph TestStage["fa:fa-vial Test Stage"]
+        style TestStage fill:#e1f5fe,stroke:#0288d1,stroke-width:2px,color:black
+        TestB["fa:fa-flask Backend Tests<br><i>pytest</i>"]
+        TestF["fa:fa-check-square Frontend Tests<br><i>jest</i>"]
+    end
+    
+    %% Stage: Build
+    subgraph BuildStage["fa:fa-hammer Build Stage"]
+        style BuildStage fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:black
+        DockerBuildB["fab:fa-docker Docker Build Backend<br><i>multi-platform</i>"]
+        DockerBuildF["fab:fa-docker Docker Build Frontend<br><i>multi-platform</i>"]
+    end
+    
+    %% Registries
+    subgraph Registries["fa:fa-cloud Registry"]
+        style Registries fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:black
+        GitlabRegistry["fab:fa-gitlab GitLab Registry"]
+        DockerHubRegistry["fab:fa-docker DockerHub"]
+    end
+    
+    %% Deployment (which happens after CI/CD)
+    subgraph Deployment["fa:fa-rocket Deployment"]
+        style Deployment fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:black
+        BackendContainer["fa:fa-server Backend Container"]
+        FrontendContainer["fa:fa-desktop Frontend Container"]
+        PostgreContainer["fa:fa-database PostgreSQL Container"]
+    end
+    
+    %% Volumes
+    DBVolume["fa:fa-database Database Volume"]
+    DocumentsVolume["fa:fa-folder Documents Volume"]
+    
+    %% Connections
+    Source --> LintB
+    Source --> LintF
+    
+    LintB --> TestB
+    LintF --> TestF
+    
+    TestB --> DockerBuildB
+    TestF --> DockerBuildF
+    
+    DockerBuildB --> GitlabRegistry
+    DockerBuildB --> DockerHubRegistry
+    DockerBuildF --> GitlabRegistry
+    DockerBuildF --> DockerHubRegistry
+    
+    GitlabRegistry --> BackendContainer
+    GitlabRegistry --> FrontendContainer
+    DockerHubRegistry --> BackendContainer
+    DockerHubRegistry --> FrontendContainer
+    DockerHubRegistry --> PostgreContainer
+    
+    BackendContainer --> DocumentsVolume
+    PostgreContainer --> DBVolume
+    
+    %% Node styling
+    style Source fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:black
+    
+    style LintB fill:#e0f7fa,stroke:#0277bd,stroke-width:1px,color:black
+    style LintF fill:#e0f7fa,stroke:#0277bd,stroke-width:1px,color:black
+    
+    style TestB fill:#e1f5fe,stroke:#0288d1,stroke-width:1px,color:black
+    style TestF fill:#e1f5fe,stroke:#0288d1,stroke-width:1px,color:black
+    
+    style DockerBuildB fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px,color:black
+    style DockerBuildF fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px,color:black
+    
+    style GitlabRegistry fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px,color:black
+    style DockerHubRegistry fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px,color:black
+    
+    style BackendContainer fill:#fff3e0,stroke:#ef6c00,stroke-width:1px,color:black
+    style FrontendContainer fill:#fff3e0,stroke:#ef6c00,stroke-width:1px,color:black
+    style PostgreContainer fill:#fff3e0,stroke:#ef6c00,stroke-width:1px,color:black
+    
+    style DBVolume fill:#fce4ec,stroke:#c2185b,stroke-width:1px,color:black
+    style DocumentsVolume fill:#fce4ec,stroke:#c2185b,stroke-width:1px,color:black

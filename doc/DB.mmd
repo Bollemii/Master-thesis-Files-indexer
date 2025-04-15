@@ -1,0 +1,31 @@
+erDiagram
+    USERS {
+        int id PK
+        string username
+        string password_hash
+        boolean is_active
+        boolean is_admin
+        datetime creation_date
+    }
+    
+    DOCUMENTS {
+        int id PK
+        string filename
+        string display_name
+        string file_path
+        string mime_type
+        int user_id FK
+        datetime upload_date
+        string status
+    }
+    
+    PREVIEWS {
+        int id PK
+        int document_id FK
+        string preview_path
+        string preview_type
+        datetime generation_date
+    }
+    
+    USERS ||--o{ DOCUMENTS : uploads
+    DOCUMENTS ||--o{ PREVIEWS : has
