@@ -1,8 +1,8 @@
+from concurrent.futures import Future, ProcessPoolExecutor
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Any
-from concurrent.futures import Future
-from concurrent.futures import ProcessPoolExecutor
+from typing import Any, Optional
+
 from app.utils.process_documents import run_process_document
 
 
@@ -25,7 +25,7 @@ class ProcessManager:
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self):
         self.shutdown()
 
     def __del__(self):
@@ -55,6 +55,8 @@ class ProcessManager:
         try:
             print("Process starting")
             self._last_run_time = datetime.now()
+            if self._executor is None:
+                self._executor = ProcessPoolExecutor(max_workers=1)
             self._status = ProcessStatus.RUNNING
             self._future = self._executor.submit(run_process_document)
             self._future.add_done_callback(self._process_completed)

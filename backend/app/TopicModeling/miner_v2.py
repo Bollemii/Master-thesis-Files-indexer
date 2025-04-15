@@ -1,13 +1,14 @@
-import nltk
-import pandas as pd
-from functools import lru_cache
-import langdetect
-from nltk.stem import WordNetLemmatizer
-from nltk.corpus import stopwords
 import re
+from functools import lru_cache
 
 # from nltk.stem.snowball import FrenchStemmer, DutchStemmer
 from typing import Optional
+
+import langdetect
+import nltk
+import pandas as pd
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 
 URL_PATTERN = re.compile(
     r"(?:http(?:s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&\'\(\)\*\+,;=.]+"

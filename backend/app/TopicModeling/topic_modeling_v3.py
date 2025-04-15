@@ -1,10 +1,12 @@
 import os
 import pathlib
+
+from multiprocessing import cpu_count
 import pandas as pd
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.decomposition import LatentDirichletAllocation
-from app.TopicModeling.Reader import Reader
 from app.TopicModeling.miner_v2 import Miner
+from app.TopicModeling.Reader import Reader
+from sklearn.decomposition import LatentDirichletAllocation
+from sklearn.feature_extraction.text import CountVectorizer
 
 
 def delete_eol(content):
@@ -17,7 +19,7 @@ def delete_eol(content):
 
 
 def get_length(content):
-    if content is None:
+    if not isinstance(content, str):
         return 0
     else:
         return len(content)
@@ -45,7 +47,6 @@ def process_documents(doc_df):
         lambda row: pathlib.PurePosixPath(row["file_path"]).suffix.replace(".", ""),
         axis=1,
     )
-    doc_df = doc_df.drop(columns=["file_path"])
     doc_df["content_size"] = doc_df.apply(
         lambda row: get_length(row["content"]), axis=1
     )
@@ -55,6 +56,7 @@ def process_documents(doc_df):
     doc_df = doc_df[
         [
             "file_name",
+            "file_path",
             "file_type",
             "creation_time",
             "file_size",
@@ -75,6 +77,7 @@ def process_documents(doc_df):
     transf_doc_df = transf_doc_df[
         [
             "file_name",
+            "file_path",
             "file_type",
             "creation_time",
             "file_size",
@@ -109,7 +112,7 @@ def run_lda(transf_doc_df):
         doc_topic_prior=doc_topic_prior,
         topic_word_prior=topic_word_prior,
         evaluate_every=50,
-        n_jobs=-1,
+        n_jobs=cpu_count()-1,
         max_iter=500,
     )
     lda.fit(X)
@@ -133,19 +136,30 @@ def run_lda(transf_doc_df):
 
 
 def run(doc_df):
+    print("Starting topic modeling...")
     if not os.path.exists("./tmp"):
         os.makedirs("./tmp")
     if not os.path.exists("./tmp/doc_df.miner.pkl"):
+        print("Processing documents...")
         transf_doc_df = process_documents(doc_df)
     else:
+        print("Loading existing documents...")
         existing_df = pd.read_pickle("./tmp/doc_df.miner.pkl")
-        new_docs = doc_df[~doc_df["file_path"].isin(existing_df["file_path"])]
-        if not new_docs.empty:
-            new_transf_doc_df = process_documents(new_docs)
-            transf_doc_df = pd.concat([existing_df, new_transf_doc_df])
+        if "file_path" not in existing_df.columns:
+            transf_doc_df = process_documents(doc_df.copy())
             transf_doc_df.to_pickle("./tmp/doc_df.miner.pkl")
         else:
-            transf_doc_df = existing_df
+            # Filter to find new documents
+            new_docs_mask = ~doc_df["file_path"].isin(existing_df["file_path"])
+            new_docs = doc_df[new_docs_mask]
+            if not new_docs.empty:
+                new_transf_doc_df = process_documents(new_docs.copy())
+                transf_doc_df = pd.concat(
+                    [existing_df, new_transf_doc_df], ignore_index=True
+                )
+                transf_doc_df.to_pickle("./tmp/doc_df.miner.pkl")
+            else:
+                transf_doc_df = existing_df
 
     topics, doc_topics = run_lda(transf_doc_df)
     return topics, doc_topics
@@ -157,7 +171,8 @@ def delete_document_from_cache(filepath: str):
 
     try:
         existing_df = pd.read_pickle("./tmp/doc_df.miner.pkl")
-
+        print(f"New file path: {filepath}")
+        print(f"Existing file paths: {existing_df['file_name'].values}")
         if filepath in existing_df["file_name"].values:
             updated_df = existing_df[existing_df["file_name"] != filepath]
             updated_df.to_pickle("./tmp/doc_df.miner.pkl")
