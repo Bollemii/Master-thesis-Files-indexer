@@ -59,11 +59,16 @@ export function CorpusDetail() {
   });
 
   const handleDelete = () => {
-    fetchWithAuth(`/documents/${document.id}`, token, {
-      method: "DELETE",
-    }).then(() => {
-      window.location.href = "/dashboard";
-    });
+    if (window.confirm(`Are you sure you want to delete "${document?.filename}"? This action cannot be undone.`)) {
+      fetchWithAuth(`/documents/${document.id}`, token, {
+        method: "DELETE",
+      }).then(() => {
+        window.location.href = "/dashboard";
+      }).catch(err => {
+        console.error("Failed to delete document:", err);
+        alert("Failed to delete the document. Please try again.");
+      });
+    };
   };
 
   const handleUpdate = () => {

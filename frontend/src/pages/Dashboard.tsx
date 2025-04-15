@@ -53,7 +53,7 @@ export function Dashboard() {
   const fetchDocuments = useCallback(async () => {
     try {
       const documents = await fetchWithAuth(
-        `/documents/?q=${encodeURIComponent(
+        `/documents?q=${encodeURIComponent(
           searchQuery
         )}&page=${currentPage}&limit=${itemsPerPage}`,
         token
