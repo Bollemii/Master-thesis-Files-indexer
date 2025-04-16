@@ -123,7 +123,7 @@ flowchart LR
   - **Preview Service**: Document preview generation
 - **Data Layer**: Abstraction for database operations
 - **Storage**:
-  - **Database**: Stores structured data (PostgreSQL in production, SQLite in development)
+  - **Database**: Stores application data
   - **File Storage**: Manages document files
 
 ## Frontend Architecture
@@ -215,17 +215,25 @@ flowchart LR
 
 - **App**: Root component
 - **Router**: Handles navigation between pages
+- **Routes**:
+  - **Public Routes**: Accessible without authentication (login, registration)
+  - **Protected Route**: Requires authentication (dashboard)
 - **Pages**:
-  - **Auth Pages**: Login and registration
+  - **Login**: User login interface
+  - **Register**: User registration interface
   - **Dashboard**: Main interface showing document list
-  - **Document Page**: Document viewing and management
+  - **Corpus detail**: Document viewing and management
 - **Components**:
-  - **DocumentList/Item**: List of available documents and individual items
-  - **DocumentViewer**: Document preview component
-  - **DocumentMetadata**: Shows document information
-- **Hook**:
+  - **TopBar**: Navigation and search bar
+  - **CorpusList**: Displays list of documents
+  - **CorpusDetail**: Detailed view of a selected document
+  - **Pagination**: Handles pagination of document lists
+  - **DocumentPreview**: Previews document content
+  - **UpdateDocumentModal**: Modal for updating document details
+- **Hooks**:
   - **useAuth**: Handles authentication with backend
   - **API Service**: Handles API requests to the backend
+- **Backend API**: FastAPI endpoints for user and document management
 
 ## CI/CD Pipeline
 
