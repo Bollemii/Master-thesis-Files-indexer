@@ -25,7 +25,7 @@ Attention, due à l'utilisation de Tesseract et de LibreOffice, le container bac
 Pour lancer le projet, lancer la commande suivante :
 
 ```console
-$ docker compose -f compose.yml up -d
+$ docker compose up -d
 ```
 Puis rendez-vous sur [http://localhost:3000](http://localhost:3000) pour accéder à l'application.
 
@@ -33,7 +33,7 @@ Puis rendez-vous sur [http://localhost:3000](http://localhost:3000) pour accéde
 Pour arrêter le projet, lancer la commande suivante :
 
 ```console
-$ docker compose -f compose.yml down
+$ docker compose down
 ```
 
 ## Screenshots
