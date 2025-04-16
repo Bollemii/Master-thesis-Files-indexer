@@ -1,11 +1,12 @@
 sequenceDiagram
     autonumber
-    
+
     actor User as User
     participant Frontend as React<br/>Frontend
     participant DocAPI as Documents<br/>API
     participant Storage as File<br/>Storage
     participant Preview as Preview<br/>Generator
+    participant TopicModeler as Topic<br/>Modeler
     participant DB as Database
 
     Note over User,Frontend: Upload Phase
@@ -13,26 +14,41 @@ sequenceDiagram
     Frontend->>+DocAPI: POST /documents
     DocAPI->>+Storage: Save file
     Storage-->>-DocAPI: Return file path
-    DocAPI->>+DB: Store document metadata
+    DocAPI->>+DB: Store document metadata (processed=false)
     DB-->>-DocAPI: Return document ID
     DocAPI-->>-Frontend: Document created response
     Frontend-->>User: Upload confirmation
-    
-    Note over DocAPI,Preview: Processing Phase
+
+    Note over DocAPI,Preview: Preview Generation Phase (Async)
     DocAPI->>+Preview: Generate preview request
-    Preview->>+Storage: Read document content
-    Storage-->>-Preview: Return document first page
+    Preview->>+Storage: Read document content (e.g., first page)
+    Storage-->>-Preview: Return document content
     Preview->>Preview: Generate preview image
     Preview->>+Storage: Save preview image
     Storage-->>-Preview: Return preview path
-    Preview-->>DocAPI: Preview generation complete
+    Preview->>+DocAPI: Notify preview ready (optional)
+    DocAPI->>+DB: Update document with preview path (optional)
+    DB-->>-DocAPI: Confirm update (optional)
+
+    Note over DocAPI,TopicModeler: Topic Modeling Phase (Async/Background)
+    User->>+DocAPI: Trigger topic modeling
+    DocAPI->>+TopicModeler: Trigger document processing
+    TopicModeler->>+DB: Get unprocessed documents
+    DB-->>-TopicModeler: Return document list (paths)
+    TopicModeler->>+Storage: Read document content
+    Storage-->>-TopicModeler: Return content
+    TopicModeler->>TopicModeler: Perform Read, Mine, LDA Analysis
+    TopicModeler->>+DB: Update/Create Topics & DocumentTopicLinks
+    DB-->>-TopicModeler: Confirm updates
+    TopicModeler->>+DB: Mark documents as processed
+    DB-->>-TopicModeler: Confirm updates
 
     Note over User,Frontend: Viewing Phase
-    User->>+Frontend: Request document view
-    Frontend->>+DocAPI: GET /documents/{id}/preview
-    DocAPI->>+DB: Query file path & preview ID
-    DB-->>-DocAPI: Return metadata
-    DocAPI->>+Storage: Retrieve preview
-    Storage-->>-DocAPI: Return preview image
-    DocAPI-->>-Frontend: Preview URL response
-    Frontend-->>-User: Display document preview
+    User->>+Frontend: Request document details
+    Frontend->>+DocAPI: GET /documents/{id}
+    DocAPI->>+DB: Query document metadata & topics
+    DB-->>-DocAPI: Return document details + topic info
+    DocAPI->>+Storage: Get preview URL (if needed)
+    Storage-->>-DocAPI: Return preview URL
+    DocAPI-->>-Frontend: Document details response (incl. topics, preview)
+    Frontend-->>-User: Display document details & topics

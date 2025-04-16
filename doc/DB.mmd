@@ -1,31 +1,36 @@
 erDiagram
-    USERS {
-        int id PK
-        string username
-        string password_hash
+    USER {
+        UUID id PK
+        string username UK "Unique username"
+        string hashed_password
         boolean is_active
-        boolean is_admin
+        boolean is_superuser
         datetime creation_date
     }
-    
-    DOCUMENTS {
-        int id PK
-        string filename
-        string display_name
-        string file_path
-        string mime_type
-        int user_id FK
+
+    DOCUMENT {
+        UUID id PK
+        string filename UK "Unique filename"
+        string path
+        boolean processed
         datetime upload_date
-        string status
+        UUID owner_id FK "Optional foreign key to USER"
     }
-    
-    PREVIEWS {
-        int id PK
-        int document_id FK
-        string preview_path
-        string preview_type
-        datetime generation_date
+
+    TOPIC {
+        UUID id PK
+        string name UK "Unique topic name"
+        string description "Optional description"
+        JSON words "Dictionary of words and weights"
     }
-    
-    USERS ||--o{ DOCUMENTS : uploads
-    DOCUMENTS ||--o{ PREVIEWS : has
+
+    DOCUMENT_TOPIC_LINK {
+        UUID document_id PK, FK "Composite PK, FK to DOCUMENT"
+        UUID topic_id PK, FK "Composite PK, FK to TOPIC"
+        float weight "Weight of the topic for the document"
+    }
+
+    USER ||--o{ DOCUMENT : owns
+    %% DOCUMENT }o--o{ TOPIC : related_via DOCUMENT_TOPIC_LINK
+    DOCUMENT ||--|{ DOCUMENT_TOPIC_LINK : links_to
+    TOPIC ||--|{ DOCUMENT_TOPIC_LINK : links_to
