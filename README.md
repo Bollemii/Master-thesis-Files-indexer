@@ -9,14 +9,17 @@ Code source du projet TFE de l'année académique 2024-2025.
 Le projet nécessite l'installation Docker et Docker Compose. Pour installer Docker, suivez les instructions sur le site officiel : [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/).
 
 
-Pour installer le projet, il suffit de cloner le dépôt avec la commande suivante :
+Pour installer le projet, vous pouvez soit:
 
+- cloner le dépôt avec les commandes suivantes :
 ```console
 $ git clone https://gitlab.com/Masi-s-Matcas/tfe.git
 ```
 ```console
 $ cd tfe
 ```
+- ou télécharger uniquement les fichiers docker-compose.yml et .env
+
 
 ## Utilisation
 
