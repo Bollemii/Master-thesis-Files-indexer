@@ -61,47 +61,51 @@ The server-side consists of:
 The backend follows a layered architecture with clear separation of concerns.
 
 ```mermaid
-flowchart TD
+flowchart LR
     %% Define Client and API
-    Client["fa:fa-laptop Client"] --> API["fa:fa-server FastAPI App"]
+    Client("fa:fa-laptop Client") --> API("fa:fa-server FastAPI App")
     
     %% Define Backend with styling
     subgraph Backend["fa:fa-cogs Backend Architecture"]
         style Backend fill:#f5f5ff,stroke:#6366f1,stroke-width:2px,color:black
         
         %% Define routers with icons
-        API --> RouterUsers["fa:fa-users Users Router"]
-        API --> RouterDocuments["fa:fa-file-text Documents Router"]
+        API --> UserRoutes("fa:fa-users User Routes")
+        API --> DocumentRoutes("fa:fa-file-text Document Routes")
         
         %% Define services with icons
-        RouterUsers --> UserService["fa:fa-user-circle User Service"]
-        RouterUsers --> AuthService["fa:fa-key Auth Service"]
-        RouterDocuments --> DocumentService["fa:fa-file-pdf Document Service"]
-        RouterDocuments --> PreviewService["fa:fa-image Preview Service"]
+        UserRoutes --> UserService("fa:fa-user-circle User Endpoints")
+        UserRoutes --> AuthService("fa:fa-key Authentication Endpoint")
+        DocumentRoutes --> DocumentService("fa:fa-file-pdf Document Endpoints")
+        DocumentRoutes --> PreviewService("fa:fa-image Preview Endpoints")
         
         %% Define data layer with icons
-        UserService --> DataLayer["fa:fa-database Data Layer"]
-        AuthService --> DataLayer
-        DocumentService --> DataLayer
-        PreviewService --> DataLayer
+        UserService --> AuthManager("fa:fa-database Auth Manager")
+        AuthService --> AuthManager
+        DocumentService --> DocumentManager("fa:fa-cogs Document Manager")
+        PreviewService --> PreviewManager("fa:fa-cogs Preview Manager")
         
         %% Define storage with icons
-        DataLayer --> DB[("fa:fa-hdd-o PostgreSQL Database")]
+        AuthManager --> DB[("fa:fa-hdd-o PostgreSQL Database")]
         
-        DocumentService --> FileStorage["fa:fa-folder File Storage"]
-        PreviewService --> FileStorage
+        DocumentManager --> FileStorage("fa:fa-folder File Storage")
+        PreviewManager --> FileStorage
+        DocumentManager --> DB
+        PreviewManager --> DB
     end
     
     %% Styling for components
     style Client fill:#d1fae5,stroke:#059669,stroke-width:2px,color:black
     style API fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:black
-    style RouterUsers fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,color:black
-    style RouterDocuments fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,color:black
+    style UserRoutes fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,color:black
+    style DocumentRoutes fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,color:black
     style UserService fill:#ede9fe,stroke:#8b5cf6,stroke-width:2px,color:black
     style AuthService fill:#ede9fe,stroke:#8b5cf6,stroke-width:2px,color:black
     style DocumentService fill:#ede9fe,stroke:#8b5cf6,stroke-width:2px,color:black
     style PreviewService fill:#ede9fe,stroke:#8b5cf6,stroke-width:2px,color:black
-    style DataLayer fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:black
+    style AuthManager fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:black
+    style DocumentManager fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:black
+    style PreviewManager fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:black
     style DB fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:black
     style FileStorage fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:black
 ```
@@ -127,82 +131,83 @@ flowchart TD
 The frontend is built with React and TypeScript, following a component-based architecture.
 
 ```mermaid
-flowchart TD
-    %% Main App Components
-    App["fab:fa-react App"] --> AuthProvider["fa:fa-shield-alt Auth Provider"]
-    App --> Router["fa:fa-route React Router"]
-    
-    %% Routes
-    Router --> PublicRoutes["fa:fa-unlock Public Routes"]
-    Router --> ProtectedRoutes["fa:fa-lock Protected Routes"]
-    
-    %% Public Pages
-    PublicRoutes --> LoginPage["fa:fa-sign-in-alt Login Page"]
-    PublicRoutes --> RegisterPage["fa:fa-user-plus Register Page"]
-    
-    %% Protected Pages
-    ProtectedRoutes --> Dashboard["fa:fa-tachometer-alt Dashboard"]
-    ProtectedRoutes --> DocumentsPage["fa:fa-folder-open Documents Page"]
-    ProtectedRoutes --> DocumentViewPage["fa:fa-file-alt Document View Page"]
-    ProtectedRoutes --> UserProfile["fa:fa-user-circle User Profile"]
-    
-    %% State Management
-    subgraph StateManagement["fa:fa-database State Management"]
-        style StateManagement fill:#e8f4f8,stroke:#4dabf7,stroke-width:2px,color:black
-        AuthContext["fa:fa-key Auth Context"]
-        DocumentsContext["fa:fa-file-contract Documents Context"]
+flowchart LR
+    subgraph AppSetup ["fa:fa-cogs Application Setup"]
+        style AppSetup fill:#f3e5f5,stroke:#ab47bc,stroke-width:2px
+        App["fab:fa-react App"]:::setup --> ThemeProvider["fa:fa-palette ThemeProvider"]:::setup
+        ThemeProvider --> AuthProvider["fa:fa-shield-alt AuthProvider (useAuth)"]:::setup
+        AuthProvider --> Router["fa:fa-route React Router"]:::setup
     end
-    
-    %% Page Components
-    Dashboard --> DocumentStats["fa:fa-chart-pie Document Stats"]
-    DocumentsPage --> DocumentList["fa:fa-list Document List"]
-    DocumentsPage --> DocumentFilter["fa:fa-filter Document Filter"]
-    DocumentViewPage --> DocumentPreview["fa:fa-eye Document Preview"]
-    DocumentViewPage --> DocumentDetails["fa:fa-info-circle Document Details"]
-    
-    %% API Integration
-    subgraph ApiIntegration["fa:fa-network-wired API Integration"]
-        style ApiIntegration fill:#fff9db,stroke:#fcc419,stroke-width:2px,color:black
-        ApiService["fa:fa-cogs API Service"]
-        AuthService["fa:fa-user-shield Auth Service"]
-        DocumentsService["fa:fa-file-invoice Documents Service"]
+
+    subgraph Routing ["fa:fa-project-diagram Routing"]
+        style Routing fill:#e3f2fd,stroke:#42a5f5,stroke-width:2px
+        Router --> PublicRoutes["fa:fa-unlock Public Routes"]
+        Router --> ProtectedRouteWrapper["fa:fa-lock Protected Route"]
     end
-    
-    %% Data Flow Connections
-    AuthContext <--> AuthService
-    DocumentsContext <--> DocumentsService
-    AuthService <--> Backend["fa:fa-server Backend API"]
-    DocumentsService <--> Backend
-    
-    %% Component Styling
-    style App fill:#ffdeeb,stroke:#f06595,stroke-width:2px,color:black
-    style AuthProvider fill:#ffdeeb,stroke:#f06595,stroke-width:2px,color:black
-    style Router fill:#ffdeeb,stroke:#f06595,stroke-width:2px,color:black
-    
-    style PublicRoutes fill:#e3fafc,stroke:#22b8cf,stroke-width:2px,color:black
-    style ProtectedRoutes fill:#e3fafc,stroke:#22b8cf,stroke-width:2px,color:black
-    
-    style LoginPage fill:#d3f9d8,stroke:#40c057,stroke-width:2px,color:black
-    style RegisterPage fill:#d3f9d8,stroke:#40c057,stroke-width:2px,color:black
-    style Dashboard fill:#d3f9d8,stroke:#40c057,stroke-width:2px,color:black
-    style DocumentsPage fill:#d3f9d8,stroke:#40c057,stroke-width:2px,color:black
-    style DocumentViewPage fill:#d3f9d8,stroke:#40c057,stroke-width:2px,color:black
-    style UserProfile fill:#d3f9d8,stroke:#40c057,stroke-width:2px,color:black
-    
-    style DocumentStats fill:#f4f6f8,stroke:#adb5bd,stroke-width:2px,color:black
-    style DocumentList fill:#f4f6f8,stroke:#adb5bd,stroke-width:2px,color:black
-    style DocumentFilter fill:#f4f6f8,stroke:#adb5bd,stroke-width:2px,color:black
-    style DocumentPreview fill:#f4f6f8,stroke:#adb5bd,stroke-width:2px,color:black
-    style DocumentDetails fill:#f4f6f8,stroke:#adb5bd,stroke-width:2px,color:black
-    
-    style AuthContext fill:#e8f4f8,stroke:#4dabf7,stroke-width:2px,color:black
-    style DocumentsContext fill:#e8f4f8,stroke:#4dabf7,stroke-width:2px,color:black
-    
-    style ApiService fill:#fff9db,stroke:#fcc419,stroke-width:2px,color:black
-    style AuthService fill:#fff9db,stroke:#fcc419,stroke-width:2px,color:black
-    style DocumentsService fill:#fff9db,stroke:#fcc419,stroke-width:2px,color:black
-    
-    style Backend fill:#f8f0fc,stroke:#cc5de8,stroke-width:2px,color:black
+
+    subgraph PublicPages ["fa:fa-file Public Pages"]
+        style PublicPages fill:#e8f5e9,stroke:#66bb6a,stroke-width:2px
+        LoginPage["fa:fa-sign-in-alt Login Page"]:::page
+        RegisterPage["fa:fa-user-plus Register Page"]:::page
+    end
+    PublicRoutes --> LoginPage
+    PublicRoutes --> RegisterPage
+
+    subgraph ProtectedArea ["fa:fa-shield-check Protected Area (Dashboard)"]
+        style ProtectedArea fill:#fffde7,stroke:#ffee58,stroke-width:2px
+        DashboardPage["fa:fa-tachometer-alt Dashboard Page"]:::page
+        TopBar["fa:fa-search TopBar"]:::component
+        CorpusList["fa:fa-list CorpusList"]:::component
+        CorpusDetail["fa:fa-file-alt CorpusDetail"]:::component
+        DocumentPreview["fa:fa-image DocumentPreview"]:::component
+        UpdateDocumentModal["fa:fa-edit UpdateDocumentModal"]:::component
+        Pagination["fa:fa-ellipsis-h Pagination"]:::component
+    end
+
+    ProtectedRouteWrapper --> DashboardPage
+
+    DashboardPage --> TopBar
+    DashboardPage -- Route / --> CorpusList
+
+    CorpusList --> Pagination
+    CorpusList --> DocumentPreview
+    CorpusDetail --> DocumentPreview
+
+    subgraph ServicesAndHooks ["fa:fa-plug Services & Hooks"]
+        style ServicesAndHooks fill:#ffebee,stroke:#ef5350,stroke-width:2px
+        ApiService["fa:fa-server API Service (fetchWithAuth)"]:::service
+        useAuthHook["fa:fa-key useAuth Hook"]:::service
+    end
+
+    subgraph Backend ["fa:fa-database Backend"]
+         style Backend fill:#e0f2f1,stroke:#26a69a,stroke-width:2px
+         BackendAPI["fa:fa-cloud Backend API"]:::backend
+    end
+
+    %% Data Flow
+    AuthProvider --> useAuthHook
+
+    %% Components using Auth Hook
+    useAuthHook --> DashboardPage
+    useAuthHook --> CorpusDetail
+    useAuthHook --> DocumentPreview
+    useAuthHook --> UpdateDocumentModal
+
+    %% Components using API Service
+    DashboardPage --> ApiService
+    DashboardPage -- Route /corpus/:id --> CorpusDetail
+    CorpusDetail --> ApiService
+    UpdateDocumentModal --> ApiService
+    DocumentPreview --> ApiService
+    CorpusDetail --> UpdateDocumentModal
+    ApiService --> BackendAPI
+
+    %% Styling Classes
+    classDef page fill:#d1e7dd,stroke:#198754,color:#000;
+    classDef component fill:#cfe2ff,stroke:#0d6efd,color:#000;
+    classDef service fill:#f8d7da,stroke:#dc3545,color:#000;
+    classDef setup fill:#e2d9f3,stroke:#6f42c1,color:#000;
+    classDef backend fill:#d2f4ea,stroke:#17a2b8,color:#000;
 ```
 
 ### Frontend Components
@@ -217,9 +222,9 @@ flowchart TD
   - **DocumentList/Item**: List of available documents and individual items
   - **DocumentViewer**: Document preview component
   - **DocumentMetadata**: Shows document information
-- **Services**:
-  - **AuthService**: Handles authentication with backend
-  - **DocumentsService**: Manages document operations
+- **Hook**:
+  - **useAuth**: Handles authentication with backend
+  - **API Service**: Handles API requests to the backend
 
 ## CI/CD Pipeline
 
