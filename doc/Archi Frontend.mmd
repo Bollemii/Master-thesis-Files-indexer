@@ -1,19 +1,19 @@
 flowchart LR
     subgraph AppSetup ["fa:fa-cogs Application Setup"]
-        style AppSetup fill:#f3e5f5,stroke:#ab47bc,stroke-width:2px
+        style AppSetup fill:#f3e5f5,stroke:#ab47bc,stroke-width:2px,color:black
         App["fab:fa-react App"]:::setup --> ThemeProvider["fa:fa-palette ThemeProvider"]:::setup
         ThemeProvider --> AuthProvider["fa:fa-shield-alt AuthProvider (useAuth)"]:::setup
         AuthProvider --> Router["fa:fa-route React Router"]:::setup
     end
 
     subgraph Routing ["fa:fa-project-diagram Routing"]
-        style Routing fill:#e3f2fd,stroke:#42a5f5,stroke-width:2px
+        style Routing fill:#e3f2fd,stroke:#42a5f5,stroke-width:2px,color:black
         Router --> PublicRoutes["fa:fa-unlock Public Routes"]
         Router --> ProtectedRouteWrapper["fa:fa-lock Protected Route"]
     end
 
     subgraph PublicPages ["fa:fa-file Public Pages"]
-        style PublicPages fill:#e8f5e9,stroke:#66bb6a,stroke-width:2px
+        style PublicPages fill:#e8f5e9,stroke:#66bb6a,stroke-width:2px,color:black
         LoginPage["fa:fa-sign-in-alt Login Page"]:::page
         RegisterPage["fa:fa-user-plus Register Page"]:::page
     end
@@ -21,7 +21,7 @@ flowchart LR
     PublicRoutes --> RegisterPage
 
     subgraph ProtectedArea ["fa:fa-shield-check Protected Area (Dashboard)"]
-        style ProtectedArea fill:#fffde7,stroke:#ffee58,stroke-width:2px
+        style ProtectedArea fill:#fffde7,stroke:#ffee58,stroke-width:2px,color:black
         DashboardPage["fa:fa-tachometer-alt Dashboard Page"]:::page
         TopBar["fa:fa-search TopBar"]:::component
         CorpusList["fa:fa-list CorpusList"]:::component
@@ -41,13 +41,13 @@ flowchart LR
     CorpusDetail --> DocumentPreview
 
     subgraph ServicesAndHooks ["fa:fa-plug Services & Hooks"]
-        style ServicesAndHooks fill:#ffebee,stroke:#ef5350,stroke-width:2px
+        style ServicesAndHooks fill:#ffebee,stroke:#ef5350,stroke-width:2px,color:black
         ApiService["fa:fa-server API Service (fetchWithAuth)"]:::service
         useAuthHook["fa:fa-key useAuth Hook"]:::service
     end
 
     subgraph Backend ["fa:fa-database Backend"]
-         style Backend fill:#e0f2f1,stroke:#26a69a,stroke-width:2px
+         style Backend fill:#e0f2f1,stroke:#26a69a,stroke-width:2px,color:black
          BackendAPI["fa:fa-cloud Backend API"]:::backend
     end
 
