@@ -42,6 +42,10 @@ lint-backend:
   script:
     - flake8 --max-line-length=120 .
     - black --check .
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - backend/**/* # Run only if files in the backend directory change
 
 lint-frontend:
   allow_failure: true
@@ -56,6 +60,10 @@ lint-frontend:
     - npm ci
   script:
     - npm run lint
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - frontend/**/* # Run only if files in the frontend directory change
 
 # Test jobs
 test-backend:
@@ -82,6 +90,10 @@ test-backend:
     paths:
       - backend/coverage.xml
     expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - backend/**/* # Run only if files in the backend directory change
 
 test-frontend:
   stage: test
@@ -95,6 +107,10 @@ test-frontend:
     - npm ci
   script:
     - npm test
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - frontend/**/* # Run only if files in the frontend directory change
 
 # Build jobs with multi-platform support
 build-frontend:
@@ -110,6 +126,10 @@ build-frontend:
         -t $DOCKERHUB_USERNAME/tfe-frontend:latest \
         -t $DOCKERHUB_USERNAME/tfe-frontend:$CI_COMMIT_SHORT_SHA \
         ./frontend
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - frontend/**/* # Run only if files in the frontend directory change
 
 build-backend:
   <<: *docker-setup
@@ -124,3 +144,8 @@ build-backend:
         -t $DOCKERHUB_USERNAME/tfe-backend:latest \
         -t $DOCKERHUB_USERNAME/tfe-backend:$CI_COMMIT_SHORT_SHA \
         ./backend
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      changes:
+        - backend/**/* # Run only if files in the backend directory change
+
