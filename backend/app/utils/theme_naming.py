@@ -1,15 +1,15 @@
 import logging
-import os
 from typing import List, Tuple
 
 import requests
+from app.config import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma3:4b")
-OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "30"))
+OLLAMA_BASE_URL = settings.OLLAMA_BASE_URL
+OLLAMA_MODEL = settings.OLLAMA_MODEL
+OLLAMA_TIMEOUT = settings.OLLAMA_TIMEOUT
 
 
 def generate_name_for_topic(topic_words: List[Tuple[str, float]]) -> str:
@@ -28,12 +28,14 @@ def generate_name_for_topic(topic_words: List[Tuple[str, float]]) -> str:
         f"Only output the topic name."
     )
 
+    print("Prompt:", prompt)
+
     api_url = f"{OLLAMA_BASE_URL}/api/generate"
     payload = {
         "model": OLLAMA_MODEL,
         "prompt": prompt,
         "stream": False,
-        "options": {"num_predict": 15},
+        # "options": {"num_predict": 15},
     }
 
     try:

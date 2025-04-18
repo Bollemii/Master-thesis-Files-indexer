@@ -4,13 +4,15 @@ services:
     container_name: backend
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      - DOCUMENT_STORAGE_PATH=${DOCUMENT_STORAGE_PATH}
-      - TESSERACT_PATH=${TESSERACT_PATH}
-      - LIBREOFFICE_PATH=${LIBREOFFICE_PATH}
+      - DOCUMENT_STORAGE_PATH="/app/storage"
+      - TESSERACT_PATH="/usr/bin/tesseract"
+      - LIBREOFFICE_PATH="/usr/bin/libreoffice"
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
     ports:
       - "8000:8000"
     volumes:
-      - ./document-storage:${DOCUMENT_STORAGE_PATH}
+      - ./document-storage:/app/storage
       - ./tmp-storage:/app/tmp
     depends_on:
       - db
@@ -50,18 +52,18 @@ services:
       - db
     restart: unless-stopped
 
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - 11434:11434
-    volumes:
-      - ./ollama/ollama:/root/.ollama
-      - ./entrypoint.sh:/entrypoint.sh
-    container_name: ollama
-    pull_policy: always
-    tty: true
-    restart: always
-    entrypoint: ["/usr/bin/bash", "/entrypoint.sh"]
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   ports:
+  #     - 11434:11434
+  #   volumes:
+  #     - ./ollama/ollama:/root/.ollama
+  #     - ./entrypoint.sh:/entrypoint.sh
+  #   container_name: ollama
+  #   pull_policy: always
+  #   tty: true
+  #   restart: always
+  #   entrypoint: ["/usr/bin/bash", "/entrypoint.sh"]
 
 volumes:
   db-storage:

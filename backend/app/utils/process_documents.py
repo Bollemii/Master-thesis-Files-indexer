@@ -52,16 +52,12 @@ def run_process_document():
                 ).first()
                 if topic:
                     topic.words = {word: weight for word, weight in topic_words_weights}
-                    topic.description = generate_name_for_topic(
-                        [word for word, weight in topic_words_weights]
-                    )
+                    topic.description = generate_name_for_topic(topic_words_weights)
                 else:
-                    topic_words = [word for word, weight in topic_words_weights]
-                    print("Topic words:", topic_words)
                     topic = Topic(
                         name=f"Topic {topic_idx}",
                         words={word: weight for word, weight in topic_words_weights},
-                        description=generate_name_for_topic(topic_words),
+                        description=generate_name_for_topic(topic_words_weights),
                     )
                     session.add(topic)
                 session.commit()
