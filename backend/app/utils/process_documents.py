@@ -9,6 +9,7 @@ from app.TopicModeling import topic_modeling_v3
 from sqlalchemy import create_engine
 from sqlmodel import Session, select
 from app.config import settings
+from app.utils.theme_naming import generate_name_for_topic
 
 
 def run_process_document():
@@ -52,9 +53,12 @@ def run_process_document():
                 if topic:
                     topic.words = {word: weight for word, weight in topic_words_weights}
                 else:
+                    topic_words = [word for word, weight in topic_words_weights]
+                    print("Topic words:", topic_words)
                     topic = Topic(
                         name=f"Topic {topic_idx}",
                         words={word: weight for word, weight in topic_words_weights},
+                        description=generate_name_for_topic(topic_words),
                     )
                     session.add(topic)
                 session.commit()

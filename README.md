@@ -18,7 +18,7 @@ $ git clone https://gitlab.com/Masi-s-Matcas/tfe.git
 ```console
 $ cd tfe
 ```
-- ou télécharger uniquement les fichiers docker-compose.yml et .env
+- ou télécharger uniquement les fichiers docker-compose.yml, .env et entrypoint.sh depuis le dépôt GitLab.
 
 
 ## Utilisation
