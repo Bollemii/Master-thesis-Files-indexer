@@ -3,6 +3,7 @@ variables:
   DOCKER_BUILDKIT: "1"            # Enable BuildKit for faster builds
   CACHE_DIR: ".cache"             # Cache directory
   UV_CACHE_DIR: "${CACHE_DIR}/uv" # Cache directory for uv
+  UV_LINK_MODE: copy
 
 # Only run pipeline on main branch
 workflow:
@@ -42,8 +43,8 @@ lint-backend:
     - cd backend
     - uv pip install flake8 black wheel
   script:
-    - flake8 --max-line-length=120 backend/app/
-    - black --check backend/app/
+    - flake8 --max-line-length=120 app/
+    - black --check app/
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
@@ -83,7 +84,7 @@ test-backend:
     - uv pip install wheel
     - uv pip install -r requirements.txt
   script:
-    - pytest --cov=backend/app/ --cov-report=xml:coverage.xml --cov-report=term
+    - pytest --cov=app/ --cov-report=xml:coverage.xml --cov-report=term
   coverage: '/TOTAL.+?(\d+\%)/'
   artifacts:
     reports:
