@@ -42,8 +42,8 @@ lint-backend:
     - cd backend
     - uv pip install flake8 black wheel
   script:
-    - flake8 --max-line-length=120 .
-    - black --check .
+    - flake8 --max-line-length=120 .app/
+    - black --check .app/
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
