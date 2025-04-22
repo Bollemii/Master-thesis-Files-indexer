@@ -42,8 +42,8 @@ lint-backend:
     - cd backend
     - uv pip install flake8 black wheel
   script:
-    - flake8 --max-line-length=120 .app/
-    - black --check .app/
+    - flake8 --max-line-length=120 backend/app/
+    - black --check backend/app/
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
@@ -83,7 +83,7 @@ test-backend:
     - uv pip install wheel
     - uv pip install -r requirements.txt
   script:
-    - pytest --cov=. --cov-report=xml:coverage.xml --cov-report=term
+    - pytest --cov=backend/app/ --cov-report=xml:coverage.xml --cov-report=term
   coverage: '/TOTAL.+?(\d+\%)/'
   artifacts:
     reports:
