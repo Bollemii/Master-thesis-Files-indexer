@@ -1,7 +1,8 @@
 variables:
-  DOCKER_TLS_CERTDIR: "/certs" # Security for Docker-in-Docker
-  DOCKER_BUILDKIT: "1"         # Enable BuildKit for faster builds
-  CACHE_DIR: ".cache"          # Cache directory
+  DOCKER_TLS_CERTDIR: "/certs"    # Security for Docker-in-Docker
+  DOCKER_BUILDKIT: "1"            # Enable BuildKit for faster builds
+  CACHE_DIR: ".cache"             # Cache directory
+  UV_CACHE_DIR: "${CACHE_DIR}/uv" # Cache directory for uv
 
 # Only run pipeline on main branch
 workflow:
@@ -29,16 +30,16 @@ stages:
 lint-backend:
   allow_failure: true
   stage: lint
-  image: python:3.13-slim
+  image: ghcr.io/astral-sh/uv:python3.13-bookworm-slim
   cache:
-    key: ${CI_COMMIT_REF_SLUG}-python
+    key: ${CI_COMMIT_REF_SLUG}-uv
     paths:
-      - ${CACHE_DIR}/pip
+      - ${UV_CACHE_DIR}
   variables:
-    PIP_CACHE_DIR: ${CACHE_DIR}/pip
+    UV_CACHE_DIR: ${UV_CACHE_DIR}
   before_script:
     - cd backend
-    - pip install flake8 black wheel
+    - uv pip install flake8 black wheel
   script:
     - flake8 --max-line-length=120 .
     - black --check .
@@ -68,17 +69,17 @@ lint-frontend:
 # Test jobs
 test-backend:
   stage: test
-  image: python:3.13-slim
+  image: ghcr.io/astral-sh/uv:python3.13-bookworm-slim
   cache:
-    key: ${CI_COMMIT_REF_SLUG}-python
+    key: ${CI_COMMIT_REF_SLUG}-uv
     paths:
-      - ${CACHE_DIR}/pip
+      - ${UV_CACHE_DIR}
   variables:
-    PIP_CACHE_DIR: ${CACHE_DIR}/pip
+    UV_CACHE_DIR: ${UV_CACHE_DIR}
   before_script:
     - cd backend
-    - pip install wheel
-    - pip install -r requirements.txt
+    - uv pip install wheel
+    - uv pip install -r requirements.txt
   script:
     - pytest --cov=. --cov-report=xml:coverage.xml --cov-report=term
   coverage: '/TOTAL.+?(\d+\%)/'

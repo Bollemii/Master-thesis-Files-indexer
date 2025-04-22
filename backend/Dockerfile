@@ -1,12 +1,16 @@
-FROM python:3.13-slim-bookworm
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 
 WORKDIR /app
 
-COPY ./requirements.txt .
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
 
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-# install tesseract and libreoffice
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-project --no-dev
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     libreoffice \
@@ -15,9 +19,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-ARG CACHEBUST=1
-COPY ./app /app
+ADD ./app /app
+COPY pyproject.toml .
+COPY uv.lock .
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+
+ENV PATH="/app/.venv/bin:$PATH"
 
 RUN mkdir -p /app/tmp
+
+ENTRYPOINT []
 
 CMD ["fastapi", "run", "main.py", "--port", "8000"]
