@@ -37,9 +37,9 @@ lint-backend:
       - ${UV_CACHE_DIR}
   variables:
     UV_CACHE_DIR: ${UV_CACHE_DIR}
+    UV_SYSTEM_PYTHON: 1
   before_script:
     - cd backend
-    - uv venv
     - uv pip install flake8 black wheel
   script:
     - flake8 --max-line-length=120 .
@@ -77,9 +77,9 @@ test-backend:
       - ${UV_CACHE_DIR}
   variables:
     UV_CACHE_DIR: ${UV_CACHE_DIR}
+    UV_SYSTEM_PYTHON: 1
   before_script:
     - cd backend
-    - uv venv
     - uv pip install wheel
     - uv pip install -r requirements.txt
   script:
