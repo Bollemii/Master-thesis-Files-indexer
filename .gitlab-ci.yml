@@ -84,7 +84,7 @@ test-backend:
     - uv pip install wheel
     - uv pip install -r requirements.txt
   script:
-    - pytest --cov=app/ --cov-report=xml:coverage.xml --cov-report=term
+    - pytest app/ --cov=app/ --cov-report=xml:coverage.xml --cov-report=term
   coverage: '/TOTAL.+?(\d+\%)/'
   artifacts:
     reports:
