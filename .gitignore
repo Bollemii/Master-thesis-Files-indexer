@@ -2,8 +2,7 @@
 documents*
 *.db
 __pycache__/
-app/__pycache__/
-.vscode*
+.vscode/
 .pytest*
 tmp
 openapi.json
