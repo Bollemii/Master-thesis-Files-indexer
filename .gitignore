@@ -8,3 +8,6 @@ tmp
 openapi.json
 .DS_Store
 test_document.txt
+document-storage/
+ollama/
+tmp-storage/

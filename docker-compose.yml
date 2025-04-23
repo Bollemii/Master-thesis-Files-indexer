@@ -1,12 +1,14 @@
 services:
   backend:
-    image: mateofski/tfe-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: backend
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - DOCUMENT_STORAGE_PATH=/app/storage
-      - TESSERACT_PATH="/usr/bin/tesseract"
-      - LIBREOFFICE_PATH="/usr/bin/libreoffice"
+      - TESSERACT_PATH=/usr/bin/tesseract
+      - LIBREOFFICE_PATH=/usr/bin/libreoffice
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
       - OLLAMA_MODEL=${OLLAMA_MODEL}
     ports:
@@ -19,7 +21,9 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: mateofski/tfe-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: frontend
     ports:
       - "3000:80"
@@ -34,8 +38,8 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PW}
       - POSTGRES_DB=${POSTGRES_DB}
-    expose:
-      - "5432"
+    ports:
+      - "5432:5432"
     volumes:
       - db-storage:/var/lib/postgresql/data
     restart: unless-stopped
