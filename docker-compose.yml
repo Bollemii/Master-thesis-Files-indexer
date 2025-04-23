@@ -11,6 +11,7 @@ services:
       - LIBREOFFICE_PATH=/usr/bin/libreoffice
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
       - OLLAMA_MODEL=${OLLAMA_MODEL}
+      - OLLAMA_TIMEOUT=50
     ports:
       - "8000:8000"
     volumes:
@@ -57,7 +58,7 @@ services:
     restart: unless-stopped
 
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.6.5
     ports:
       - 11434:11434
     volumes:

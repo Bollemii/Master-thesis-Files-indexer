@@ -2,14 +2,14 @@ import os
 import pathlib
 from datetime import datetime
 from time import perf_counter
-
 import pandas as pd
+from sqlalchemy import create_engine
+from sqlmodel import Session, select
+
 from app.config import settings
 from app.models import Document, DocumentTopicLink, Topic
 from app.TopicModeling import topic_modeling_v3
 from app.utils.theme_naming import generate_name_for_topic
-from sqlalchemy import create_engine
-from sqlmodel import Session, select
 
 
 def run_process_document():

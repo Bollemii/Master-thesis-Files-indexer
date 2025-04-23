@@ -1,12 +1,13 @@
 import os
 import pathlib
 from multiprocessing import cpu_count
-
 import pandas as pd
-from app.TopicModeling.miner_v2 import Miner
-from app.TopicModeling.Reader import Reader
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import CountVectorizer
+
+from app.config import settings
+from app.TopicModeling.miner_v2 import Miner
+from app.TopicModeling.Reader import Reader
 
 
 def delete_eol(content):
@@ -94,6 +95,7 @@ def process_documents(doc_df):
 
 
 def run_lda(transf_doc_df):
+    NB_TOPICS = settings.LDA_NB_TOPICS if settings.LDA_NB_TOPICS else 5
 
     no_error_df = transf_doc_df[transf_doc_df["error"].isnull()]
     corpus = no_error_df["without_stop_words"]
@@ -103,10 +105,9 @@ def run_lda(transf_doc_df):
 
     doc_topic_prior = 0.085
     topic_word_prior = 0.225
-    n_topics = 5
 
     lda = LatentDirichletAllocation(
-        n_components=n_topics,
+        n_components=NB_TOPICS,
         random_state=0,
         verbose=1,
         doc_topic_prior=doc_topic_prior,

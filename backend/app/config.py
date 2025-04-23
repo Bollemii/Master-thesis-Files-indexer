@@ -1,5 +1,4 @@
 from typing import List, Union
-
 from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings
 
@@ -15,6 +14,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     DATABASE_URL: str = "sqlite:///./app.db"
     DOCUMENT_STORAGE_PATH: str = "./documents"
+    LDA_NB_TOPICS: int = 5
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = ""
     OLLAMA_TIMEOUT: int = 30
