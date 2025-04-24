@@ -30,7 +30,6 @@ rectangle "Document Topic Modeling" {
   User --> UC_Logout
   User --> UC_Upload
   User --> UC_ViewList
-  User --> UC_Search
   User --> UC_ViewDetails
   User --> UC_UpdateDetails
   User --> UC_Delete
@@ -38,9 +37,10 @@ rectangle "Document Topic Modeling" {
 
   UC_ViewDetails ..> UC_ViewPreview : <<include>>
   UC_ViewList ..> UC_ViewPreview : <<include>>
+  UC_ViewList <.. UC_Search : <<extend>>
   UC_ViewDetails ..> UC_ViewTopics : <<include>>
 
-  UC_Upload ..> UC_GenPreview : <<trigger>>
+  UC_Upload <.. UC_GenPreview : <<extend>>
 
   User <|-left- Admin
   Admin --> UC_ManageUsers
