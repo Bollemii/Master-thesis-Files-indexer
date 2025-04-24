@@ -75,6 +75,10 @@ def run_process_document():
                 if document is not None:
                     document_topics = get_document_topics_by_id(document.id)
                     for topic_idx, weight in enumerate(doc_topic[1]):
+                        if weight < 0.01:
+                            # Skip topics with low weight
+                            continue
+
                         document_topic_link = [
                             t for t in document_topics if t.name == f"Topic {topic_idx}"
                         ][0] if document_topics else None
