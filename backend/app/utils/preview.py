@@ -2,11 +2,10 @@ import io
 import os
 from multiprocessing import Pool, cpu_count
 from typing import Dict, List, Literal, Tuple
-
 import fitz
-from app.models import Document
 from PIL import Image
-from sqlmodel import Session, select
+
+from app.database.documents import get_all_documents
 
 PreviewSize = Literal["thumbnail", "detail"]
 
@@ -126,10 +125,10 @@ class PreviewManager:
 
         return document_id, {"thumbnail": thumbnail_path, "detail": detail_path}
 
-    async def generate_all_previews(self, session: Session):
+    async def generate_all_previews(self):
         """Generate previews for all documents at startup using process pool"""
         try:
-            documents = session.exec(select(Document)).all()
+            documents = get_all_documents()
             preview_tasks: List[Tuple[str, str]] = []
 
             # Check for existing previews

@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     DATABASE_URL: str = "sqlite:///./app.db"
+    NEO4J_URL: str = "neo4j://localhost:7687"
+    NEO4J_USER: str = "neo4j"
+    NEO4J_PASSWORD: str = "password"
     DOCUMENT_STORAGE_PATH: str = "./documents"
     LDA_NB_TOPICS: int = 5
     OLLAMA_BASE_URL: str = "http://localhost:11434"

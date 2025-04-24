@@ -1,5 +1,4 @@
 .venv
-documents*
 *.db
 __pycache__/
 .vscode/
@@ -8,6 +7,4 @@ tmp
 openapi.json
 .DS_Store
 test_document.txt
-document-storage/
-ollama/
-tmp-storage/
+data/

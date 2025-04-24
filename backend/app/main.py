@@ -4,12 +4,11 @@ from contextlib import asynccontextmanager
 import uvicorn
 from anyio.streams.file import FileWriteStream
 from app.config import settings
-from app.database import (
+from app.init_database import (
     add_existing_documents,
     create_admin_user,
-    create_db_and_tables,
-    get_session,
 )
+from app.database.main import check_neo4j_connection
 from app.routers import documents, users
 from app.utils.preview import PreviewManager
 from fastapi import FastAPI
@@ -18,24 +17,25 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Initialize database
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(appli: FastAPI):
     print("Starting up...")
-    create_db_and_tables()
+    if not check_neo4j_connection():
+        raise ValueError("Could not connect to Neo4j database. Check your connection.")
+
     add_existing_documents()
     create_admin_user()
     print("Database initialized")
 
-    with next(get_session()) as session:
-        try:
-            preview_manager = PreviewManager()
-            await preview_manager.generate_all_previews(session)
-        except Exception as e:
-            print(f"Error generating previews: {e}")
+    try:
+        preview_manager = PreviewManager()
+        await preview_manager.generate_all_previews()
+    except Exception as e:
+        print(f"Error generating previews: {e}")
 
     try:
         path = "./openapi.json"
         async with await FileWriteStream.from_path(path) as stream:
-            openapi_schema = app.openapi()
+            openapi_schema = appli.openapi()
             await stream.send(json.dumps(openapi_schema).encode("utf-8"))
         print(f"OpenAPI spec saved to {path}")
     except Exception as e:

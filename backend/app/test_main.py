@@ -3,7 +3,7 @@ import uuid
 from unittest.mock import patch
 
 import pytest
-from app.database import get_session
+from app.init_database import get_session
 from app.main import app
 from app.models import Document, User
 from app.utils.security import get_password_hash

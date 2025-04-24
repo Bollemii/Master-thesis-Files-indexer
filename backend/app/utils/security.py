@@ -1,17 +1,16 @@
 from datetime import datetime, timedelta
-from typing import Annotated, Optional
-
-from app.config import settings
-from app.database import get_session
-from app.models import User
+from typing import Optional
+import uuid
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from sqlmodel import Session, select
 
-SessionDep = Annotated[Session, Depends(get_session)]
+from app.config import settings
+from app.models import User
+from app.database.users import get_user_by_username
+
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -77,28 +76,36 @@ async def verify_token(token: str = Depends(oauth2_scheme)) -> TokenData:
 
 
 def get_current_user(
-    session: SessionDep, token_data: TokenData = Depends(verify_token)
+    token_data: TokenData = Depends(verify_token)
 ) -> User:
     """Get the current authenticated user based on the token."""
-    user = session.exec(
-        select(User).where(User.username == token_data.username)
-    ).first()
+    user = get_user_by_username(token_data.username)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return User(
+        id=uuid.UUID(user.id),
+        username=user.username,
+        is_superuser=user.is_superuser,
+        creation_date=user.creation_date,
+        hashed_password=user.hashed_password,
+    )
 
 
-def authenticate_user(session: Session, username: str, password: str) -> User:
+def authenticate_user(username: str, password: str) -> User:
     """Authenticate a user based on username and password."""
-    user = session.exec(select(User).where(User.username == username)).first()
+    user = get_user_by_username(username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
         return False
-    return user
+    return User(
+        id=uuid.UUID(user.id),
+        username=user.username,
+        is_superuser=user.is_superuser,
+        creation_date=user.creation_date,
+        hashed_password=user.hashed_password,
+    )
 
-
-# def create_user(session: Session, user: User) -> User:
 
 # Helper function to require authentication
 require_auth = Security(get_current_user)

@@ -3,20 +3,21 @@ import pathlib
 from datetime import datetime
 from time import perf_counter
 import pandas as pd
-from sqlalchemy import create_engine
-from sqlmodel import Session, select
 
-from app.config import settings
-from app.models import Document, DocumentTopicLink, Topic
 from app.TopicModeling import topic_modeling_v3
 from app.utils.theme_naming import generate_name_for_topic
+from app.database.documents import (
+    get_all_documents,
+    get_document_by_filename,
+    get_document_topics_by_id,
+    process_document,
+    link_document_to_topic,
+)
+from app.database.topics import get_topic_by_name, create_topic, update_topic
 
 
 def run_process_document():
-    DATABASE_URL = settings.DATABASE_URL
-    engine = create_engine(DATABASE_URL)
-    with Session(engine) as session:
-        documents = session.exec(select(Document)).all()
+    documents = get_all_documents()
 
     start_time = perf_counter()
     try:
@@ -31,7 +32,7 @@ def run_process_document():
             ]:
                 file_path_list.append(document.path)
                 file_name_list.append(document.filename)
-                time_list.append(datetime.timestamp(document.upload_date))
+                time_list.append(datetime.timestamp(datetime.fromisoformat(document.upload_date)))
                 size_list.append(os.path.getsize(document.path))
 
         doc_df = pd.DataFrame(
@@ -47,64 +48,64 @@ def run_process_document():
 
         for topic_idx, topic_words_weights in enumerate(topics):
             try:
-                topic = session.exec(
-                    select(Topic).where(Topic.name == f"Topic {topic_idx}")
-                ).first()
-                if topic:
+                topic = get_topic_by_name(f"Topic {topic_idx}")
+                if topic is not None:
                     topic.words = {word: weight for word, weight in topic_words_weights}
                     topic.description = generate_name_for_topic(topic_words_weights)
+
+                    update_topic(
+                        topic_id=topic.id,
+                        name=topic.name,
+                        words=topic.words,
+                        description=topic.description,
+                    )
                 else:
-                    topic = Topic(
+                    create_topic(
                         name=f"Topic {topic_idx}",
-                        words={word: weight for word, weight in topic_words_weights},
+                        words=dict(topic_words_weights),
                         description=generate_name_for_topic(topic_words_weights),
                     )
-                    session.add(topic)
-                session.commit()
-                session.refresh(topic)
             except Exception as e:
                 print(f"Error processing topic {topic_idx}: {str(e)}")
-                session.rollback()
                 continue
 
         for doc_topic in doc_topics:
             try:
-                document = session.exec(
-                    select(Document).where(Document.filename == doc_topic[0])
-                ).first()
-                if document:
+                document = get_document_by_filename(doc_topic[0])
+                if document is not None:
+                    document_topics = get_document_topics_by_id(document.id)
                     for topic_idx, weight in enumerate(doc_topic[1]):
-                        topic = session.exec(
-                            select(Topic).where(Topic.name == f"Topic {topic_idx}")
-                        ).first()
-                        document_topic_link = session.exec(
-                            select(DocumentTopicLink)
-                            .where(DocumentTopicLink.document_id == document.id)
-                            .where(DocumentTopicLink.topic_id == topic.id)
-                        ).first()
-                        if document_topic_link:
+                        document_topic_link = [
+                            t for t in document_topics if t.name == f"Topic {topic_idx}"
+                        ][0] if document_topics else None
+                        if document_topic_link is not None:
                             document_topic_link.weight = float(weight)
+
+                            update_topic(
+                                topic_id=document_topic_link.topic_id,
+                                name=document_topic_link.name,
+                                words=document_topic_link.words,
+                                description=document_topic_link.description,
+                            )
                         else:
-                            document_topic_link = DocumentTopicLink(
+                            topic = get_topic_by_name(f"Topic {topic_idx}")
+                            if not topic:
+                                raise ValueError(f"Topic {topic_idx} not found.")
+                            link_document_to_topic(
                                 document_id=document.id,
                                 topic_id=topic.id,
                                 weight=float(weight),
                             )
-                            session.add(document_topic_link)
-                        session.commit()
 
-                document.processed = True
-                session.add(document)
-                session.commit()
+                    process_document(
+                        document_id=document.id,
+                    )
             except Exception as e:
                 print(f"Error processing document {doc_topic[0]}: {str(e)}")
-                session.rollback()
                 continue
 
     except Exception as e:
         print(f"Process error: {str(e)}")
-        session.rollback()
     finally:
         end_time = perf_counter()
-        session.close()
         print(f"Processing completed in: {end_time - start_time:.2f}s")

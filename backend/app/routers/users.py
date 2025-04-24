@@ -1,6 +1,8 @@
 from typing import Annotated
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 
-from app.database import get_session
 from app.models import User
 from app.schemas import UserCreate, UserDetail
 from app.utils.security import (
@@ -8,16 +10,10 @@ from app.utils.security import (
     authenticate_user,
     create_access_token,
     get_current_user,
-    get_password_hash,
 )
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlmodel import Session
+from app.database.users import create_user as create_user_db
 
 router = APIRouter()
-
-SessionDep = Annotated[Session, Depends(get_session)]
-
 
 @router.post(
     "/user/new",
@@ -25,25 +21,29 @@ SessionDep = Annotated[Session, Depends(get_session)]
     status_code=status.HTTP_201_CREATED,
     tags=["users"],
 )
-async def create_user(user: UserCreate, session: SessionDep):
+async def create_user(user: UserCreate):
     """Create a new user"""
     try:
-        user = User(
-            **user.model_dump(), hashed_password=get_password_hash(user.password)
+        user = create_user_db(
+            username=user.username,
+            password=user.password,
         )
-        session.add(user)
-        session.commit()
-        session.refresh(user)
-        return user
+
+        return UserDetail(
+            id=uuid.UUID(user.id),
+            username=user.username,
+            is_superuser=user.is_superuser,
+            creation_date=user.creation_date,
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/token", tags=["auth"])
 async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session: SessionDep
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> Token:
-    current_user = authenticate_user(session, form_data.username, form_data.password)
+    current_user = authenticate_user(form_data.username, form_data.password)
     if not current_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
