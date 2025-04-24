@@ -1,0 +1,50 @@
+@startuml UseCases
+skinparam linetype polyline
+left to right direction
+
+actor Guest
+actor "Authenticated User" as User
+actor "Administrator" as Admin
+
+rectangle "Document Topic Modeling" {
+  usecase "Register" as UC_Register
+  usecase "Login" as UC_Login
+  usecase "Logout" as UC_Logout
+  usecase "Upload Document" as UC_Upload
+  usecase "View Dashboard" as UC_ViewList
+  usecase "Search Documents" as UC_Search
+  usecase "View Document Details" as UC_ViewDetails
+  usecase "Update Document Details" as UC_UpdateDetails
+  usecase "Delete Document" as UC_Delete
+  usecase "View Document Preview" as UC_ViewPreview
+  usecase "View Document Topics" as UC_ViewTopics
+  usecase "Start Topic Modeling Process" as UC_TopicModel
+  usecase "Generate Document Preview" as UC_GenPreview
+  usecase "Manage Users" as UC_ManageUsers
+  usecase "Manage Documents" as UC_ManageDocuments
+
+  Guest --> UC_Register
+  Guest --> UC_Login
+
+  User --> UC_Login
+  User --> UC_Logout
+  User --> UC_Upload
+  User --> UC_ViewList
+  User --> UC_Search
+  User --> UC_ViewDetails
+  User --> UC_UpdateDetails
+  User --> UC_Delete
+  User --> UC_TopicModel
+
+  UC_ViewDetails ..> UC_ViewPreview : <<include>>
+  UC_ViewList ..> UC_ViewPreview : <<include>>
+  UC_ViewDetails ..> UC_ViewTopics : <<include>>
+
+  UC_Upload ..> UC_GenPreview : <<trigger>>
+
+  User <|-left- Admin
+  Admin --> UC_ManageUsers
+  Admin --> UC_ManageDocuments
+}
+
+@enduml
