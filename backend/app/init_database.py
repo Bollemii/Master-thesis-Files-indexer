@@ -1,16 +1,10 @@
 import os
 from passlib.context import CryptContext
-from sqlmodel import Session, SQLModel, create_engine
 
 from app.config import settings
 from app.utils.space_word import space_between_word
 from app.database.documents import get_all_documents, create_document
 from app.database.users import get_all_users, create_user
-
-DATABASE_URL = settings.DATABASE_URL
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL must be set in environment variables.")
-engine = create_engine(DATABASE_URL)
 
 DOCUMENT_STORAGE_PATH = settings.DOCUMENT_STORAGE_PATH
 if not DOCUMENT_STORAGE_PATH:
@@ -18,14 +12,6 @@ if not DOCUMENT_STORAGE_PATH:
 os.makedirs(DOCUMENT_STORAGE_PATH, exist_ok=True)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-
-
-def get_session():
-    with Session(engine) as session:
-        yield session
 
 
 def add_existing_documents():

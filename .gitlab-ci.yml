@@ -13,19 +13,6 @@ workflow:
 stages:
   - lint
   - test
-  - build
-
-# Reusable templates
-.docker-setup: &docker-setup
-  image: docker:24.0
-  services:
-    - docker:24.0-dind
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
-    - docker context create builder-context
-    - docker buildx create --name mybuilder --driver docker-container --use builder-context
-    - docker buildx inspect --bootstrap
 
 # Linting jobs
 lint-backend:
@@ -68,37 +55,6 @@ lint-frontend:
       changes:
         - frontend/**/* # Run only if files in the frontend directory change
 
-# Test jobs
-test-backend:
-  stage: test
-  image: ghcr.io/astral-sh/uv:python3.13-bookworm-slim
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}-uv
-    paths:
-      - ${UV_CACHE_DIR}
-  variables:
-    UV_CACHE_DIR: ${UV_CACHE_DIR}
-    UV_SYSTEM_PYTHON: 1
-  before_script:
-    - cd backend
-    - uv pip install wheel
-    - uv pip install -r requirements.txt
-  script:
-    - pytest app/ --cov=app/ --cov-report=xml:coverage.xml --cov-report=term
-  coverage: '/TOTAL.+?(\d+\%)/'
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: backend/coverage.xml
-    paths:
-      - backend/coverage.xml
-    expire_in: 1 week
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      changes:
-        - backend/**/* # Run only if files in the backend directory change
-
 test-frontend:
   stage: test
   image: node:20-alpine
@@ -115,41 +71,4 @@ test-frontend:
     - if: $CI_COMMIT_BRANCH == "main"
       changes:
         - frontend/**/* # Run only if files in the frontend directory change
-
-# Build jobs with multi-platform support
-build-frontend:
-  <<: *docker-setup
-  stage: build
-  script:
-    - |
-      docker buildx build \
-        --platform linux/amd64,linux/arm64 \
-        --push \
-        -t $CI_REGISTRY_IMAGE/frontend:latest \
-        -t $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA \
-        -t $DOCKERHUB_USERNAME/tfe-frontend:latest \
-        -t $DOCKERHUB_USERNAME/tfe-frontend:$CI_COMMIT_SHORT_SHA \
-        ./frontend
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      changes:
-        - frontend/**/* # Run only if files in the frontend directory change
-
-build-backend:
-  <<: *docker-setup
-  stage: build
-  script:
-    - |
-      docker buildx build \
-        --platform linux/amd64,linux/arm64 \
-        --push \
-        -t $CI_REGISTRY_IMAGE/backend:latest \
-        -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA \
-        -t $DOCKERHUB_USERNAME/tfe-backend:latest \
-        -t $DOCKERHUB_USERNAME/tfe-backend:$CI_COMMIT_SHORT_SHA \
-        ./backend
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      changes:
-        - backend/**/* # Run only if files in the backend directory change
 

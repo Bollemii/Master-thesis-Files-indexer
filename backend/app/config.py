@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "740b6ea71528914a03a0404f5a9573236410dd68b4c00de3913575b4aed9a924"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    DATABASE_URL: str = "sqlite:///./app.db"
     NEO4J_URL: str = "neo4j://localhost:7687"
     NEO4J_USER: str = "neo4j"
     NEO4J_PASSWORD: str = "password"
