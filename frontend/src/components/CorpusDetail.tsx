@@ -8,6 +8,11 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
 } from "recharts";
 import { Trash2, RefreshCcw } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
@@ -17,6 +22,12 @@ import { UpdateDocumentModal } from "./UpdateDocumentModal";
 
 // Custom colors for the pie chart
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
+const BAR_COLOR = "#8884d8";
+
+interface WordData {
+  name: string;
+  weight: number;
+}
 
 export function CorpusDetail() {
   const [document, setDocument] = useState<Document>();
@@ -51,24 +62,56 @@ export function CorpusDetail() {
   const topicData = document.topics?.map((topic) => {
     const value = topic.weight;
     const minAngle = value > 0 && value < 0.02 ? 2 : 0;
+    const displayName = topic.description?.trim()
+      ? topic.description
+      : topic.name;
     return {
-      name: topic.name,
+      name: displayName,
       value,
       minAngle,
+      originalTopic: topic,
     };
   });
 
+  const MAJOR_TOPIC_THRESHOLD = 0.1; // Example threshold: 10% weight
+  const TOP_N_WORDS = 10; // Show top N words per topic
+
+  const majorTopicsWithWordData = topicData
+    ?.filter(
+      (topic) =>
+        topic.value >= MAJOR_TOPIC_THRESHOLD && topic.originalTopic.words
+    ) // Filter major topics that have word data
+    .map((topic) => {
+      // Convert words dictionary to sorted array [{ name: string, weight: number }]
+      const wordsArray: WordData[] = Object.entries(topic.originalTopic.words)
+        .map(([name, weight]) => ({ name, weight: Number(weight) })) // Ensure weight is number
+        .sort((a, b) => b.weight - a.weight) // Sort descending by weight
+        .slice(0, TOP_N_WORDS); // Take top N words
+
+      return {
+        topicName: topic.name, // Use the display name (description or name)
+        words: wordsArray,
+      };
+    })
+    .filter((topic) => topic.words.length > 0);
+
   const handleDelete = () => {
-    if (window.confirm(`Are you sure you want to delete "${document?.filename}"? This action cannot be undone.`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete "${document?.filename}"? This action cannot be undone.`
+      )
+    ) {
       fetchWithAuth(`/documents/${document.id}`, token, {
         method: "DELETE",
-      }).then(() => {
-        window.location.href = "/dashboard";
-      }).catch(err => {
-        console.error("Failed to delete document:", err);
-        alert("Failed to delete the document. Please try again.");
-      });
-    };
+      })
+        .then(() => {
+          window.location.href = "/dashboard";
+        })
+        .catch((err) => {
+          console.error("Failed to delete document:", err);
+          alert("Failed to delete the document. Please try again.");
+        });
+    }
   };
 
   const handleUpdate = () => {
@@ -80,7 +123,7 @@ export function CorpusDetail() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-10">
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 min-h-[100px]">
         <div className="flex justify-between items-center mt-2">
           <h2 className="text-2xl font-bold mb-4 dark:text-white">
@@ -109,7 +152,7 @@ export function CorpusDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 min-w-0">
           <h3 className="text-lg font-medium mb-4 dark:text-white">
             Document Preview
           </h3>
@@ -124,11 +167,11 @@ export function CorpusDetail() {
         </div>
 
         {topicData && topicData.length > 0 ? (
-          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 min-w-0">
             <h3 className="text-lg font-medium mb-4 dark:text-white">
               Topic Distribution
             </h3>
-            <div className="h-[400px]">
+            <div className="h-[350px] sm:h-[400px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -153,6 +196,9 @@ export function CorpusDetail() {
                       `${(Number(value) * 100).toFixed(1)}%`,
                       "Weight",
                     ]}
+                    labelFormatter={(Label) => (
+                      <span className="dark:text-white">{Label}</span>
+                    )}
                     contentStyle={{
                       backgroundColor: "var(--tooltip-bg, #fff)",
                       color: "var(--tooltip-text, #000)",
@@ -160,9 +206,9 @@ export function CorpusDetail() {
                     }}
                   />
                   <Legend
-                    layout="vertical"
-                    align="right"
-                    verticalAlign="middle"
+                    layout="horizontal"
+                    align="center"
+                    verticalAlign="bottom"
                     formatter={(value) => (
                       <span className="dark:text-white">{value}</span>
                     )}
@@ -183,6 +229,67 @@ export function CorpusDetail() {
           </div>
         )}
       </div>
+      {majorTopicsWithWordData && majorTopicsWithWordData.length > 0 && (
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold dark:text-white mt-8  pt-6">
+            Major Topic Word Distributions (Top {TOP_N_WORDS})
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {majorTopicsWithWordData.map((topicData, index) => (
+              <div
+                key={index}
+                className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 min-w-0"
+              >
+                <h3
+                  className="text-lg font-medium mb-4 dark:text-white truncate"
+                  title={topicData.topicName}
+                >
+                  {topicData.topicName}
+                </h3>
+                <div className="h-[300px] w-full">
+                  {" "}
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={topicData.words}
+                      layout="vertical"
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />{" "}
+                      <XAxis type="number" hide />{" "}
+                      <YAxis
+                        dataKey="name"
+                        type="category"
+                        width={80}
+                        tick={{
+                          fontSize: 12,
+                          fill: "var(--text-color, #6b7280)",
+                        }}
+                        className="dark:text-gray-400"
+                      />
+                      <Tooltip
+                        formatter={(value: number) => [
+                          value.toFixed(4),
+                          "Weight",
+                        ]}
+                        labelFormatter={(label: string) => (
+                          <span className="dark:text-white">{label}</span>
+                        )}
+                        contentStyle={{
+                          backgroundColor: "var(--tooltip-bg, #fff)",
+                          color: "var(--tooltip-text, #000)",
+                          borderColor: "var(--tooltip-border, #ccc)",
+                        }}
+                        cursor={{ fill: "rgba(200, 200, 200, 0.1)" }}
+                      />
+                      <Bar dataKey="weight" fill={BAR_COLOR} barSize={20} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {token && (
         <UpdateDocumentModal
           document={document}
