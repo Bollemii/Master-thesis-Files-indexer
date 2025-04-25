@@ -13,11 +13,11 @@ Pour installer le projet, vous pouvez soit:
 - cloner le dépôt avec les commandes suivantes :
 
 ```console
-$ git clone https://gitlab.com/Masi-s-Matcas/tfe.git
+git clone https://gitlab.com/Masi-s-Matcas/tfe.git
 ```
 
 ```console
-$ cd tfe
+cd tfe
 ```
 
 - ou télécharger uniquement les fichiers docker-compose.yml, .env et entrypoint.sh depuis le dépôt GitLab.
@@ -29,7 +29,7 @@ Attention, due à l'utilisation de Tesseract et de LibreOffice, le container bac
 Pour lancer le projet, lancer la commande suivante :
 
 ```console
-$ docker compose up -d
+docker compose up -d
 ```
 
 Puis rendez-vous sur [http://localhost:3000](http://localhost:3000) pour accéder à l'application.
@@ -37,7 +37,7 @@ Puis rendez-vous sur [http://localhost:3000](http://localhost:3000) pour accéde
 Pour arrêter le projet, lancer la commande suivante :
 
 ```console
-$ docker compose down
+docker compose down
 ```
 
 ## Screenshots

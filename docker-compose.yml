@@ -4,7 +4,7 @@ services:
     container_name: backend
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      - DOCUMENT_STORAGE_PATH="/app/storage"
+      - DOCUMENT_STORAGE_PATH=/app/storage
       - TESSERACT_PATH="/usr/bin/tesseract"
       - LIBREOFFICE_PATH="/usr/bin/libreoffice"
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
