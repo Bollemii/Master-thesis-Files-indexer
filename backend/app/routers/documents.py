@@ -1,6 +1,6 @@
 import os
 import uuid
-from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 
 from app.models import Document, User
@@ -66,13 +66,24 @@ async def get_document_preview(
         )
 
         if not preview_path:
-            raise HTTPException(status_code=404, detail="Preview not available")
+            raise HTTPException(
+                status_code=500, detail="Failed to generate preview image"
+            )
 
         return FileResponse(preview_path, media_type="image/webp")
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        raise e
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error 500 - Generating preview: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
 
 
 @router.post(
@@ -110,8 +121,19 @@ async def upload_document(
             processed=document.processed,
             upload_date=document.upload_date,
         )
+    except HTTPException as e:
+        raise e
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error 500 - Uploading document: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.get(
@@ -154,8 +176,17 @@ async def get_document(
         return document_response
     except HTTPException as e:
         raise e
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error 500 - Retrieving document: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.get("/documents/", response_model=DocumentsPagination, tags=["documents"])
@@ -190,8 +221,19 @@ async def list_documents(
         ]
 
         return {"items": result, "total": total, "page": page, "limit": limit}
+    except HTTPException as e:
+        raise e
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error 500 - Listing documents: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.post(
@@ -218,12 +260,20 @@ def process_document(current_user: User = Depends(get_current_user)):
 
         process_manager.run_process()
 
+        return {"message": "Processing started"}
     except HTTPException as e:
         raise e
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    return {"message": "Processing started"}
+        print(f"Error 500 - Processing documents: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.get(
@@ -257,8 +307,19 @@ async def delete_document(
         delete_document_db(str(document_id))
 
         return {"message": "Document deleted"}
+    except HTTPException as e:
+        raise e
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error 500 - Deleting document: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.put("/documents/{document_id}", response_model=Document, tags=["documents"])
@@ -302,8 +363,19 @@ async def update_document(
             processed=document.processed,
             upload_date=document.upload_date,
         )
+    except HTTPException as e:
+        raise e
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error 500 - Updating document: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
 
 
 @router.put(
@@ -327,5 +399,16 @@ async def update_document_name(
         document.filename = name
 
         return document
+    except HTTPException as e:
+        raise e
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error 500 - Updating document name: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )

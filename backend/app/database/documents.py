@@ -3,11 +3,12 @@ import json
 from app.database.main import execute_neo4j_query, generate_id, get_current_timestamp
 from app.database.models import Document, DocumentTopic
 
-def get_document_count(filename : str | None = None) -> int:
+
+def get_document_count(filename: str | None = None) -> int:
     """Get the count of documents in the database"""
     if filename is not None:
         result = execute_neo4j_query(
-            "MATCH (d:Document) WHERE d.filename CONTAINS $filename RETURN COUNT(d) as count;",
+            "MATCH (d:Document) WHERE tolower(d.filename) CONTAINS tolower($filename) RETURN COUNT(d) as count;",
             parameters={"filename": filename},
         )
     else:
@@ -16,7 +17,10 @@ def get_document_count(filename : str | None = None) -> int:
         )
     return result[0]["count"] if result else 0
 
-def get_all_documents(page: int | None = None, limit: int | None = None) -> list[Document]:
+
+def get_all_documents(
+    page: int | None = None, limit: int | None = None
+) -> list[Document]:
     """Get all documents from the database"""
     if page is not None and limit is not None:
         result = execute_neo4j_query(
@@ -27,16 +31,21 @@ def get_all_documents(page: int | None = None, limit: int | None = None) -> list
         result = execute_neo4j_query(
             "MATCH (d:Document) RETURN d;",
         )
-    return [
-        Document(
-            identifier=doc["d"]["id"],
-            filename=doc["d"]["filename"],
-            path=doc["d"]["path"],
-            processed=doc["d"]["processed"],
-            upload_date=doc["d"]["upload_date"],
-        )
-        for doc in result
-    ] if result else []
+    return (
+        [
+            Document(
+                identifier=doc["d"]["id"],
+                filename=doc["d"]["filename"],
+                path=doc["d"]["path"],
+                processed=doc["d"]["processed"],
+                upload_date=doc["d"]["upload_date"],
+            )
+            for doc in result
+        ]
+        if result
+        else []
+    )
+
 
 def get_document_by_id(document_id: str) -> Document | None:
     """Get a document by its ID"""
@@ -46,13 +55,17 @@ def get_document_by_id(document_id: str) -> Document | None:
         "MATCH (d:Document {id: $id}) RETURN d;",
         parameters={"id": document_id},
     )
-    return Document(
-        identifier=result[0]["d"]["id"],
-        filename=result[0]["d"]["filename"],
-        path=result[0]["d"]["path"],
-        processed=result[0]["d"]["processed"],
-        upload_date=result[0]["d"]["upload_date"],
-    ) if result else None
+    if result:
+        doc = result[0]["d"]
+        return Document(
+            identifier=doc["id"],
+            filename=doc["filename"],
+            path=doc["path"],
+            processed=doc["processed"],
+            upload_date=doc["upload_date"],
+        )
+    return None
+
 
 def get_document_by_filename(filename: str) -> Document | None:
     """Get a document by its filename"""
@@ -62,13 +75,16 @@ def get_document_by_filename(filename: str) -> Document | None:
         "MATCH (d:Document {filename: $filename}) RETURN d;",
         parameters={"filename": filename},
     )
-    return Document(
-        identifier=result[0]["d"]["id"],
-        filename=result[0]["d"]["filename"],
-        path=result[0]["d"]["path"],
-        processed=result[0]["d"]["processed"],
-        upload_date=result[0]["d"]["upload_date"],
-    ) if result else None
+    if result:
+        doc = result[0]["d"]
+        return Document(
+            identifier=doc["id"],
+            filename=doc["filename"],
+            path=doc["path"],
+            processed=doc["processed"],
+            upload_date=doc["upload_date"],
+        )
+    return None
 
 
 def get_documents_by_filename_like(
@@ -80,7 +96,7 @@ def get_documents_by_filename_like(
 
     if page is not None or limit is not None:
         result = execute_neo4j_query(
-            "MATCH (d:Document) WHERE d.filename CONTAINS $filename RETURN d SKIP $skip LIMIT $limit;",
+            "MATCH (d:Document) WHERE tolower(d.filename) CONTAINS tolower($filename) RETURN d SKIP $skip LIMIT $limit;",
             parameters={
                 "filename": filename,
                 "skip": (page - 1) * limit,
@@ -89,19 +105,23 @@ def get_documents_by_filename_like(
         )
     else:
         result = execute_neo4j_query(
-            "MATCH (d:Document) WHERE d.filename CONTAINS $filename RETURN d;",
+            "MATCH (d:Document) WHERE tolower(d.filename) CONTAINS tolower($filename) RETURN d;",
             parameters={"filename": filename},
         )
-    return [
-        Document(
-            identifier=doc["d"]["id"],
-            filename=doc["d"]["filename"],
-            path=doc["d"]["path"],
-            processed=doc["d"]["processed"],
-            upload_date=doc["d"]["upload_date"],
-        )
-        for doc in result
-    ] if result else []
+    return (
+        [
+            Document(
+                identifier=doc["d"]["id"],
+                filename=doc["d"]["filename"],
+                path=doc["d"]["path"],
+                processed=doc["d"]["processed"],
+                upload_date=doc["d"]["upload_date"],
+            )
+            for doc in result
+        ]
+        if result
+        else []
+    )
 
 
 def get_document_topics_by_id(document_id: str) -> list[DocumentTopic]:
@@ -112,16 +132,20 @@ def get_document_topics_by_id(document_id: str) -> list[DocumentTopic]:
         "MATCH (d:Document {id: $id})-[l:HAS_TOPIC]->(t:Topic) RETURN t as topic, l.weight as weight;",
         parameters={"id": document_id},
     )
-    return [
-        DocumentTopic(
-            topic_id=topic["topic"]["id"],
-            name=topic["topic"]["name"],
-            words=json.loads(topic["topic"]["words"]),
-            weight=topic["weight"],
-            description=topic["topic"]["description"],
-        )
-        for topic in result
-    ] if result else []
+    return (
+        [
+            DocumentTopic(
+                topic_id=topic["topic"]["id"],
+                name=topic["topic"]["name"],
+                words=json.loads(topic["topic"]["words"]),
+                weight=topic["weight"],
+                description=topic["topic"]["description"],
+            )
+            for topic in result
+        ]
+        if result
+        else []
+    )
 
 
 def create_document(
@@ -149,6 +173,7 @@ def create_document(
     )
     return Document(identifier, filename, document_path, processed, upload_date)
 
+
 def link_document_to_topic(
     document_id: str, topic_id: str, weight: float = 1.0
 ) -> None:
@@ -156,12 +181,22 @@ def link_document_to_topic(
     if not document_id or not topic_id:
         raise ValueError("Document ID and Topic ID must be provided.")
     execute_neo4j_query(
-        "MATCH (d:Document {id: $document_id}), (t:Topic {id: $topic_id}) CREATE (d)-[l:HAS_TOPIC {weight: $weight}]->(t);",
+        """
+        OPTIONAL MATCH (d:Document {id: $document_id})
+        OPTIONAL MATCH (t:Topic {id: $topic_id})
+        WITH d, t
+        WHERE d IS NOT NULL AND t IS NOT NULL
+        CREATE (d)-[l:HAS_TOPIC {weight: $weight}]->(t);
+        """,
         parameters={"document_id": document_id, "topic_id": topic_id, "weight": weight},
     )
 
+
 def update_document(
-    document_id: str, filename: str | None = None, document_path: str | None = None, processed: bool | None = None
+    document_id: str,
+    filename: str | None = None,
+    document_path: str | None = None,
+    processed: bool | None = None,
 ) -> Document:
     """Update an existing document in the database"""
     if not document_id:
@@ -197,6 +232,7 @@ def update_document(
         document.upload_date,
     )
 
+
 def process_document(document_id: str) -> None:
     """Mark a document as processed"""
     if not document_id:
@@ -205,6 +241,7 @@ def process_document(document_id: str) -> None:
         "MATCH (d:Document {id: $id}) SET d.processed = true;",
         parameters={"id": document_id},
     )
+
 
 def update_weight_of_document_topic_link(
     document_id: str, topic_id: str, weight: float
@@ -216,6 +253,7 @@ def update_weight_of_document_topic_link(
         "MATCH (d:Document {id: $document_id})-[l:HAS_TOPIC]->(t:Topic {id: $topic_id}) SET l.weight = $weight;",
         parameters={"document_id": document_id, "topic_id": topic_id, "weight": weight},
     )
+
 
 def delete_document(document_id: str) -> None:
     """Delete a document by its ID"""

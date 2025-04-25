@@ -25,7 +25,7 @@ class ProcessManager:
     def __enter__(self):
         return self
 
-    def __exit__(self):
+    def __exit__(self, _, __, ___):
         self.shutdown()
 
     def __del__(self):

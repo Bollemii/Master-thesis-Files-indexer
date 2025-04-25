@@ -23,7 +23,7 @@ export function Dashboard() {
   const { token, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const itemsPerPage = 21;
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);

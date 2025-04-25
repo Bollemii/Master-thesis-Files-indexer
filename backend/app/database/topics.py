@@ -65,7 +65,8 @@ def update_topic(topic_id: str, name: str | None = None, words: dict[str, float]
         raise ValueError("Topic identifier is required.")
 
     topic = get_topic_by_name(topic_id)
-    if not topic:
+    if topic is None:
+        print(f"Topic with ID {topic_id} not found.")
         raise ValueError("Topic not found.")
 
     if name:

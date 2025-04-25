@@ -4,6 +4,7 @@ from datetime import datetime
 from time import perf_counter
 import pandas as pd
 
+from app.config import settings
 from app.TopicModeling import topic_modeling_v3
 from app.utils.theme_naming import generate_name_for_topic
 from app.database.documents import (
@@ -15,8 +16,11 @@ from app.database.documents import (
 )
 from app.database.topics import get_topic_by_name, create_topic, update_topic
 
+NB_TRESHOLD_LINK = settings.LDA_TRESHOLD_LINK if settings.LDA_TRESHOLD_LINK else 0.01
+
 
 def run_process_document():
+    errors = []
     documents = get_all_documents()
 
     start_time = perf_counter()
@@ -32,7 +36,9 @@ def run_process_document():
             ]:
                 file_path_list.append(document.path)
                 file_name_list.append(document.filename)
-                time_list.append(datetime.timestamp(datetime.fromisoformat(document.upload_date)))
+                time_list.append(
+                    datetime.timestamp(datetime.fromisoformat(document.upload_date))
+                )
                 size_list.append(os.path.getsize(document.path))
 
         doc_df = pd.DataFrame(
@@ -67,6 +73,7 @@ def run_process_document():
                     )
             except Exception as e:
                 print(f"Error processing topic {topic_idx}: {str(e)}")
+                errors.append(f"Error processing topic {topic_idx}: {str(e)}")
                 continue
 
         for doc_topic in doc_topics:
@@ -75,18 +82,19 @@ def run_process_document():
                 if document is not None:
                     document_topics = get_document_topics_by_id(document.id)
                     for topic_idx, weight in enumerate(doc_topic[1]):
-                        if weight < 0.01:
+                        if weight < NB_TRESHOLD_LINK:
                             # Skip topics with low weight
                             continue
 
-                        document_topic_link = [
-                            t for t in document_topics if t.name == f"Topic {topic_idx}"
-                        ][0] if document_topics else None
-                        if document_topic_link is not None:
+                        name_topic = [
+                            t.name for t in document_topics if t.name == f"Topic {topic_idx}"
+                        ] if len(document_topics) > 0 else []
+                        if len(name_topic) > 0:
+                            document_topic_link = name_topic[0]
                             document_topic_link.weight = float(weight)
 
                             update_topic(
-                                topic_id=document_topic_link.topic_id,
+                                topic_id=document_topic_link.id,
                                 name=document_topic_link.name,
                                 words=document_topic_link.words,
                                 description=document_topic_link.description,
@@ -106,6 +114,7 @@ def run_process_document():
                     )
             except Exception as e:
                 print(f"Error processing document {doc_topic[0]}: {str(e)}")
+                errors.append(f"Error processing document {doc_topic[0]}: {str(e)}")
                 continue
 
     except Exception as e:
@@ -113,3 +122,6 @@ def run_process_document():
     finally:
         end_time = perf_counter()
         print(f"Processing completed in: {end_time - start_time:.2f}s")
+        if errors:
+            print(f"Document processing errors: {errors}")
+            raise RuntimeError(f"Document processing failed with errors: {errors}")

@@ -9,6 +9,9 @@ from app.config import settings
 from app.TopicModeling.miner_v2 import Miner
 from app.TopicModeling.Reader import Reader
 
+NB_TOPICS = settings.LDA_NB_TOPICS if settings.LDA_NB_TOPICS else 5
+NB_TOP_WORDS = settings.LDA_NB_TOP_WORDS if settings.LDA_NB_TOP_WORDS else 10
+
 
 def delete_eol(content):
     if type(content) is str:
@@ -95,8 +98,6 @@ def process_documents(doc_df):
 
 
 def run_lda(transf_doc_df):
-    NB_TOPICS = settings.LDA_NB_TOPICS if settings.LDA_NB_TOPICS else 5
-
     no_error_df = transf_doc_df[transf_doc_df["error"].isnull()]
     corpus = no_error_df["without_stop_words"]
 
@@ -123,7 +124,7 @@ def run_lda(transf_doc_df):
     for topic in lda.components_:
         words_in_topic = zip(topic_words, topic)
         sorted_words = sorted(words_in_topic, key=lambda x: float(x[1]), reverse=True)[
-            :10
+            :NB_TOP_WORDS
         ]
         topics.append(sorted_words)
 
