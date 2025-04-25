@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./app.db"
     DOCUMENT_STORAGE_PATH: str = "./documents"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = None
+    OLLAMA_MODEL: str = ""
     OLLAMA_TIMEOUT: int = 30
 
     BACKEND_CORS_ORIGINS: List[Union[AnyHttpUrl, str]] = [
