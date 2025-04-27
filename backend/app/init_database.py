@@ -16,7 +16,14 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def add_existing_documents():
     stored_documents = get_all_documents()
-    for file_path in os.listdir(DOCUMENT_STORAGE_PATH):
+    dir_list = os.listdir(DOCUMENT_STORAGE_PATH)
+
+    if not dir_list or len(dir_list) <= len(stored_documents):
+        print("No new documents to add")
+        return
+
+    print("Adding existing documents, this may take a while...")
+    for file_path in dir_list:
         complete_file_path = os.path.join(DOCUMENT_STORAGE_PATH, file_path)
 
         if os.path.isdir(complete_file_path):
@@ -42,6 +49,7 @@ def create_admin_user():
         user.username == "admin" for user in found_users
     )
     if not admin_found:
+        print("Creating admin user")
         create_user(
             username="admin",
             password="admin",

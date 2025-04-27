@@ -23,6 +23,7 @@ def run_process_document():
     errors = []
     documents = get_all_documents()
 
+    print("[DOCUMENT PROCESSING] Collecting documents...")
     start_time = perf_counter()
     try:
         file_path_list = []
@@ -52,6 +53,8 @@ def run_process_document():
 
         topics, doc_topics = topic_modeling_v3.run(doc_df)
 
+        print(f"[DOCUMENT PROCESSING] Topic modeling completed. Topics: {len(topics)}")
+        print("[DOCUMENT PROCESSING] Creating topics...")
         for topic_idx, topic_words_weights in enumerate(topics):
             try:
                 topic = get_topic_by_name(f"Topic {topic_idx}")
@@ -76,6 +79,7 @@ def run_process_document():
                 errors.append(f"Error processing topic {topic_idx}: {str(e)}")
                 continue
 
+        print("[DOCUMENT PROCESSING] Linking documents to topics...")
         for doc_topic in doc_topics:
             try:
                 document = get_document_by_filename(doc_topic[0])
@@ -121,7 +125,7 @@ def run_process_document():
         print(f"Process error: {str(e)}")
     finally:
         end_time = perf_counter()
-        print(f"Processing completed in: {end_time - start_time:.2f}s")
+        print(f"[DOCUMENT PROCESSING] Processing completed in: {end_time - start_time:.2f}s")
         if errors:
             print(f"Document processing errors: {errors}")
-            raise RuntimeError(f"Document processing failed with errors: {errors}")
+            raise RuntimeError(f"[DOCUMENT PROCESSING] Document processing failed with errors: {errors}")

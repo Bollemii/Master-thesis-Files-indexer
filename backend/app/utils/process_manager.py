@@ -53,7 +53,7 @@ class ProcessManager:
             raise RuntimeError("Process already running")
 
         try:
-            print("Process starting")
+            print("[DOCUMENT PROCESSING] Starting process...")
             self._last_run_time = datetime.now()
             if self._executor is None:
                 self._executor = ProcessPoolExecutor(max_workers=1)

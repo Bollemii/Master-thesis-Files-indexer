@@ -30,7 +30,7 @@ def get_length(content):
 
 
 def process_documents(doc_df):
-
+    print("[DOCUMENT PROCESSING] Processing documents...")
     tesseract_path = os.getenv("TESSERACT_PATH", "/opt/homebrew/bin/tesseract")
     libreoffice_path = os.getenv("LIBREOFFICE_PATH", "/usr/bin/libreoffice")
 
@@ -138,14 +138,13 @@ def run_lda(transf_doc_df):
 
 
 def run(doc_df):
-    print("Starting topic modeling...")
+    print("[DOCUMENT PROCESSING] Starting Topic Modeling...")
     if not os.path.exists("./tmp"):
         os.makedirs("./tmp")
     if not os.path.exists("./tmp/doc_df.miner.pkl"):
-        print("Processing documents...")
         transf_doc_df = process_documents(doc_df)
     else:
-        print("Loading existing documents...")
+        print("[DOCUMENT PROCESSING] Loading existing documents...")
         existing_df = pd.read_pickle("./tmp/doc_df.miner.pkl")
         if "file_path" not in existing_df.columns:
             transf_doc_df = process_documents(doc_df.copy())
@@ -163,6 +162,7 @@ def run(doc_df):
             else:
                 transf_doc_df = existing_df
 
+    print("[DOCUMENT PROCESSING] Running LDA...")
     topics, doc_topics = run_lda(transf_doc_df)
     return topics, doc_topics
 

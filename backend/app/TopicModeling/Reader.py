@@ -272,7 +272,7 @@ class Reader:
             raise ValueError(f"Column '{self.cv_file_column}' not found in DataFrame.")
 
         filepath_list = doc_df[self.cv_file_column].dropna().unique().tolist()
-        print(f"Processing {len(filepath_list)} unique files...")
+        print(f"[DOCUMENT PROCESSING] Processing {len(filepath_list)} unique files...")
 
         tasks_config = []
         for path in filepath_list:
@@ -301,7 +301,7 @@ class Reader:
                     "  Path is invalid or does not exist. Skipping."
                 )  # Modified message
 
-        print(f"Number of tasks configured: {len(tasks_config)}")
+        print(f"[DOCUMENT PROCESSING] Number of tasks configured: {len(tasks_config)}")
         results_map = {}
         with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
             future_to_config = {
@@ -336,7 +336,7 @@ class Reader:
                 if processed_count % 10 == 0:
                     print(f"Processed {processed_count}/{len(tasks_config)} files...")
 
-        print(f"Finished processing {len(results_map)} files.")
+        print(f"[DOCUMENT PROCESSING] Finished processing {len(results_map)} files.")
 
         results_series = pd.Series(results_map, name="results").reindex(
             doc_df[self.cv_file_column]

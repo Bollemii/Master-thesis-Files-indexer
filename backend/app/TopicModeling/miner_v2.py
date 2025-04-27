@@ -85,6 +85,7 @@ class Miner:
         self, doc_df: pd.DataFrame, content_column_name: str = "content"
     ) -> pd.DataFrame:
         """Optimize mining process with vectorized operations"""
+        print("[MINER] Mining documents...")
         result_df = doc_df.copy()
 
         mask = result_df["error"].isnull()
