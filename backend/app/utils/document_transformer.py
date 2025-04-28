@@ -1,5 +1,5 @@
 import re
-import fitz
+from langchain.text_splitter import CharacterTextSplitter
 
 
 def space_between_word(text):
@@ -28,25 +28,13 @@ def space_between_word(text):
     return result.strip()
 
 
-def get_pdf_title(file_path: str) -> str | None:
-    """
-    Extract title from PDF metadata.
-    If metadata title is not available, return None
+def chunk_text(text: str, chunk_size: int = 1000) -> list[str]:
+    """Split text into chunks of a specified size."""
 
-    Args:
-        file_path (str): Path to the PDF file
+    text_splitter = CharacterTextSplitter(
+        separator="\n\n",
+        chunk_size=chunk_size,
+        chunk_overlap=200,
+    )
 
-    Returns:
-        str | None: The PDF title if available, None otherwise
-    """
-    try:
-        with fitz.open(file_path) as pdf:
-            metadata = pdf.metadata
-            # print(f"Metadata: {metadata}")
-            if metadata and metadata.get("title"):
-                # print(f"Title extracted from PDF metadata: {metadata['title']}")
-                return metadata["title"]
-        return None
-    except Exception as e:
-        print(f"Error extracting PDF title: {str(e)}")
-        return None
+    return text_splitter.split_text(text)

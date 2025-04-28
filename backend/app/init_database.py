@@ -2,7 +2,7 @@ import os
 from passlib.context import CryptContext
 
 from app.config import settings
-from app.utils.space_word import space_between_word
+from app.utils.document_transformer import space_between_word
 from app.database.documents import get_all_documents, create_document
 from app.database.users import get_all_users, create_user
 

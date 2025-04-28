@@ -9,7 +9,8 @@ services:
       - TESSERACT_PATH=/usr/bin/tesseract
       - LIBREOFFICE_PATH=/usr/bin/libreoffice
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
-      - OLLAMA_MODEL=${OLLAMA_MODEL}
+      - OLLAMA_LLM_MODEL=${OLLAMA_LLM_MODEL}
+      - OLLAMA_EMBEDDING_MODEL=${OLLAMA_EMBEDDING_MODEL}
       - OLLAMA_TIMEOUT=50
       - NEO4J_URL=${NEO4J_URL}
       - NEO4J_USER=${NEO4J_USER}

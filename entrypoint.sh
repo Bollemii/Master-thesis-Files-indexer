@@ -6,13 +6,16 @@
 pid=$!
 
 # Configure model
-model="gemma3:4b"
+llm_model="gemma3:4b"
+embedding_model="nomic-embed-text"
 
 # Pause for Ollama to start.
 sleep 5
 
-echo "🔴 Retrieve $model model..."
-ollama pull $model
+echo "🔴 Retrieve LLM model ($llm_model)..."
+ollama pull $llm_model
+echo "🔴 Retrieve Embedding model ($embedding_model)..."
+ollama pull $embedding_model
 echo "🟢 Done!"
 
 # Wait for Ollama process to finish.

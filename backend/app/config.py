@@ -20,7 +20,8 @@ class Settings(BaseSettings):
     NEO4J_PASSWORD: str = "password"
     DOCUMENT_STORAGE_PATH: str = "./documents"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "gemma3:4b"
+    OLLAMA_LLM_MODEL: str = "gemma3:4b"
+    OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
     OLLAMA_TIMEOUT: int = 60
     # Document processing settings
     LDA_NB_TOPICS: int = 5

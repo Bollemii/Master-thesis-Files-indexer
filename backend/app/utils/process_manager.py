@@ -48,7 +48,7 @@ class ProcessManager:
         except Exception:
             return False
 
-    def run_process(self) -> None:
+    def run_process(self, documents: list) -> None:
         if self.is_running():
             raise RuntimeError("Process already running")
 
@@ -58,7 +58,7 @@ class ProcessManager:
             if self._executor is None:
                 self._executor = ProcessPoolExecutor(max_workers=1)
             self._status = ProcessStatus.RUNNING
-            self._future = self._executor.submit(run_process_document)
+            self._future = self._executor.submit(run_process_document, documents)
             self._future.add_done_callback(self._process_completed)
         except Exception as e:
             self.shutdown()

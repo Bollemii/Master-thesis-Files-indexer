@@ -16,7 +16,7 @@ from app.TopicModeling.topic_modeling_v3 import delete_document_from_cache
 from app.utils.preview import PreviewManager
 from app.utils.process_manager import ProcessManager
 from app.utils.security import get_current_user
-from app.utils.space_word import space_between_word
+from app.utils.document_transformer import space_between_word
 from app.database.documents import (
     get_document_by_id,
     create_document,
@@ -42,7 +42,7 @@ process_manager = ProcessManager()
 async def get_document_preview(
     document_id: uuid.UUID,
     size: str = "thumbnail",
-    current_user: User = Depends(get_current_user),
+    _: User = Depends(get_current_user),
 ):
     """Get the preview image for a document with specified size"""
     try:
@@ -91,7 +91,7 @@ async def get_document_preview(
 )
 async def upload_document(
     file: UploadFile,
-    current_user: User = Depends(get_current_user),
+    _: User = Depends(get_current_user),
 ):
     """Upload a new document"""
     try:
@@ -141,7 +141,7 @@ async def upload_document(
 )
 async def get_document(
     document_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
+    _: User = Depends(get_current_user),
 ):
     """Retrieve document information by ID"""
     try:
@@ -194,7 +194,7 @@ async def list_documents(
     q: str | None = None,
     page: int = 1,
     limit: int = 20,
-    current_user: User = Depends(get_current_user),
+    _: User = Depends(get_current_user),
 ):
     """List all documents with topics for each document"""
     try:
@@ -242,7 +242,7 @@ async def list_documents(
     response_model=DocumentProcess,
     tags=["process"],
 )
-def process_document(current_user: User = Depends(get_current_user)):
+def process_document(_: User = Depends(get_current_user)):
     """Process documents and extract topics"""
 
     if process_manager.is_running():
@@ -258,7 +258,7 @@ def process_document(current_user: User = Depends(get_current_user)):
                 status_code=409, detail="All documents are already processed"
             )
 
-        process_manager.run_process()
+        process_manager.run_process(documents)
 
         return {"message": "Processing started"}
     except HTTPException as e:
@@ -282,7 +282,7 @@ def process_document(current_user: User = Depends(get_current_user)):
     response_model=DocumentProcessStatus,
     tags=["process"],
 )
-async def get_process_status(current_user: User = Depends(get_current_user)):
+async def get_process_status(_: User = Depends(get_current_user)):
     """Get the status of the document processing task"""
     response = {
         "status": process_manager.status.value,
@@ -294,7 +294,7 @@ async def get_process_status(current_user: User = Depends(get_current_user)):
 @router.delete("/documents/{document_id}", tags=["documents"])
 async def delete_document(
     document_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
+    _: User = Depends(get_current_user),
 ):
     """Delete a document by ID"""
     try:
@@ -325,7 +325,7 @@ async def delete_document(
 @router.put("/documents/{document_id}", response_model=Document, tags=["documents"])
 async def update_document(
     document_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
+    _: User = Depends(get_current_user),
     file: UploadFile = None,
 ):
     """Update a document's filename or content"""
@@ -383,7 +383,7 @@ async def update_document(
 )
 async def update_document_name(
     document_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
+    _: User = Depends(get_current_user),
     name: str = Form(None),
 ):
     """Update a document's filename"""

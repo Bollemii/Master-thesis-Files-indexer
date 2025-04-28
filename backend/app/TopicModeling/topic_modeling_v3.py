@@ -14,7 +14,7 @@ NB_TOP_WORDS = settings.LDA_NB_TOP_WORDS if settings.LDA_NB_TOP_WORDS else 10
 
 
 def delete_eol(content):
-    if type(content) is str:
+    if isinstance(content, str):
         content = content.replace("-\n", " ")
         content = content.replace("-\r", " ")
         content = content.replace("\n", " ")
@@ -25,8 +25,7 @@ def delete_eol(content):
 def get_length(content):
     if not isinstance(content, str):
         return 0
-    else:
-        return len(content)
+    return len(content)
 
 
 def process_documents(doc_df):

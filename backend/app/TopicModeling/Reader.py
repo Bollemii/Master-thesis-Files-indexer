@@ -3,7 +3,11 @@ import os
 import pathlib
 import subprocess
 import time
-from concurrent.futures import ProcessPoolExecutor, TimeoutError, as_completed
+from concurrent.futures import (
+    ProcessPoolExecutor,
+    TimeoutError as FutureTimeoutError,
+    as_completed,
+)
 from multiprocessing import cpu_count
 
 import fitz
@@ -64,7 +68,6 @@ class Reader:
     def __init__(
         self,
         cv_file_column="cv_file",
-        cv_content_column="cv_content_base64",
         temporary_path="tmp",
         doc_reader_path="",
         tesseract_path="",
@@ -177,8 +180,8 @@ class Reader:
                 capture_output=True,
                 text=True,
                 timeout=60,
+                check=True,
             )
-            result.check_returncode()
 
             if not os.path.exists(text_file_path):
                 raise OSError(
@@ -320,7 +323,7 @@ class Reader:
                     results_map[file_path] = (content, error, n_pages, dt)
                     if error:
                         print(f"Processed {file_path} with error: {error} in {dt:.2f}s")
-                except TimeoutError:
+                except FutureTimeoutError:
                     results_map[file_path] = (
                         None,
                         f"Timeout after {timeout_per_task}s",

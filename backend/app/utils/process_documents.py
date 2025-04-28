@@ -6,12 +6,11 @@ import pandas as pd
 
 from app.config import settings
 from app.TopicModeling import topic_modeling_v3
-from app.utils.theme_naming import generate_name_for_topic
+from app.utils.ai_model import generate_name_for_topic
 from app.database.documents import (
-    get_all_documents,
     get_document_by_filename,
     get_document_topics_by_id,
-    process_document,
+    set_document_processed,
     link_document_to_topic,
 )
 from app.database.topics import get_topic_by_name, create_topic, update_topic
@@ -19,9 +18,8 @@ from app.database.topics import get_topic_by_name, create_topic, update_topic
 NB_TRESHOLD_LINK = settings.LDA_TRESHOLD_LINK if settings.LDA_TRESHOLD_LINK else 0.01
 
 
-def run_process_document():
+def run_process_document(documents: list) -> None:
     errors = []
-    documents = get_all_documents()
 
     print("[DOCUMENT PROCESSING] Collecting documents...")
     start_time = perf_counter()
@@ -90,9 +88,15 @@ def run_process_document():
                             # Skip topics with low weight
                             continue
 
-                        name_topic = [
-                            t.name for t in document_topics if t.name == f"Topic {topic_idx}"
-                        ] if len(document_topics) > 0 else []
+                        name_topic = (
+                            [
+                                t.name
+                                for t in document_topics
+                                if t.name == f"Topic {topic_idx}"
+                            ]
+                            if len(document_topics) > 0
+                            else []
+                        )
                         if len(name_topic) > 0:
                             document_topic_link = name_topic[0]
                             document_topic_link.weight = float(weight)
@@ -113,7 +117,7 @@ def run_process_document():
                                 weight=float(weight),
                             )
 
-                    process_document(
+                    set_document_processed(
                         document_id=document.id,
                     )
             except Exception as e:
@@ -125,7 +129,26 @@ def run_process_document():
         print(f"Process error: {str(e)}")
     finally:
         end_time = perf_counter()
-        print(f"[DOCUMENT PROCESSING] Processing completed in: {end_time - start_time:.2f}s")
+        print(
+            f"[DOCUMENT PROCESSING] Processing completed in: {end_time - start_time:.2f}s"
+        )
         if errors:
             print(f"Document processing errors: {errors}")
-            raise RuntimeError(f"[DOCUMENT PROCESSING] Document processing failed with errors: {errors}")
+            raise RuntimeError(
+                f"[DOCUMENT PROCESSING] Document processing failed with errors: {errors}"
+            )
+        
+def extract_text_from_document(document_path: str) -> str:
+    """
+    Extract text from a document using the appropriate method based on the file type.
+    Currently, only PDF files are supported.
+    """
+    if not os.path.isfile(document_path):
+        raise FileNotFoundError(f"File not found: {document_path}")
+
+    file_extension = pathlib.Path(document_path).suffix.lower()
+    if file_extension == ".pdf":
+        # Implement PDF text extraction logic here
+        pass
+    else:
+        raise ValueError(f"Unsupported file type: {file_extension}")

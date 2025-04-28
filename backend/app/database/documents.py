@@ -233,7 +233,7 @@ def update_document(
     )
 
 
-def process_document(document_id: str) -> None:
+def set_document_processed(document_id: str) -> None:
     """Mark a document as processed"""
     if not document_id:
         raise ValueError("Document ID must be provided.")
