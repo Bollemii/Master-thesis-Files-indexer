@@ -9,6 +9,12 @@ from app.config import settings
 from app.TopicModeling.miner_v2 import Miner
 from app.TopicModeling.Reader import Reader
 
+LIBREOFFICE_PATH = settings.LIBREOFFICE_PATH
+if not LIBREOFFICE_PATH:
+    raise ValueError("LIBREOFFICE_PATH must be set in environment variables.")
+TESSERACT_PATH = settings.TESSERACT_PATH
+if not TESSERACT_PATH:
+    raise ValueError("TESSERACT_PATH must be set in environment variables.")
 NB_TOPICS = settings.LDA_NB_TOPICS if settings.LDA_NB_TOPICS else 5
 NB_TOP_WORDS = settings.LDA_NB_TOP_WORDS if settings.LDA_NB_TOP_WORDS else 10
 
@@ -30,13 +36,11 @@ def get_length(content):
 
 def process_documents(doc_df):
     print("[DOCUMENT PROCESSING] Processing documents...")
-    tesseract_path = os.getenv("TESSERACT_PATH", "/opt/homebrew/bin/tesseract")
-    libreoffice_path = os.getenv("LIBREOFFICE_PATH", "/usr/bin/libreoffice")
 
     reader = Reader(
         cv_file_column="file_path",
-        doc_reader_path=libreoffice_path,
-        tesseract_path=tesseract_path,
+        doc_reader_path=LIBREOFFICE_PATH,
+        tesseract_path=TESSERACT_PATH,
         image_resolution=150,
     )
 

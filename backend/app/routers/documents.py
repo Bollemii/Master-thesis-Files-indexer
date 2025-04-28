@@ -107,11 +107,13 @@ async def upload_document(
         base_filename = os.path.splitext(file.filename)[0]
         spaced_filename = space_between_word(base_filename)
 
+        # Create document in the database
         document = create_document(
             filename=spaced_filename,
             document_path=file_path,
         )
 
+        # Generate preview image
         preview_manager.generate_preview(document.path, str(document.id))
 
         return Document(

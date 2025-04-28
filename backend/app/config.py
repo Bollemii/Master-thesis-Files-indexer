@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     SERVER_HOST: str = "0.0.0.0"
     SERVER_PORT: int = 8000
     DEBUG: bool = False
+    TESSERACT_PATH: str = "/opt/homebrew/bin/tesseract"
+    LIBREOFFICE_PATH: str = "/usr/bin/libreoffice"
     # Token settings
     SECRET_KEY: str = "740b6ea71528914a03a0404f5a9573236410dd68b4c00de3913575b4aed9a924"
     ALGORITHM: str = "HS256"

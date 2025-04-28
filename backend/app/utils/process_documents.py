@@ -137,18 +137,3 @@ def run_process_document(documents: list) -> None:
             raise RuntimeError(
                 f"[DOCUMENT PROCESSING] Document processing failed with errors: {errors}"
             )
-        
-def extract_text_from_document(document_path: str) -> str:
-    """
-    Extract text from a document using the appropriate method based on the file type.
-    Currently, only PDF files are supported.
-    """
-    if not os.path.isfile(document_path):
-        raise FileNotFoundError(f"File not found: {document_path}")
-
-    file_extension = pathlib.Path(document_path).suffix.lower()
-    if file_extension == ".pdf":
-        # Implement PDF text extraction logic here
-        pass
-    else:
-        raise ValueError(f"Unsupported file type: {file_extension}")
