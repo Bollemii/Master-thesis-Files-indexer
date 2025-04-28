@@ -49,6 +49,7 @@ docker compose down
 ### Document
 
 ![Document detail](doc/images/document_detail.png)
+![Document detail](doc/images/document_detail_2.png)
 
 ## Auteur
 
