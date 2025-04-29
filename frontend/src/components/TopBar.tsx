@@ -9,6 +9,7 @@ interface TopBarProps {
   setSearchQuery: (query: string) => void;
   processStatus: ProcessStatus;
   startProcess: () => void;
+  n_not_processed: number;
 }
 
 export function TopBar({
@@ -16,6 +17,7 @@ export function TopBar({
   setSearchQuery,
   processStatus,
   startProcess,
+  n_not_processed,
 }: TopBarProps) {
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -40,7 +42,7 @@ export function TopBar({
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-md">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+      <div className="px-4 w-full">
         <div className="flex items-center justify-between h-16">
           <Logo />
           <div className="flex-shrink-0 w-32">
@@ -69,6 +71,12 @@ export function TopBar({
                     className="block w-full pl-4 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") {
+                        e.preventDefault();
+                        e.currentTarget.value = ""; // Reset the input
+                      }
+                    }}
                   />
                 </div>
               </form>
@@ -81,8 +89,11 @@ export function TopBar({
                 processStatus.status
               )}`}
             >
-              {processStatus.status.charAt(0).toUpperCase() +
-                processStatus.status.slice(1)}
+              {processStatus.status !== "running" && n_not_processed > 0 ? (
+                `${n_not_processed} not processed`
+              ) : (
+                `${processStatus.status.charAt(0).toUpperCase()}${processStatus.status.slice(1)}`
+              )}
             </div>
             {processStatus.last_run_time && (
               <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -93,7 +104,7 @@ export function TopBar({
 
             <button
               onClick={startProcess}
-              disabled={processStatus.status === "running"}
+              disabled={processStatus.status === "running" || n_not_processed === 0}
               className={`px-4 py-2 cursor-pointer rounded-md text-sm font-medium ${
                 processStatus.status === "running"
                   ? "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"

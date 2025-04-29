@@ -9,6 +9,8 @@ interface CorpusListProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  itemsPerPage: number;
+  setItemsPerPage: (itemsPerPage: number) => void;
 }
 
 export const CorpusList = memo(function CorpusList({
@@ -16,6 +18,8 @@ export const CorpusList = memo(function CorpusList({
   currentPage,
   totalPages,
   onPageChange,
+  itemsPerPage,
+  setItemsPerPage,
 }: CorpusListProps) {
   const navigate = useNavigate();
 
@@ -56,14 +60,36 @@ export const CorpusList = memo(function CorpusList({
           </div>
         ))}
       </div>
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 h-16">
-        <div className="max-w-7xl mx-auto h-full">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between">
+        <div className="flex items-center px-4 h-full flex-1">
+          <span className="text-sm text-gray-500 dark:text-gray-400 mr-4">
+            Items per page:
+          </span>
+          <div className="rounded-md p-2 border dark:border-gray-300 border-gray-700 dark:bg-gray-300 bg-white cursor-pointer">
+            <select
+              style={{ cursor: "pointer" }}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              value={itemsPerPage}
+            >
+              <option value={9}>9</option>
+              <option value={12}>12</option>
+              <option value={15}>15</option>
+              <option value={18}>18</option>
+              <option value={21}>21</option>
+              <option value={24}>24</option>
+              <option value={27}>27</option>
+              <option value={30}>30</option>
+            </select>
+          </div>
+        </div>
+        <div className="h-full flex-1">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={onPageChange}
           />
         </div>
+        <div className="flex-1"/>
       </div>
     </div>
   );

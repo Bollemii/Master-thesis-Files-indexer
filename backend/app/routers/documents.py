@@ -28,6 +28,7 @@ from app.database.documents import (
     get_documents_by_filename_like,
     get_all_documents,
     get_document_count,
+    get_document_count_not_processed,
     delete_document as delete_document_db,
     update_document as update_document_db,
     create_chunks_embedding_index,
@@ -202,6 +203,7 @@ async def list_documents(
             if q
             else get_all_documents(page=page, limit=limit)
         )
+        n_not_processed = get_document_count_not_processed()
 
         result = [
             DocumentList(
@@ -218,7 +220,7 @@ async def list_documents(
             for document in documents
         ]
 
-        return {"items": result, "total": total, "page": page, "limit": limit}
+        return {"items": result, "total": total, "page": page, "limit": limit, "n_not_processed": n_not_processed}
     except HTTPException as e:
         raise e
     except ValueError as e:

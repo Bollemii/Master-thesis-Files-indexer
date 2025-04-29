@@ -21,6 +21,7 @@ export interface DocumentsPagination {
   total: number;
   page: number;
   limit: number;
+  n_not_processed: number;
 }
 
 export interface ProcessStatus {

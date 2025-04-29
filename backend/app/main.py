@@ -65,6 +65,14 @@ if settings.BACKEND_CORS_ORIGINS:
 app.include_router(documents.router, prefix=settings.API_V1_STR)
 app.include_router(users.router, prefix=settings.API_V1_STR)
 
+@app.get("/", status_code=200, tags=["Healthcheck"])
+@app.head("/", status_code=200, tags=["Healthcheck"])
+async def healthcheck():
+    """
+    Healthcheck endpoint to check if the server is running.
+    """
+    return {"status": "ok"}
+
 if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",

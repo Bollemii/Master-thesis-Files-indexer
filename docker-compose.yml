@@ -20,6 +20,12 @@ services:
     volumes:
       - ./data/document-storage:/app/storage
       - ./data/tmp-storage:/app/tmp
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f localhost:8000 || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 3s
     depends_on:
       neo4j-db:
         condition: service_healthy
@@ -33,7 +39,8 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
   neo4j-db:

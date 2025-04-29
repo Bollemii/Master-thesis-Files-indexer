@@ -22,6 +22,14 @@ def get_document_count(filename: str | None = None) -> int:
     return result[0]["count"] if result else 0
 
 
+def get_document_count_not_processed() -> int:
+    """Get the count of documents that are not processed"""
+    result = execute_neo4j_query(
+        "MATCH (d:Document) WHERE d.processed = false RETURN COUNT(d) as count;",
+    )
+    return result[0]["count"] if result else 0
+
+
 def get_all_documents(
     with_text: bool = False, page: int | None = None, limit: int | None = None
 ) -> list[Document]:
@@ -344,6 +352,13 @@ def get_similar_chunks_by_embedding(
 
 def create_chunks_embedding_index() -> None:
     """Recreate the index for chunk embeddings"""
+    is_index_exists = execute_neo4j_query(
+        "SHOW INDEXES WHERE type='VECTOR' AND name='chunk_embedding_index'"
+    )
+    print("Index exists:", is_index_exists)
+    if is_index_exists is not None or len(is_index_exists) > 0:
+        return
+    print("Creating chunk embedding index...")
     execute_neo4j_query(
         """
         CREATE VECTOR INDEX chunk_embedding_index IF NOT EXISTS

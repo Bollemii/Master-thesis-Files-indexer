@@ -8,6 +8,7 @@ import { TopicDetail } from "../components/TopicDetail";
 import { fetchWithAuth, AuthError } from "../services/api";
 import { TopBar } from "@/components/TopBar";
 import { Upload } from "lucide-react";
+import { ClipLoader } from "react-spinners";
 
 export function Dashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -20,10 +21,10 @@ export function Dashboard() {
   const previousStatusRef = useRef<string>(processStatus.status);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(9);
   const { token, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const itemsPerPage = 10;
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -63,7 +64,7 @@ export function Dashboard() {
       console.error("Failed to fetch documents:", err);
       handleAuthError(err as Error);
     }
-  }, [token, searchQuery, currentPage, handleAuthError]);
+  }, [token, searchQuery, currentPage, handleAuthError, itemsPerPage]);
 
   const fetchProcessStatus = useCallback(async () => {
     try {
@@ -135,7 +136,7 @@ export function Dashboard() {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, fetchDocuments, currentPage, location.search]);
+  }, [searchQuery, fetchDocuments, currentPage, location.search, itemsPerPage]);
 
   const totalPages = Math.ceil((documents?.total || 0) / itemsPerPage);
 
@@ -146,6 +147,7 @@ export function Dashboard() {
         setSearchQuery={setSearchQuery}
         processStatus={processStatus}
         startProcess={startProcess}
+        n_not_processed={documents?.n_not_processed || 0}
       />
       <main className="flex-1 max-w-7xl w-full mx-auto py-6 sm:px-6 lg:px-8 mt-16">
         <Routes>
@@ -157,6 +159,8 @@ export function Dashboard() {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                setItemsPerPage={setItemsPerPage}
               />
             }
           />
@@ -187,7 +191,11 @@ export function Dashboard() {
           }`}
           aria-label="Upload document"
         >
-          <Upload className={`w-6 h-6 ${isUploading ? "animate-pulse" : ""}`} />
+          {isUploading ? (
+            <ClipLoader size={24} color="#ffffff"/>
+          ) : (
+            <Upload className={`w-6 h-6`} />
+          )}
           <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:ml-2 transition-all duration-200 ease-in-out">
             {isUploading ? "Uploading..." : "Upload"}
           </span>

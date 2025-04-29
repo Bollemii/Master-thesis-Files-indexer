@@ -18,8 +18,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def add_existing_documents():
     stored_documents = get_all_documents()
     dir_list = os.listdir(DOCUMENT_STORAGE_PATH)
-
-    if not dir_list or len(dir_list) <= len(stored_documents):
+    if not dir_list or len(dir_list)-1 <= len(stored_documents): # -1 for previews folder
         print("No new documents to add")
         return
 

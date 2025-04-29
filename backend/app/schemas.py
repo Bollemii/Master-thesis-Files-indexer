@@ -32,6 +32,7 @@ class DocumentsPagination(BaseModel):
     total: int
     page: int
     limit: int
+    n_not_processed: int
 
 
 class DocumentProcess(BaseModel):

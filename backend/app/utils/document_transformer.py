@@ -113,5 +113,4 @@ def preprocess_document(file_path: str, filename: str, stored_documents: list) -
 
         return created_document
 
-    print("Document already exists in the database.")
     return document_found
