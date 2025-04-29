@@ -1,10 +1,11 @@
 import os
+from multiprocessing import Pool, cpu_count
 from passlib.context import CryptContext
 
 from app.config import settings
-from app.utils.document_transformer import space_between_word
-from app.database.documents import get_all_documents, create_document
+from app.database.documents import get_all_documents, create_chunks_embedding_index
 from app.database.users import get_all_users, create_user
+from app.utils.document_transformer import preprocess_document
 
 DOCUMENT_STORAGE_PATH = settings.DOCUMENT_STORAGE_PATH
 if not DOCUMENT_STORAGE_PATH:
@@ -23,6 +24,8 @@ def add_existing_documents():
         return
 
     print("Adding existing documents, this may take a while...")
+
+    tasks = []
     for file_path in dir_list:
         complete_file_path = os.path.join(DOCUMENT_STORAGE_PATH, file_path)
 
@@ -31,16 +34,21 @@ def add_existing_documents():
         if file_path.startswith("."):
             continue
 
-        base_filename = os.path.splitext(file_path)[0]
-        spaced_filename = space_between_word(base_filename)
+        tasks.append((complete_file_path, file_path, stored_documents))
 
-        document_found = stored_documents and any(
-            doc.filename == spaced_filename for doc in stored_documents
-        )
-        if not document_found:
-            create_document(
-                spaced_filename, complete_file_path
-            )
+    num_processes = min(cpu_count(), len(tasks))
+    print(f"Processing {len(tasks)} documents using {num_processes} processes")
+
+    with Pool(processes=num_processes) as pool:
+        pool.map(_preprocess_wrapper, tasks)
+
+    create_chunks_embedding_index()
+
+
+def _preprocess_wrapper(args):
+    complete_file_path, file_path, stored_documents = args
+    preprocess_document(complete_file_path, file_path, stored_documents)
+
 
 def create_admin_user():
     """Create an admin user if it doesn't exist"""

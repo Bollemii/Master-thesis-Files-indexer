@@ -14,7 +14,7 @@ OLLAMA_TIMEOUT = settings.OLLAMA_TIMEOUT
 
 ollama_client = Client(
     host=OLLAMA_BASE_URL,
-    timeout=OLLAMA_TIMEOUT,
+    timeout=OLLAMA_TIMEOUT if OLLAMA_TIMEOUT > 0 else None, # Set timeout to negative to disable it
 )
 
 

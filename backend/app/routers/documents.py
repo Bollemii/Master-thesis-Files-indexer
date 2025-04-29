@@ -16,19 +16,16 @@ from app.TopicModeling.topic_modeling_v3 import delete_document_from_cache
 from app.utils.preview import PreviewManager
 from app.utils.process_manager import ProcessManager
 from app.utils.security import get_current_user
-from app.utils.document_transformer import space_between_word, extract_document_text, chunk_text
-from app.utils.ai_model import generate_embedding_for_texts
+from app.utils.document_transformer import space_between_word, preprocess_document
 from app.database.documents import (
     get_document_by_id,
-    create_document,
-    set_text_of_document,
-    create_document_chunks,
     get_document_topics_by_id,
     get_documents_by_filename_like,
     get_all_documents,
     get_document_count,
     delete_document as delete_document_db,
     update_document as update_document_db,
+    create_chunks_embedding_index,
 )
 
 DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
@@ -107,38 +104,12 @@ async def upload_document(
             content = await file.read()
             f.write(content)
 
-        base_filename = os.path.splitext(file.filename)[0]
-        spaced_filename = space_between_word(base_filename)
-
-        # Create document in the database
-        document = create_document(
-            filename=spaced_filename,
-            document_path=file_path,
-        )
+        document = preprocess_document(file_path, file.filename, get_all_documents())
 
         # Generate preview image
         preview_manager.generate_preview(document.path, str(document.id))
 
-        # Extract text from the document
-        text, mined_text = extract_document_text(file_path)
-        if text is not None:
-            # Save the extracted text to the database
-            set_text_of_document(
-                document_id=document.id,
-                text=text,
-                mined_text=mined_text,
-            )
-            # Prepare text for RAG
-            chunks = chunk_text(text)
-            embeddings = generate_embedding_for_texts(chunks)
-            # Save chunks to the database
-            create_document_chunks(
-                document_id=document.id,
-                chunks=chunks,
-                embedding=embeddings,
-            )
-        else:
-            print("Error: No text extracted from the document.")
+        create_chunks_embedding_index()
 
         return Document(
             id=uuid.UUID(document.id),

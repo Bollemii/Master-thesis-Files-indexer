@@ -3,6 +3,9 @@ import json
 from app.database.main import execute_neo4j_query, generate_id, get_current_timestamp
 from app.database.models import Document, DocumentTopic
 
+# =================================================
+# Document Management Functions
+# =================================================
 
 def get_document_count(filename: str | None = None) -> int:
     """Get the count of documents in the database"""
@@ -124,30 +127,6 @@ def get_documents_by_filename_like(
     )
 
 
-def get_document_topics_by_id(document_id: str) -> list[DocumentTopic]:
-    """Get topics associated with a document by its ID"""
-    if not document_id:
-        raise ValueError("Document ID must be provided.")
-    result = execute_neo4j_query(
-        "MATCH (d:Document {id: $id})-[l:HAS_TOPIC]->(t:Topic) RETURN t as topic, l.weight as weight;",
-        parameters={"id": document_id},
-    )
-    return (
-        [
-            DocumentTopic(
-                topic_id=topic["topic"]["id"],
-                name=topic["topic"]["name"],
-                words=json.loads(topic["topic"]["words"]),
-                weight=topic["weight"],
-                description=topic["topic"]["description"],
-            )
-            for topic in result
-        ]
-        if result
-        else []
-    )
-
-
 def create_document(
     filename: str, document_path: str, processed: bool = False
 ) -> Document:
@@ -172,24 +151,6 @@ def create_document(
         },
     )
     return Document(identifier, filename, document_path, processed, upload_date)
-
-
-def link_document_to_topic(
-    document_id: str, topic_id: str, weight: float = 1.0
-) -> None:
-    """Link a document to a topic with a specified weight"""
-    if not document_id or not topic_id:
-        raise ValueError("Document ID and Topic ID must be provided.")
-    execute_neo4j_query(
-        """
-        OPTIONAL MATCH (d:Document {id: $document_id})
-        OPTIONAL MATCH (t:Topic {id: $topic_id})
-        WITH d, t
-        WHERE d IS NOT NULL AND t IS NOT NULL
-        CREATE (d)-[l:HAS_TOPIC {weight: $weight}]->(t);
-        """,
-        parameters={"document_id": document_id, "topic_id": topic_id, "weight": weight},
-    )
 
 
 def update_document(
@@ -268,34 +229,59 @@ def set_document_processed(document_id: str) -> None:
     )
 
 
-def create_document_chunks(
-    document_id: str, chunks: list[str], embedding: list[list[float]] | None = None
+def delete_document(document_id: str) -> None:
+    """Delete a document by its ID"""
+    if not document_id:
+        raise ValueError("Document ID must be provided.")
+    execute_neo4j_query(
+        "MATCH (d:Document {id: $id}) DETACH DELETE d;",
+        parameters={"id": document_id},
+    )
+
+# =================================================
+# Document Topic Management Functions
+# =================================================
+
+def get_document_topics_by_id(document_id: str) -> list[DocumentTopic]:
+    """Get topics associated with a document by its ID"""
+    if not document_id:
+        raise ValueError("Document ID must be provided.")
+    result = execute_neo4j_query(
+        "MATCH (d:Document {id: $id})-[l:HAS_TOPIC]->(t:Topic) RETURN t as topic, l.weight as weight;",
+        parameters={"id": document_id},
+    )
+    return (
+        [
+            DocumentTopic(
+                topic_id=topic["topic"]["id"],
+                name=topic["topic"]["name"],
+                words=json.loads(topic["topic"]["words"]),
+                weight=topic["weight"],
+                description=topic["topic"]["description"],
+            )
+            for topic in result
+        ]
+        if result
+        else []
+    )
+
+
+def link_document_to_topic(
+    document_id: str, topic_id: str, weight: float = 1.0
 ) -> None:
-    """Create chunks for a document"""
-    if not document_id or not chunks:
-        raise ValueError("Document ID and chunks must be provided.")
-
-    if len(chunks) != len(embedding):
-        raise ValueError("Chunks and embeddings must have the same length.")
-
-    if get_document_by_id(document_id) is None:
-        raise ValueError("Document not found.")
-
-    for i, chunk in enumerate(chunks):
-        chunk_id = f"{document_id}_chunk_{i}"
-        execute_neo4j_query(
-            "CREATE (c:Chunk {id: $id, text: $text, embedding: $embedding});",
-            parameters={
-                "id": chunk_id,
-                "text": chunk,
-                "embedding": json.dumps(embedding[i]) if embedding else None,
-            },
-        )
-        execute_neo4j_query(
-            """MATCH (d:Document {id: $document_id}), (c:Chunk {id: $chunk_id})
-            CREATE (d)-[:HAS_CHUNK]->(c);""",
-            parameters={"document_id": document_id, "chunk_id": chunk_id},
-        )
+    """Link a document to a topic with a specified weight"""
+    if not document_id or not topic_id:
+        raise ValueError("Document ID and Topic ID must be provided.")
+    execute_neo4j_query(
+        """
+        OPTIONAL MATCH (d:Document {id: $document_id})
+        OPTIONAL MATCH (t:Topic {id: $topic_id})
+        WITH d, t
+        WHERE d IS NOT NULL AND t IS NOT NULL
+        CREATE (d)-[l:HAS_TOPIC {weight: $weight}]->(t);
+        """,
+        parameters={"document_id": document_id, "topic_id": topic_id, "weight": weight},
+    )
 
 
 def update_weight_of_document_topic_link(
@@ -309,12 +295,58 @@ def update_weight_of_document_topic_link(
         parameters={"document_id": document_id, "topic_id": topic_id, "weight": weight},
     )
 
+# =================================================
+# Chunk Management Functions
+# =================================================
 
-def delete_document(document_id: str) -> None:
-    """Delete a document by its ID"""
-    if not document_id:
-        raise ValueError("Document ID must be provided.")
+def create_chunks_embedding_index() -> None:
+    """Recreate the index for chunk embeddings"""
     execute_neo4j_query(
-        "MATCH (d:Document {id: $id}) DETACH DELETE d;",
-        parameters={"id": document_id},
+        """
+        CREATE VECTOR INDEX chunk_embedding_index IF NOT EXISTS
+        FOR (c:Chunk) ON c.embedding
+        OPTIONS {indexConfig: {
+            `vector.dimensions`: 1536,
+            `vector.similarity_function`: 'cosine'
+        }}
+        """,
     )
+
+
+def create_document_chunks(
+    document_id: str, chunks: list[str], embedding: list[list[float]] | None = None
+) -> None:
+    """Create chunks for a document"""
+    if not document_id or not chunks:
+        raise ValueError("Document ID and chunks must be provided.")
+
+    if get_document_by_id(document_id) is None:
+        raise ValueError("Document not found.")
+
+    if len(chunks) != len(embedding):
+        print("Chunks and embeddings must have the same length (chunks: %d, embeddings: %d)", len(chunks), len(embedding))
+        return
+
+    for i, chunk in enumerate(chunks):
+        chunk_id = f"{document_id}_chunk_{i}"
+        # Create the chunk node
+        execute_neo4j_query(
+            "CREATE (c:Chunk {id: $id, text: $text, embedding: $embedding});",
+            parameters={
+                "id": chunk_id,
+                "text": chunk,
+                "embedding": json.dumps(embedding[i]) if embedding else None,
+            },
+        )
+        # Link the chunk to the document
+        execute_neo4j_query(
+            """
+            OPTIONAL MATCH (d:Document {id: $document_id})
+            OPTIONAL MATCH (c:Chunk {id: $chunk_id})
+            WITH d, c
+            WHERE d IS NOT NULL AND c IS NOT NULL
+            CREATE (d)-[:HAS_CHUNK]->(c);
+            """,
+            parameters={"document_id": document_id, "chunk_id": chunk_id},
+        )
+        # Embedding index is automatically updated in Neo4j on chunk creation
