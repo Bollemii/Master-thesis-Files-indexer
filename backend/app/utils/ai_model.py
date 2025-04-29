@@ -68,7 +68,7 @@ def generate_name_for_topic(topic_words: List[Tuple[str, float]]) -> str:
         return "Error: Processing Failed"
 
 
-def generate_embedding_for_text(text: str) -> List[float]:
+def generate_embedding_for_texts(texts: list[str]) -> list[list[float]]:
     """Generates an embedding for a given text using the configured Ollama model."""
     if not OLLAMA_BASE_URL or not OLLAMA_EMBEDDING_MODEL:
         logger.warning(
@@ -78,22 +78,21 @@ def generate_embedding_for_text(text: str) -> List[float]:
 
     try:
         logger.info(
-            "Requesting embedding with model %s for text: %s",
+            "Requesting embedding with model %s for %s texts",
             OLLAMA_EMBEDDING_MODEL,
-            text,
+            len(texts),
         )
 
-        response = ollama_client.embeddings(
+        response = ollama_client.embed(
             model=OLLAMA_EMBEDDING_MODEL,
-            prompt=text,
+            input=texts,
         )
-        embedding = response.get("embedding", [])
+        embedding = response.get("embeddings", [])
 
         if not isinstance(embedding, list):
             logger.error("Ollama returned an invalid embedding format: %s", embedding)
             return []
 
-        logger.info("Generated embedding for text: %s", text)
         return embedding
 
     except ResponseError as e:

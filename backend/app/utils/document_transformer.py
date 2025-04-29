@@ -1,6 +1,17 @@
 import re
 from langchain.text_splitter import CharacterTextSplitter
 
+from app.config import settings
+from app.TopicModeling.miner_v2 import Miner
+from app.TopicModeling.Reader import process_single_file
+from app.TopicModeling.topic_modeling_v3 import delete_eol
+
+LIBREOFFICE_PATH = settings.LIBREOFFICE_PATH
+if not LIBREOFFICE_PATH:
+    raise ValueError("LIBREOFFICE_PATH must be set in environment variables.")
+TESSERACT_PATH = settings.TESSERACT_PATH
+if not TESSERACT_PATH:
+    raise ValueError("TESSERACT_PATH must be set in environment variables.")
 
 def space_between_word(text):
     # Replace underscores with spaces
@@ -38,3 +49,19 @@ def chunk_text(text: str, chunk_size: int = 1000) -> list[str]:
     )
 
     return text_splitter.split_text(text)
+
+def extract_document_text(file_path: str) -> str:
+    """Extract text from a document."""
+    config = {
+        "file_path": file_path,
+        "doc_reader_path": LIBREOFFICE_PATH,
+        "tesseract_path": TESSERACT_PATH,
+        "image_resolution": 150,
+    }
+    _, content, error, _, _ = process_single_file(config)
+    if error:
+        print(f"Error extracting text from {file_path}: {error}")
+        return None
+    cleaned_content = delete_eol(content)
+    mined_content = Miner().mine_text(cleaned_content)
+    return cleaned_content, mined_content

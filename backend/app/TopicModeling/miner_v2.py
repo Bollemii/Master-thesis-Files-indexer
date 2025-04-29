@@ -128,3 +128,19 @@ class Miner:
         )
 
         return result_df
+
+    def mine_text(self, text: str) -> str:
+        """Optimize mining process for a single text"""
+        try:
+            language = detect_language(text)
+            if language is None:
+                return text
+
+            stripped = normalize(text)
+            lemmatized = self.lemmatize(stripped)
+            without_stop_words = self.delete_stop_words(language, lemmatized)
+
+            return without_stop_words
+        except Exception as e:
+            print(f"Miner.mine_text: {str(e)}")
+            return text

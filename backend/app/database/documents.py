@@ -233,6 +233,31 @@ def update_document(
     )
 
 
+def set_text_of_document(
+    document_id: str, text: str | None = None, mined_text: str | None = None
+) -> None:
+    """Set the text of a document"""
+    if not document_id:
+        raise ValueError("Document ID must be provided.")
+    if text is None and mined_text is None:
+        raise ValueError("Either text or mined_text must be provided.")
+
+    set_clause = []
+    parameters = {"id": document_id}
+    if text is not None:
+        set_clause.append("d.text = $text")
+        parameters["text"] = text
+    if mined_text is not None:
+        set_clause.append("d.mined_text = $mined_text")
+        parameters["mined_text"] = mined_text
+
+    set_clause_str = ", ".join(set_clause)
+    execute_neo4j_query(
+        f"MATCH (d:Document {{id: $id}}) SET {set_clause_str};",
+        parameters=parameters,
+    )
+
+
 def set_document_processed(document_id: str) -> None:
     """Mark a document as processed"""
     if not document_id:
@@ -241,6 +266,36 @@ def set_document_processed(document_id: str) -> None:
         "MATCH (d:Document {id: $id}) SET d.processed = true;",
         parameters={"id": document_id},
     )
+
+
+def create_document_chunks(
+    document_id: str, chunks: list[str], embedding: list[list[float]] | None = None
+) -> None:
+    """Create chunks for a document"""
+    if not document_id or not chunks:
+        raise ValueError("Document ID and chunks must be provided.")
+
+    if len(chunks) != len(embedding):
+        raise ValueError("Chunks and embeddings must have the same length.")
+
+    if get_document_by_id(document_id) is None:
+        raise ValueError("Document not found.")
+
+    for i, chunk in enumerate(chunks):
+        chunk_id = f"{document_id}_chunk_{i}"
+        execute_neo4j_query(
+            "CREATE (c:Chunk {id: $id, text: $text, embedding: $embedding});",
+            parameters={
+                "id": chunk_id,
+                "text": chunk,
+                "embedding": json.dumps(embedding[i]) if embedding else None,
+            },
+        )
+        execute_neo4j_query(
+            """MATCH (d:Document {id: $document_id}), (c:Chunk {id: $chunk_id})
+            CREATE (d)-[:HAS_CHUNK]->(c);""",
+            parameters={"document_id": document_id, "chunk_id": chunk_id},
+        )
 
 
 def update_weight_of_document_topic_link(
