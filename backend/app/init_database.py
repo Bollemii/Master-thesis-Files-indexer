@@ -1,4 +1,5 @@
 import os
+import pathlib
 from multiprocessing import Pool, cpu_count
 from passlib.context import CryptContext
 
@@ -18,7 +19,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def add_existing_documents():
     stored_documents = get_all_documents()
     dir_list = os.listdir(DOCUMENT_STORAGE_PATH)
-    if not dir_list or len(dir_list)-1 <= len(stored_documents): # -1 for previews folder
+    dir_list = [
+        file_path for file_path in dir_list
+        if not pathlib.Path(file_path).is_dir() and pathlib.Path(file_path).suffix in settings.ALLOWED_EXTENSIONS
+    ]
+    if not dir_list or len(dir_list) <= len(stored_documents):
         print("No new documents to add")
         return
 

@@ -29,7 +29,9 @@ class Settings(BaseSettings):
     LDA_NB_TOPICS: int = 5
     LDA_NB_TOP_WORDS: int = 10
     LDA_TRESHOLD_LINK: float = 0.01
-
+    ALLOWED_EXTENSIONS: List[str] = [
+        ".pdf", ".docx", ".doc", ".txt"
+    ]
     BACKEND_CORS_ORIGINS: List[Union[AnyHttpUrl, str]] = [
         "http://127.0.0.1:5173",
         "http://localhost:5173",

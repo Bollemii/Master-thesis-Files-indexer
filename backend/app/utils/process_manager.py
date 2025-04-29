@@ -33,12 +33,15 @@ class ProcessManager:
 
     def shutdown(self) -> None:
         """Safely shuts down the process executor and cancels any running process."""
-        if self._future and not self._future.done():
-            self._future.cancel()
-            self._status = ProcessStatus.CANCELLED
-        if self._executor:
-            self._executor.shutdown(wait=False, cancel_futures=True)
-            self._executor = None
+        try:
+            if self._future and not self._future.done():
+                self._future.cancel()
+                self._status = ProcessStatus.CANCELLED
+            if self._executor:
+                self._executor.shutdown(wait=False, cancel_futures=True)
+                self._executor = None
+        except Exception:
+            pass
 
     def is_running(self) -> bool:
         try:

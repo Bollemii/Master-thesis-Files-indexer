@@ -1,5 +1,6 @@
 import io
 import os
+import pathlib
 from multiprocessing import Pool, cpu_count
 from typing import Dict, List, Literal, Tuple
 import fitz
@@ -61,6 +62,11 @@ class PreviewManager:
         force: bool = False,
     ) -> str | None:
         """Generate a preview image for a document"""
+        if not os.path.exists(document_path) or not os.path.isfile(document_path):
+            print(f"Document does not exist: {document_path}")
+            return None
+        if pathlib.Path(document_path).suffix != ".pdf":
+            return None
         try:
             if document_id not in self.preview_cache:
                 self.preview_cache[document_id] = {}
@@ -134,6 +140,8 @@ class PreviewManager:
             # Check for existing previews
             for doc in documents:
                 if not doc.path:
+                    continue
+                if pathlib.Path(doc.path).suffix != ".pdf":
                     continue
 
                 existing_previews = self._cache_existing_preview(str(doc.id))

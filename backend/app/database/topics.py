@@ -17,6 +17,25 @@ def get_all_topics() -> list[Topic]:
         for topic in result
     ] if result else []
 
+def get_topic_by_id(topic_id: str) -> Topic | None:
+    """Get a topic by its identifier."""
+    if not topic_id:
+        raise ValueError("Topic identifier is required.")
+
+    result = execute_neo4j_query(
+        "MATCH (t:Topic {id: $id}) RETURN t;",
+        parameters={"id": topic_id},
+    )
+    if result:
+        topic = result[0]["t"]
+        return Topic(
+            identifier=topic["id"],
+            name=topic["name"],
+            words=json.loads(topic["words"]),
+            description=topic.get("description"),
+        )
+    return None
+
 def get_topic_by_name(name: str) -> Topic | None:
     """Get a topic by its name."""
     if not name:
@@ -64,7 +83,7 @@ def update_topic(topic_id: str, name: str | None = None, words: dict[str, float]
     if not topic_id:
         raise ValueError("Topic identifier is required.")
 
-    topic = get_topic_by_name(topic_id)
+    topic = get_topic_by_id(topic_id)
     if topic is None:
         print(f"Topic with ID {topic_id} not found.")
         raise ValueError("Topic not found.")

@@ -22,7 +22,7 @@ services:
       - ./data/tmp-storage:/app/tmp
     healthcheck:
       test: ["CMD-SHELL", "curl -f localhost:8000 || exit 1"]
-      interval: 20s
+      interval: 10s
       timeout: 5s
       retries: 10
       start_period: 3s

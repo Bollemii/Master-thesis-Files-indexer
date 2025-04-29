@@ -31,9 +31,7 @@ def run_process_document(documents: list) -> None:
         size_list = []
 
         for document in documents:
-            if os.path.isfile(document.path) and pathlib.Path(document.path).suffix in [
-                ".pdf"
-            ]:
+            if os.path.isfile(document.path) and pathlib.Path(document.path).suffix in settings.ALLOWED_EXTENSIONS:
                 file_path_list.append(document.path)
                 file_name_list.append(document.filename)
                 document_mined_texts.append(document.mined_text)
@@ -91,17 +89,16 @@ def run_process_document(documents: list) -> None:
                             # Skip topics with low weight
                             continue
 
-                        name_topic = (
+                        existing_topic_matches = (
                             [
-                                t.name
-                                for t in document_topics
+                                t for t in document_topics
                                 if t.name == f"Topic {topic_idx}"
                             ]
                             if len(document_topics) > 0
                             else []
                         )
-                        if len(name_topic) > 0:
-                            document_topic_link = name_topic[0]
+                        if len(existing_topic_matches) > 0:
+                            document_topic_link = existing_topic_matches[0]
                             document_topic_link.weight = float(weight)
 
                             update_topic(

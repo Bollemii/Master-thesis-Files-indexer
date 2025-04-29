@@ -6,6 +6,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ThemeProvider } from "./components/ThemeProvider";
 import "./App.css";
+import { Chatbot } from "./pages/Chatbot";
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/chatbot" element={<Chatbot />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </AuthProvider>

@@ -1,8 +1,10 @@
 import os
 import uuid
+import pathlib
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 
+from app.config import settings
 from app.models import Document, User
 from app.schemas import (
     DocumentDetail,
@@ -102,6 +104,13 @@ async def upload_document(
 ):
     """Upload a new document"""
     try:
+        if not file:
+            raise HTTPException(status_code=400, detail="No file provided")
+        if pathlib.Path(file.filename).suffix not in settings.ALLOWED_EXTENSIONS:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid file type. Only PDF, DOC, DOCX, and TXT are allowed.",
+            )
         # Save document to local storage
         # overwriting if file already exists
         file_path = os.path.join(DOCUMENT_STORAGE_PATH, file.filename)
@@ -220,7 +229,13 @@ async def list_documents(
             for document in documents
         ]
 
-        return {"items": result, "total": total, "page": page, "limit": limit, "n_not_processed": n_not_processed}
+        return {
+            "items": result,
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "n_not_processed": n_not_processed,
+        }
     except HTTPException as e:
         raise e
     except ValueError as e:
