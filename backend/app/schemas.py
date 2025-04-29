@@ -60,6 +60,10 @@ class Document(SQLModel):
         return f"/documents/{self.id}/preview?size=detail"
 
 
+class ChatbotResponse(BaseModel):
+    answer: str
+    sources: list[str]
+
 class UserBase(BaseModel):
     username: str
     is_active: bool = True

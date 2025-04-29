@@ -6,12 +6,16 @@ class Document:
         identifier: str,
         filename: str,
         path: str,
+        text: str | None = None,
+        mined_text: str | None = None,
         processed: bool = False,
         upload_date: str | None = None,
     ):
         self.id = identifier
         self.filename = filename
         self.path = path
+        self.text = text
+        self.mined_text = mined_text
         self.processed = processed
         self.upload_date = upload_date
 
@@ -30,8 +34,6 @@ class Chunk:
         document_id: str | None = None,
         document_name: str | None = None,
         document_path: str | None = None,
-        document_processed: bool | None = None,
-        document_upload_date: str | None = None,
     ):
         self.id = identifier
         self.text = text
@@ -41,8 +43,6 @@ class Chunk:
                 document_id,
                 document_name,
                 document_path,
-                document_processed,
-                document_upload_date,
             )
             if document_id
             else None

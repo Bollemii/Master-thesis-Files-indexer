@@ -23,7 +23,7 @@ def get_document_count(filename: str | None = None) -> int:
 
 
 def get_all_documents(
-    page: int | None = None, limit: int | None = None
+    with_text: bool = False, page: int | None = None, limit: int | None = None
 ) -> list[Document]:
     """Get all documents from the database"""
     if page is not None and limit is not None:
@@ -43,6 +43,8 @@ def get_all_documents(
                 path=doc["d"]["path"],
                 processed=doc["d"]["processed"],
                 upload_date=doc["d"]["upload_date"],
+                text=doc["d"]["text"] if with_text else None,
+                mined_text=doc["d"]["mined_text"] if with_text else None,
             )
             for doc in result
         ]
@@ -332,8 +334,6 @@ def get_similar_chunks_by_embedding(
                 document_id=chunk["doc"]["id"],
                 document_name=chunk["doc"]["filename"],
                 document_path=chunk["doc"]["path"],
-                document_processed=chunk["doc"]["processed"],
-                document_upload_date=chunk["doc"]["upload_date"],
             )
             for chunk in result
         ]

@@ -106,7 +106,7 @@ def generate_embedding_for_texts(texts: list[str]) -> list[list[float]]:
 
 
 def answer_question_with_context(
-    question: str, context: list[str], history: list[str] | None = None
+    question: str, context: list[str], history: list[(str, str)] | None = None
 ) -> str:
     """Generates an answer to a question using the configured Ollama model."""
     if not OLLAMA_BASE_URL or not OLLAMA_LLM_MODEL:

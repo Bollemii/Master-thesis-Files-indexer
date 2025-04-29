@@ -11,6 +11,7 @@ from app.schemas import (
     DocumentsPagination,
     DocumentList,
     TopicResponse,
+    ChatbotResponse,
 )
 from app.TopicModeling.topic_modeling_v3 import delete_document_from_cache
 from app.utils.preview import PreviewManager
@@ -199,7 +200,7 @@ async def list_documents(
         documents = (
             get_documents_by_filename_like(q, page, limit)
             if q
-            else get_all_documents(page, limit)
+            else get_all_documents(page=page, limit=limit)
         )
 
         result = [
@@ -246,7 +247,7 @@ def process_document(_: User = Depends(get_current_user)):
         raise HTTPException(status_code=409, detail="Process is already running")
 
     try:
-        documents = get_all_documents()
+        documents = get_all_documents(with_text=True)
         if not documents:
             raise HTTPException(status_code=404, detail="No documents available")
 
@@ -411,6 +412,12 @@ async def update_document_name(
         )
 
 
+@router.put(
+    "/ask",
+    response_model=ChatbotResponse,
+    status_code=200,
+    tags=["Chatbot"],
+)
 async def answer_question_rag(
     question: str,
     conversation_history: list[(str, str)] | None = None,
@@ -439,7 +446,7 @@ async def answer_question_rag(
 
         return {
             "answer": answer,
-            "source": list(
+            "sources": list(
                 dict.fromkeys([chunk.document.filename for chunk in context_chunks])
             ),
         }

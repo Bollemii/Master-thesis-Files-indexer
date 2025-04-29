@@ -26,6 +26,7 @@ def run_process_document(documents: list) -> None:
     try:
         file_path_list = []
         file_name_list = []
+        document_mined_texts = []
         time_list = []
         size_list = []
 
@@ -35,6 +36,7 @@ def run_process_document(documents: list) -> None:
             ]:
                 file_path_list.append(document.path)
                 file_name_list.append(document.filename)
+                document_mined_texts.append(document.mined_text)
                 time_list.append(
                     datetime.timestamp(datetime.fromisoformat(document.upload_date))
                 )
@@ -44,6 +46,7 @@ def run_process_document(documents: list) -> None:
             {
                 "file_path": file_path_list,
                 "file_name": file_name_list,
+                "content": document_mined_texts,
                 "creation_time": time_list,
                 "file_size": size_list,
             }

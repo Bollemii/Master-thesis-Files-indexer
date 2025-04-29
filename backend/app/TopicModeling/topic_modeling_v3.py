@@ -100,12 +100,10 @@ def process_documents(doc_df):
     return transf_doc_df
 
 
-def run_lda(transf_doc_df):
-    no_error_df = transf_doc_df[transf_doc_df["error"].isnull()]
-    corpus = no_error_df["without_stop_words"]
-
+def run_lda(doc_df):
+    print("[DOCUMENT PROCESSING] Starting LDA...")
     vectorizer = CountVectorizer(ngram_range=(1, 2), max_df=0.8, min_df=0.05)
-    X = vectorizer.fit_transform(corpus)
+    X = vectorizer.fit_transform(doc_df["content"])
 
     doc_topic_prior = 0.085
     topic_word_prior = 0.225
@@ -134,7 +132,7 @@ def run_lda(transf_doc_df):
     doc_topic_dist = lda.transform(X)
     doc_topics = []
     for doc_idx, topic_dist in enumerate(doc_topic_dist):
-        doc_file_name = no_error_df.iloc[doc_idx]["file_name"]
+        doc_file_name = doc_df.iloc[doc_idx]["file_name"]
         doc_topics.append((doc_file_name, topic_dist.tolist()))
 
     return topics, doc_topics
@@ -142,31 +140,7 @@ def run_lda(transf_doc_df):
 
 def run(doc_df):
     print("[DOCUMENT PROCESSING] Starting Topic Modeling...")
-    if not os.path.exists("./tmp"):
-        os.makedirs("./tmp")
-    if not os.path.exists("./tmp/doc_df.miner.pkl"):
-        transf_doc_df = process_documents(doc_df)
-    else:
-        print("[DOCUMENT PROCESSING] Loading existing documents...")
-        existing_df = pd.read_pickle("./tmp/doc_df.miner.pkl")
-        if "file_path" not in existing_df.columns:
-            transf_doc_df = process_documents(doc_df.copy())
-            transf_doc_df.to_pickle("./tmp/doc_df.miner.pkl")
-        else:
-            # Filter to find new documents
-            new_docs_mask = ~doc_df["file_path"].isin(existing_df["file_path"])
-            new_docs = doc_df[new_docs_mask]
-            if not new_docs.empty:
-                new_transf_doc_df = process_documents(new_docs.copy())
-                transf_doc_df = pd.concat(
-                    [existing_df, new_transf_doc_df], ignore_index=True
-                )
-                transf_doc_df.to_pickle("./tmp/doc_df.miner.pkl")
-            else:
-                transf_doc_df = existing_df
-
-    print("[DOCUMENT PROCESSING] Running LDA...")
-    topics, doc_topics = run_lda(transf_doc_df)
+    topics, doc_topics = run_lda(doc_df)
     return topics, doc_topics
 
 
