@@ -17,6 +17,10 @@ from app.utils.preview import PreviewManager
 from app.utils.process_manager import ProcessManager
 from app.utils.security import get_current_user
 from app.utils.document_transformer import space_between_word, preprocess_document
+from app.utils.ai_model import (
+    generate_embedding_for_texts,
+    answer_question_with_context,
+)
 from app.database.documents import (
     get_document_by_id,
     get_document_topics_by_id,
@@ -26,6 +30,7 @@ from app.database.documents import (
     delete_document as delete_document_db,
     update_document as update_document_db,
     create_chunks_embedding_index,
+    get_similar_chunks_by_embedding,
 )
 
 DOCUMENT_STORAGE_PATH = os.getenv("DOCUMENT_STORAGE_PATH", "./documents")
@@ -400,6 +405,53 @@ async def update_document_name(
         )
     except Exception as e:
         print(f"Error 500 - Updating document name: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error",
+        )
+
+
+async def answer_question_rag(
+    question: str,
+    conversation_history: list[(str, str)] | None = None,
+    _: User = Depends(get_current_user),
+):
+    """Answer a question using RAG"""
+    try:
+        if not question:
+            raise HTTPException(status_code=400, detail="Question cannot be empty")
+
+        question_embedding = generate_embedding_for_texts([question])
+        if not question_embedding:
+            raise HTTPException(
+                status_code=500, detail="Failed to generate question embedding"
+            )
+
+        context_chunks = get_similar_chunks_by_embedding(question_embedding)
+        if not context_chunks:
+            raise HTTPException(status_code=404, detail="No relevant documents found")
+
+        answer = answer_question_with_context(
+            question=question,
+            context=[chunk.text for chunk in context_chunks],
+            history=conversation_history,
+        )
+
+        return {
+            "answer": answer,
+            "source": list(
+                dict.fromkeys([chunk.document.filename for chunk in context_chunks])
+            ),
+        }
+    except HTTPException as e:
+        raise e
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        print(f"Error 500 - Answering question: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",

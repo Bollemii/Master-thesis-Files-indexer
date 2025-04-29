@@ -1,11 +1,12 @@
 import json
 
 from app.database.main import execute_neo4j_query, generate_id, get_current_timestamp
-from app.database.models import Document, DocumentTopic
+from app.database.models import Document, DocumentTopic, Chunk
 
 # =================================================
 # Document Management Functions
 # =================================================
+
 
 def get_document_count(filename: str | None = None) -> int:
     """Get the count of documents in the database"""
@@ -238,9 +239,11 @@ def delete_document(document_id: str) -> None:
         parameters={"id": document_id},
     )
 
+
 # =================================================
 # Document Topic Management Functions
 # =================================================
+
 
 def get_document_topics_by_id(document_id: str) -> list[DocumentTopic]:
     """Get topics associated with a document by its ID"""
@@ -295,9 +298,49 @@ def update_weight_of_document_topic_link(
         parameters={"document_id": document_id, "topic_id": topic_id, "weight": weight},
     )
 
+
 # =================================================
 # Chunk Management Functions
 # =================================================
+
+
+def get_similar_chunks_by_embedding(
+    embedding: list[float], limit: int = 5
+) -> list[Chunk]:
+    """Get similar chunks based on embedding"""
+    if not embedding:
+        raise ValueError("Embedding must be provided.")
+    if len(embedding) != 1536:
+        raise ValueError("Embedding must be of length 1536.")
+
+    result = execute_neo4j_query(
+        """
+        WITH {embedding} AS embedding
+        CALL db.index.vector.queryNodes('chunk_embedding_index', $limit, embedding)
+        YIELD node, score
+        MATCH (doc:Document)-[:HAS_CHUNK]->(node)
+        RETURN doc, node, score
+        """,
+        parameters={"embedding": json.dumps(embedding), "limit": limit},
+    )
+    return (
+        [
+            Chunk(
+                identifier=chunk["node"]["id"],
+                text=chunk["node"]["text"],
+                embedding=json.loads(chunk["node"]["embedding"]),
+                document_id=chunk["doc"]["id"],
+                document_name=chunk["doc"]["filename"],
+                document_path=chunk["doc"]["path"],
+                document_processed=chunk["doc"]["processed"],
+                document_upload_date=chunk["doc"]["upload_date"],
+            )
+            for chunk in result
+        ]
+        if result
+        else []
+    )
+
 
 def create_chunks_embedding_index() -> None:
     """Recreate the index for chunk embeddings"""
@@ -324,7 +367,11 @@ def create_document_chunks(
         raise ValueError("Document not found.")
 
     if len(chunks) != len(embedding):
-        print("Chunks and embeddings must have the same length (chunks: %d, embeddings: %d)", len(chunks), len(embedding))
+        print(
+            "Chunks and embeddings must have the same length (chunks: %d, embeddings: %d)",
+            len(chunks),
+            len(embedding),
+        )
         return
 
     for i, chunk in enumerate(chunks):

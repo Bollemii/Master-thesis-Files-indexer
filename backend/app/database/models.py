@@ -6,8 +6,8 @@ class Document:
         identifier: str,
         filename: str,
         path: str,
-        processed: bool,
-        upload_date: str,
+        processed: bool = False,
+        upload_date: str | None = None,
     ):
         self.id = identifier
         self.filename = filename
@@ -17,6 +17,39 @@ class Document:
 
     def __repr__(self):
         return f"Document(id={self.id}, filename={self.filename}, path={self.path}, processed={self.processed}, upload_date={self.upload_date})"
+
+
+class Chunk:
+    """Class representing a chunk of a document in the database."""
+
+    def __init__(
+        self,
+        identifier: str,
+        text: str,
+        embedding: list[float],
+        document_id: str | None = None,
+        document_name: str | None = None,
+        document_path: str | None = None,
+        document_processed: bool | None = None,
+        document_upload_date: str | None = None,
+    ):
+        self.id = identifier
+        self.text = text
+        self.embedding = embedding if embedding is not None else []
+        self.document = (
+            Document(
+                document_id,
+                document_name,
+                document_path,
+                document_processed,
+                document_upload_date,
+            )
+            if document_id
+            else None
+        )
+
+    def __repr__(self):
+        return f"Chunk(id={self.id}, document_id={self.document.id})"
 
 
 class Topic:

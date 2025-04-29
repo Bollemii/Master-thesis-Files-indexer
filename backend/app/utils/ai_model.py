@@ -14,7 +14,9 @@ OLLAMA_TIMEOUT = settings.OLLAMA_TIMEOUT
 
 ollama_client = Client(
     host=OLLAMA_BASE_URL,
-    timeout=OLLAMA_TIMEOUT if OLLAMA_TIMEOUT > 0 else None, # Set timeout to negative to disable it
+    timeout=(
+        OLLAMA_TIMEOUT if OLLAMA_TIMEOUT > 0 else None
+    ),  # Set timeout to negative to disable it
 )
 
 
@@ -101,3 +103,54 @@ def generate_embedding_for_texts(texts: list[str]) -> list[list[float]]:
     except Exception as e:
         logger.error("Error processing Ollama response: %s", e)
         return []
+
+
+def answer_question_with_context(
+    question: str, context: list[str], history: list[str] | None = None
+) -> str:
+    """Generates an answer to a question using the configured Ollama model."""
+    if not OLLAMA_BASE_URL or not OLLAMA_LLM_MODEL:
+        logger.warning("Ollama URL or model not configured. Skipping answering.")
+        return "Ollama URL or model not configured."
+
+    if not question or not context:
+        logger.warning("Question or context is empty. Skipping answering.")
+        return "Question or context is empty."
+
+    prompt = (
+        f"Given the conversation history with the user:\n{history}\n\n"
+        f"He asked the following question:\n{question}\n\n"
+        f"Based on the context provided:\n{context}\n\n"
+        f"Please provide a detailed answer to the question above using the context.\n\n"
+        f"Only output the answer, do not include any other text.\n\n"
+        f"If the context is not sufficient to answer the question, please say 'I don't know'.\n\n"
+    )
+
+    try:
+        logger.info(
+            "Requesting answer with model %s for question: %s",
+            OLLAMA_LLM_MODEL,
+            question,
+        )
+
+        response = ollama_client.generate(
+            model=OLLAMA_LLM_MODEL,
+            prompt=prompt,
+            stream=False,
+        )
+
+        answer = response.get("response", "").strip()
+
+        if not answer:
+            logger.warning("Ollama returned an empty answer for question: %s", question)
+            return "No answer generated."
+
+        logger.info("Generated answer: '%s' for question: %s", answer, question)
+        return answer
+
+    except ResponseError as e:
+        logger.error("Ollama error: %s", e)
+        return "Error: Answering Failed"
+    except Exception as e:
+        logger.error("Error processing Ollama response: %s", e)
+        return "Error: Processing Failed"
