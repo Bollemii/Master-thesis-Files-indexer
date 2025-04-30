@@ -6,6 +6,7 @@ services:
     container_name: backend
     environment:
       - DOCUMENT_STORAGE_PATH=/app/storage
+      - ACCESS_TOKEN_EXPIRE_MINUTES=600
       - TESSERACT_PATH=/usr/bin/tesseract
       - LIBREOFFICE_PATH=/usr/bin/libreoffice
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
@@ -24,7 +25,7 @@ services:
       test: ["CMD-SHELL", "curl -f localhost:8000 || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 99999
       start_period: 3s
     depends_on:
       neo4j-db:
@@ -65,6 +66,8 @@ services:
     image: ollama/ollama:0.6.5
     ports:
       - 11434:11434
+    environment:
+      - OLLAMA_CONTEXT_LENGTH=8192
     volumes:
       - ./data/ollama/ollama:/root/.ollama
       - ./entrypoint.sh:/entrypoint.sh

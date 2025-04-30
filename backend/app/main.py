@@ -9,7 +9,7 @@ from app.init_database import (
     create_admin_user,
 )
 from app.database.main import check_neo4j_connection
-from app.routers import documents, users
+from app.routers import documents, users, chatbot
 from app.utils.preview import PreviewManager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -64,6 +64,7 @@ if settings.BACKEND_CORS_ORIGINS:
 
 app.include_router(documents.router, prefix=settings.API_V1_STR)
 app.include_router(users.router, prefix=settings.API_V1_STR)
+app.include_router(chatbot.router, prefix=settings.API_V1_STR)
 
 @app.get("/", status_code=200, tags=["Healthcheck"])
 @app.head("/", status_code=200, tags=["Healthcheck"])

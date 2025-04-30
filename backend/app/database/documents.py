@@ -320,25 +320,24 @@ def get_similar_chunks_by_embedding(
     """Get similar chunks based on embedding"""
     if not embedding:
         raise ValueError("Embedding must be provided.")
-    if len(embedding) != 1536:
-        raise ValueError("Embedding must be of length 1536.")
+    if len(embedding) != 768:
+        raise ValueError("Embedding must be of length 768.")
 
     result = execute_neo4j_query(
         """
-        WITH {embedding} AS embedding
-        CALL db.index.vector.queryNodes('chunk_embedding_index', $limit, embedding)
+        CALL db.index.vector.queryNodes('chunk_embedding_index', $limit, $embedding)
         YIELD node, score
         MATCH (doc:Document)-[:HAS_CHUNK]->(node)
         RETURN doc, node, score
         """,
-        parameters={"embedding": json.dumps(embedding), "limit": limit},
+        parameters={"embedding": embedding, "limit": limit},
     )
     return (
         [
             Chunk(
                 identifier=chunk["node"]["id"],
                 text=chunk["node"]["text"],
-                embedding=json.loads(chunk["node"]["embedding"]),
+                embedding=chunk["node"]["embedding"],
                 document_id=chunk["doc"]["id"],
                 document_name=chunk["doc"]["filename"],
                 document_path=chunk["doc"]["path"],
@@ -355,16 +354,17 @@ def create_chunks_embedding_index() -> None:
     is_index_exists = execute_neo4j_query(
         "SHOW INDEXES WHERE type='VECTOR' AND name='chunk_embedding_index'"
     )
-    print("Index exists:", is_index_exists)
-    if is_index_exists is not None or len(is_index_exists) > 0:
+
+    if is_index_exists is not None and len(is_index_exists) > 0:
         return
+
     print("Creating chunk embedding index...")
     execute_neo4j_query(
         """
         CREATE VECTOR INDEX chunk_embedding_index IF NOT EXISTS
         FOR (c:Chunk) ON c.embedding
         OPTIONS {indexConfig: {
-            `vector.dimensions`: 1536,
+            `vector.dimensions`: 768,
             `vector.similarity_function`: 'cosine'
         }}
         """,
@@ -397,7 +397,7 @@ def create_document_chunks(
             parameters={
                 "id": chunk_id,
                 "text": chunk,
-                "embedding": json.dumps(embedding[i]) if embedding else None,
+                "embedding": embedding[i] if embedding else None,
             },
         )
         # Link the chunk to the document

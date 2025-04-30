@@ -7,8 +7,9 @@ import { CorpusDetail } from "../components/CorpusDetail";
 import { TopicDetail } from "../components/TopicDetail";
 import { fetchWithAuth, AuthError } from "../services/api";
 import { TopBarDashboard } from "@/components/TopBarDashboard";
-import { MessageCircle, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { ClipLoader } from "react-spinners";
+import { ChatbotButton } from "@/components/ChatbotButton";
 
 export function Dashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -149,14 +150,10 @@ export function Dashboard() {
         startProcess={startProcess}
         n_not_processed={documents?.n_not_processed || 0}
       />
-      <button
-        onClick={() => navigate("/chatbot")}
-        className={`fixed top-20 left-5 p-4 bg-blue-500 text-white dark:bg-blue-600 dark:hover:bg-blue-500 rounded-full cursor-pointer shadow-lg transition-colors duration-200 flex items-center justify-center group`}
-        aria-label="Go to Chatbot"
-      >
-        <MessageCircle className={`w-6 h-6`} />
-      </button>
-      <main className="flex-1 max-w-7xl w-full mx-auto py-6 sm:px-6 lg:px-8 mt-16">
+      <div className="fixed top-20 left-5">
+        <ChatbotButton chatUrl="/chatbot"/>
+      </div>
+      <main className="flex-1 w-full mx-auto py-6 sm:px-6 lg:px-8 mt-16">
         <Routes>
           <Route
             path="/"

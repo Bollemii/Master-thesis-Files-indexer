@@ -60,6 +60,9 @@ class Document(SQLModel):
         """URL for detailed preview"""
         return f"/documents/{self.id}/preview?size=detail"
 
+class ChatbotRequest(BaseModel):
+    question: str
+    conversation_history: list[list[str]] = []
 
 class ChatbotResponse(BaseModel):
     answer: str

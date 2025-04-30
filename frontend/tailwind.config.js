@@ -51,6 +51,38 @@ module.exports = {
           5: "hsl(var(--chart-5))",
         },
       },
+      keyframes: {
+        "accordion-down": {
+          from: {
+            height: "0",
+          },
+          to: {
+            height: "var(--radix-accordion-content-height)",
+          },
+        },
+        "accordion-up": {
+          from: {
+            height: "var(--radix-accordion-content-height)",
+          },
+          to: {
+            height: "0",
+          },
+        },
+        fadeIn: {
+          "0%": { opacity: "0", transform: "translateX(-10px) translateY(-50%)" },
+          "100%": { opacity: "1", transform: "translateX(0) translateY(-50%)" },
+        },
+        slideDown: {
+          from: { opacity: "0", maxHeight: "0", transform: "translateY(-10px)" },
+          to: { opacity: "1", maxHeight: "500px", transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        fadeIn: "fadeIn 0.3s ease-out forwards",
+        slideDown: "slideDown 0.3s ease-out forwards",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

@@ -106,9 +106,16 @@ def generate_embedding_for_texts(texts: list[str]) -> list[list[float]]:
 
 
 def answer_question_with_context(
-    question: str, context: list[str], history: list[(str, str)] | None = None
+    question: str, context: list[str], history: list[list[str]] | None = None
 ) -> str:
     """Generates an answer to a question using the configured Ollama model."""
+    def format_history(history: list[list[str]]) -> str:
+        """Formats the conversation history for the prompt."""
+        return "\n".join(
+            f"- {h[0]}: {h[1]}"
+            for h in history
+        ) if history else ""
+
     if not OLLAMA_BASE_URL or not OLLAMA_LLM_MODEL:
         logger.warning("Ollama URL or model not configured. Skipping answering.")
         return "Ollama URL or model not configured."
@@ -117,15 +124,32 @@ def answer_question_with_context(
         logger.warning("Question or context is empty. Skipping answering.")
         return "Question or context is empty."
 
-    prompt = (
-        f"Given the conversation history with the user:\n{history}\n\n"
-        f"He asked the following question:\n{question}\n\n"
-        f"Based on the context provided:\n{context}\n\n"
-        f"Please provide a detailed answer to the question above using the context.\n\n"
-        f"Only output the answer, do not include any other text.\n\n"
-        f"If the context is not sufficient to answer the question, please say 'I don't know'.\n\n"
-    )
+    def format_context(context: list[str]) -> str:
+        """Formats the context for the prompt."""
+        return "\n".join(
+            f"- {i + 1}: {c}"
+            for i, c in enumerate(context)
+        )
 
+    prompt = (
+        f"You are a knowledgeable, factual, and clear assistant. Your task is to answer the user's question using only the provided documents.\n\n"
+        f"--- CONTEXT ---\n"
+        f"Here are excerpts from relevant documents. You must use them to answer the question. Do not ignore them. Do not make up information.\n\n"
+        f"{format_context(context)}\n\n"
+        f"--- CONVERSATION HISTORY ---\n"
+        f"{format_history(history)}\n\n"
+        f"--- QUESTION ---\n"
+        f"{question}\n\n"
+        f"--- INSTRUCTIONS ---\n"
+        f"- Base your answer strictly on the content of the documents.\n"
+        f"- If the documents do not provide enough information to answer with certainty, say so clearly.\n"
+        f"- Structure your response clearly and concisely.\n"
+        f"- Do not invent facts, sources, or citations.\n\n"
+        f"- Answer the question in the language of the question.\n"
+        f"- If the question is not relevant to the documents, say so clearly.\n\n"
+        f"Now, provide a precise answer to the question, using only the information in the documents above."
+    )
+    print("Prompt:", prompt)
     try:
         logger.info(
             "Requesting answer with model %s for question: %s",

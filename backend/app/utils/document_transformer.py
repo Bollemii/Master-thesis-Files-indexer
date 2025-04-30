@@ -51,9 +51,9 @@ def space_between_word(text):
 
 def chunk_text(text: str, chunk_size: int = 1000) -> list[str]:
     """Split text into chunks of a specified size."""
-
+    # Texts are transformed before to remove \n and \r characters. There are replaced by a space.
     text_splitter = CharacterTextSplitter(
-        separator="\n\n",
+        separator="  ",
         chunk_size=chunk_size,
         chunk_overlap=200,
     )
