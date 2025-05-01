@@ -55,11 +55,28 @@ export function ChatbotConversation() {
       }
     };
 
+    const storedHistory = localStorage.getItem("chatbotHistory");
+    if (storedHistory) {
+      const parsedHistory: Message[] = JSON.parse(storedHistory);
+      setHistory(parsedHistory);
+    } else {
+      setHistory([welcomeMessage]);
+    }
+
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  const addMessage = (message: Message) => {
+    setHistory((prev) => [...prev, message]);
+    localStorage.setItem("chatbotHistory", JSON.stringify([...history, message]));
+  }
+  const clearConversation = () => {
+    setHistory([welcomeMessage]);
+    localStorage.setItem("chatbotHistory", JSON.stringify([welcomeMessage]));
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
@@ -75,7 +92,8 @@ export function ChatbotConversation() {
       content: input,
     };
     setInput("");
-    setHistory((prev) => [...prev, newMessage]);
+    const oldHistory = [...history];
+    addMessage(newMessage);
     try {
       const response = await fetchWithAuth(`/chatbot/ask`, token, {
         method: "POST",
@@ -84,9 +102,8 @@ export function ChatbotConversation() {
         },
         body: JSON.stringify({
           question: input,
-          conversation_history: history
-            .slice(1, -1) // Exclude the welcome message and the new message
-            .slice(-10) // Limit to the last 10 messages
+          conversation_history: oldHistory
+            .slice(-5) // Keep the last 5 messages for context
             .map((message) => [message.role, message.content]),
         }),
       });
@@ -97,7 +114,7 @@ export function ChatbotConversation() {
         content: response.answer,
         sources: response.sources,
       };
-      setHistory((prev) => [...prev, assistantMessage]);
+      addMessage(assistantMessage);
     } catch (error) {
       console.error("Error fetching response:", error);
       handleAuthError(error as Error);
@@ -131,7 +148,7 @@ export function ChatbotConversation() {
       <div className="fixed bottom-4 left-4 right-4 flex flex-row">
         <button
           className="p-2 mr-2 text-gray-500 hover:text-gray-700 transition-colors duration-200 cursor-pointer"
-          onClick={() => setHistory([welcomeMessage])}
+          onClick={clearConversation}
           disabled={isLoading}
           aria-label="Clear chat history"
           title="Clear chat history"

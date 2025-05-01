@@ -12,6 +12,8 @@ from app.database.documents import (
     get_document_topics_by_id,
     set_document_processed,
     link_document_to_topic,
+    update_weight_of_document_topic_link,
+    delete_document_topic_link,
 )
 from app.database.topics import get_topic_by_name, create_topic, update_topic
 
@@ -85,10 +87,6 @@ def run_process_document(documents: list) -> None:
                 if document is not None:
                     document_topics = get_document_topics_by_id(document.id)
                     for topic_idx, weight in enumerate(doc_topic[1]):
-                        if weight < NB_TRESHOLD_LINK:
-                            # Skip topics with low weight
-                            continue
-
                         existing_topic_matches = (
                             [
                                 t for t in document_topics
@@ -97,15 +95,24 @@ def run_process_document(documents: list) -> None:
                             if len(document_topics) > 0
                             else []
                         )
-                        if len(existing_topic_matches) > 0:
-                            document_topic_link = existing_topic_matches[0]
-                            document_topic_link.weight = float(weight)
+                        existing_topic_matches = existing_topic_matches[0] if len(existing_topic_matches) > 0 else None
 
-                            update_topic(
-                                topic_id=document_topic_link.id,
-                                name=document_topic_link.name,
-                                words=document_topic_link.words,
-                                description=document_topic_link.description,
+                        if weight < NB_TRESHOLD_LINK:
+                            # Skip topics with low weight
+                            if existing_topic_matches is not None:
+                                # Remove existing link between document and topic if it exists
+                                delete_document_topic_link(
+                                    document_id=document.id,
+                                    topic_id=existing_topic_matches.id,
+                                )
+                            continue
+
+                        if existing_topic_matches is not None:
+                            # Update existing link if it exists
+                            update_weight_of_document_topic_link(
+                                document_id=document.id,
+                                topic_id=existing_topic_matches.id,
+                                weight=float(weight),
                             )
                         else:
                             topic = get_topic_by_name(f"Topic {topic_idx}")

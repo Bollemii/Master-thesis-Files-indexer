@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useRef } from "react";
 import { Document } from "../types/api";
 import { useNavigate } from "react-router-dom";
 import { DocumentPreview } from "./DocumentPreview";
@@ -22,9 +22,25 @@ export const CorpusList = memo(function CorpusList({
   setItemsPerPage,
 }: CorpusListProps) {
   const navigate = useNavigate();
+  const topPage = useRef<HTMLDivElement>(null);
+
+  const handleScrollToTop = () => {
+    topPage.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const setItemsPerPageAndScroll = (itemsPerPage: number) => {
+    setItemsPerPage(itemsPerPage);
+    onPageChange(1);
+    handleScrollToTop();
+  };
+  const changePageAndScroll = (page: number) => {
+    onPageChange(page);
+    handleScrollToTop();
+  }
 
   return (
     <div className="min-h-screen pb-16 dark:bg-gray-900">
+      <div ref={topPage} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {documents.map((doc) => (
           <div
@@ -68,7 +84,7 @@ export const CorpusList = memo(function CorpusList({
           <div className="rounded-md p-2 border dark:border-gray-300 border-gray-700 dark:bg-gray-300 bg-white cursor-pointer">
             <select
               style={{ cursor: "pointer" }}
-              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              onChange={(e) => setItemsPerPageAndScroll(Number(e.target.value))}
               value={itemsPerPage}
             >
               <option value={9}>9</option>
@@ -86,7 +102,7 @@ export const CorpusList = memo(function CorpusList({
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={onPageChange}
+            onPageChange={changePageAndScroll}
           />
         </div>
         <div className="flex-1"/>

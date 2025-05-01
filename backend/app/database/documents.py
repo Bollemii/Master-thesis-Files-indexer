@@ -309,6 +309,19 @@ def update_weight_of_document_topic_link(
     )
 
 
+def delete_document_topic_link(document_id: str, topic_id: str) -> None:
+    """Delete the link between a document and a topic"""
+    if not document_id or not topic_id:
+        raise ValueError("Document ID and Topic ID must be provided.")
+    execute_neo4j_query(
+        """
+        MATCH (d:Document {id: $document_id})-[l:HAS_TOPIC]->(t:Topic {id: $topic_id})
+        DELETE l;
+        """,
+        parameters={"document_id": document_id, "topic_id": topic_id},
+    )
+
+
 # =================================================
 # Chunk Management Functions
 # =================================================

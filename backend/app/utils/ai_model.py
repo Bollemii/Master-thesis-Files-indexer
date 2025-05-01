@@ -111,6 +111,7 @@ def answer_question_with_context(
     """Generates an answer to a question using the configured Ollama model."""
     def format_history(history: list[list[str]]) -> str:
         """Formats the conversation history for the prompt."""
+        history = history[:10] # Limit to the last 10 exchanges
         return "\n".join(
             f"- {h[0]}: {h[1]}"
             for h in history
@@ -132,24 +133,23 @@ def answer_question_with_context(
         )
 
     prompt = (
-        f"You are a knowledgeable, factual, and clear assistant. Your task is to answer the user's question using only the provided documents.\n\n"
-        f"--- CONTEXT ---\n"
+        f"You are a knowledgeable, factual, and clear assistant. Your task is to answer the user's question using only the provided documents.\n"
         f"Here are excerpts from relevant documents. You must use them to answer the question. Do not ignore them. Do not make up information.\n\n"
-        f"{format_context(context)}\n\n"
-        f"--- CONVERSATION HISTORY ---\n"
-        f"{format_history(history)}\n\n"
-        f"--- QUESTION ---\n"
-        f"{question}\n\n"
         f"--- INSTRUCTIONS ---\n"
         f"- Base your answer strictly on the content of the documents.\n"
         f"- If the documents do not provide enough information to answer with certainty, say so clearly.\n"
         f"- Structure your response clearly and concisely.\n"
-        f"- Do not invent facts, sources, or citations.\n\n"
+        f"- Do not invent facts, sources, or citations.\n"
         f"- Answer the question in the language of the question.\n"
         f"- If the question is not relevant to the documents, say so clearly.\n\n"
-        f"Now, provide a precise answer to the question, using only the information in the documents above."
+        f"--- QUESTION ---\n"
+        f"{question}\n\n"
+        f"--- CONVERSATION HISTORY ---\n"
+        f"{format_history(history)}\n\n"
+        f"--- CONTEXT ---\n"
+        f"{format_context(context)}"
     )
-    print("Prompt:", prompt)
+
     try:
         logger.info(
             "Requesting answer with model %s for question: %s",
