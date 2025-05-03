@@ -105,3 +105,13 @@ def update_topic(topic_id: str, name: str | None = None, words: dict[str, float]
         },
     )
     return topic
+
+def delete_topic(topic_id: str) -> None:
+    """Delete a topic from the database."""
+    if not topic_id:
+        raise ValueError("Topic identifier is required.")
+
+    execute_neo4j_query(
+        """MATCH (t:Topic {id: $id}) DETACH DELETE t""",
+        parameters={"id": topic_id},
+    )

@@ -68,6 +68,7 @@ services:
       - 11434:11434
     environment:
       - OLLAMA_CONTEXT_LENGTH=8192
+      - OLLAMA_KEEP_ALIVE=30m
     volumes:
       - ./data/ollama/ollama:/root/.ollama
       - ./entrypoint.sh:/entrypoint.sh
