@@ -26,6 +26,8 @@ cd tfe
 
 Attention, due à l'utilisation de Tesseract et de LibreOffice, le container backend nécessite 4GB d'espace disque minimum.
 
+Modifiez le fichier `.env` pour configurer les variables d'environnement.
+
 Pour lancer le projet, lancer la commande suivante :
 
 ```console
