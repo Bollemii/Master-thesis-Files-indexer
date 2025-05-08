@@ -17,6 +17,12 @@ Le système existant est le fruit des travaux de plusieurs étudiants:
 
 Le présent travail n'a pas pour but de recréer le système existant. Il a donc été décidé de le construire à partir de la solution de Mateo CASTREUIL. Le but est donc d'intégrer la base de données orientée graphe et le RAG dans son système.
 
+## Branches
+
+Deux branches principales sont disponibles dans le dépôt :
+- `main` : Cette branche contient le projet forké de Mateo CASTREUIL. Il s'agit de la version de base de l'indexeur automatique de documents.
+- `Graph-and-rag` : Cette branche contient le projet modifié pour intégrer la base de données orientée graphe et le RAG. Elle est basée sur la branche `main` et contient les modifications apportées au projet.
+
 ## Installation
 
 Le projet nécessite l'installation Docker et Docker Compose. Pour installer Docker, suivez les instructions sur le site officiel : [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/).

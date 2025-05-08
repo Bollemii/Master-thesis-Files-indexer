@@ -145,7 +145,7 @@ export function ChatbotConversation() {
         <div ref={messagesEndRef} />
       </div>
       {/* Input field and send button */}
-      <div className="fixed bottom-4 left-4 right-4 flex flex-row">
+      <div className="fixed bottom-4 left-4 right-4 flex flex-row shadow-md">
         <button
           className="p-2 mr-2 text-gray-500 hover:text-gray-700 transition-colors duration-200 cursor-pointer"
           onClick={clearConversation}
@@ -156,7 +156,7 @@ export function ChatbotConversation() {
           <Trash2 size={24} />
         </button>
         <div
-          className="p-4 border-t w-full bg-white cursor-text"
+          className="p-4 w-full bg-white cursor-text"
           onClick={(e) => {
             const target = e.target as HTMLInputElement;
             if (target.tagName !== "INPUT") {
