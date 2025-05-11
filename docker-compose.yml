@@ -69,6 +69,8 @@ services:
     environment:
       - OLLAMA_CONTEXT_LENGTH=8192
       - OLLAMA_KEEP_ALIVE=30m
+      - OLLAMA_NUM_PARALLEL=3
+      - OLLAMA_MAX_LOADED_MODELS=2
     volumes:
       - ./data/ollama/ollama:/root/.ollama
       - ./entrypoint.sh:/entrypoint.sh

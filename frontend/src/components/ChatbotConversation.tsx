@@ -5,16 +5,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PulseLoader } from "react-spinners";
 
+enum MessageRole {
+  USER = "user",
+  ASSISTANT = "assistant",
+}
+
 type Message = {
   id: string;
-  role: "user" | "assistant";
+  position: number;
+  role: MessageRole;
   content: string;
   sources?: string[];
 };
 
 const welcomeMessage: Message = {
   id: crypto.randomUUID(),
-  role: "assistant",
+  position: 0,
+  role: MessageRole.ASSISTANT,
   content: "Hi! I'm your AI assistant. How can I help you today?",
 };
 
@@ -70,8 +77,14 @@ export function ChatbotConversation() {
   }, []);
 
   const addMessage = (message: Message) => {
-    setHistory((prev) => [...prev, message]);
-    localStorage.setItem("chatbotHistory", JSON.stringify([...history, message]));
+    const storedHistory = (JSON.parse(
+      localStorage.getItem("chatbotHistory") || "[]"
+    ) as Message[]).sort((a, b) => a.position - b.position);
+    // Fix the position of the new message
+    message.position = storedHistory.length;
+    const newHistory = [...storedHistory, message];
+    localStorage.setItem("chatbotHistory", JSON.stringify(newHistory));
+    setHistory(newHistory);
   }
   const clearConversation = () => {
     setHistory([welcomeMessage]);
@@ -88,8 +101,9 @@ export function ChatbotConversation() {
     setIsLoading(true);
     const newMessage: Message = {
       id: crypto.randomUUID(),
-      role: "user",
-      content: input,
+      position: history.length,
+      role: MessageRole.USER,
+      content: input.trim(),
     };
     setInput("");
     const oldHistory = [...history];
@@ -101,7 +115,7 @@ export function ChatbotConversation() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          question: input,
+          question: input.trim(),
           conversation_history: oldHistory
             .slice(-5) // Keep the last 5 messages for context
             .map((message) => [message.role, message.content]),
@@ -110,7 +124,8 @@ export function ChatbotConversation() {
 
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
-        role: "assistant",
+        position: history.length,
+        role: MessageRole.ASSISTANT,
         content: response.answer,
         sources: response.sources,
       };
@@ -131,9 +146,11 @@ export function ChatbotConversation() {
             <p>Begin the conversation by typing a message!</p>
           </div>
         ) : (
-          history.map((message) => (
-            <MessageBubble key={message.id} message={message} />
-          ))
+          history
+            .sort((a, b) => a.position - b.position)
+            .map((message) => (
+              <MessageBubble key={message.id} message={message} />
+            ))
         )}
         {isLoading && (
           <div className="flex justify-start">
@@ -198,7 +215,7 @@ function MessageBubble({ message }: { message: Message }) {
   return (
     <div
       className={`flex ${
-        message.role === "user" ? "justify-end" : "justify-start"
+        message.role === MessageRole.USER ? "justify-end" : "justify-start"
       } ${message.sources && message.sources.length > 0 ? "cursor-pointer" : ""}`}
       onClick={
         message.sources && message.sources.length > 0
@@ -208,7 +225,7 @@ function MessageBubble({ message }: { message: Message }) {
     >
       <div
         className={`max-w-[80%] rounded-lg p-3 ${
-          message.role === "user"
+          message.role === MessageRole.USER
             ? "bg-blue-500 text-white rounded-tr-none"
             : "bg-gray-200 text-gray-800 rounded-tl-none"
         }`}
