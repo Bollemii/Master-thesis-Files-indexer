@@ -15,7 +15,7 @@ export function ChatbotButton({chatUrl}: {chatUrl: string}) {
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                <MessageCircle className={`w-6 h-6`} />
+                <MessageCircle className="w-6 h-6" />
             </button>
             {isHovered && (
                 <div className="absolute left-full ml-4 top-1/2 bg-blue-500 dark:bg-blue-600 text-white p-3 rounded-lg shadow-xl animate-fadeIn">

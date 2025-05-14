@@ -1,25 +1,30 @@
 import { memo, useRef } from "react";
-import { Document } from "../types/api";
+import { Document, TopicResponse } from "../types/api";
 import { useNavigate } from "react-router-dom";
 import { DocumentPreview } from "./DocumentPreview";
 import { Pagination } from "./Pagination";
+import DashboardFilters from "./DashboardFilters";
 
 interface CorpusListProps {
   documents: Document[];
+  topics: TopicResponse[];
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
   itemsPerPage: number;
   setItemsPerPage: (itemsPerPage: number) => void;
+  applyFilters: (processed: string, topicId: string) => void;
 }
 
 export const CorpusList = memo(function CorpusList({
   documents,
+  topics,
   currentPage,
   totalPages,
   onPageChange,
   itemsPerPage,
   setItemsPerPage,
+  applyFilters,
 }: CorpusListProps) {
   const navigate = useNavigate();
   const topPage = useRef<HTMLDivElement>(null);
@@ -42,6 +47,15 @@ export const CorpusList = memo(function CorpusList({
     <div className="min-h-screen pb-16 dark:bg-gray-900">
       <div ref={topPage} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {documents.length === 0 && (
+          <div className="col-span-1 sm:col-span-2 lg:col-span-3">
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+              <p className="text-gray-500 dark:text-gray-400 text-center">
+                No documents found.
+              </p>
+            </div>
+          </div>
+        )}
         {documents.map((doc) => (
           <div
             key={doc.id}
@@ -81,7 +95,7 @@ export const CorpusList = memo(function CorpusList({
           <span className="text-sm text-gray-500 dark:text-gray-400 mr-4">
             Items per page:
           </span>
-          <div className="rounded-md p-2 border dark:border-gray-300 border-gray-700 dark:bg-gray-300 bg-white cursor-pointer">
+          <div className="rounded-md p-2 mr-2 border dark:border-gray-300 border-gray-700 dark:bg-gray-300 bg-white cursor-pointer">
             <select
               style={{ cursor: "pointer" }}
               onChange={(e) => setItemsPerPageAndScroll(Number(e.target.value))}
@@ -97,6 +111,7 @@ export const CorpusList = memo(function CorpusList({
               <option value={30}>30</option>
             </select>
           </div>
+          <DashboardFilters topics={topics} applyFilters={applyFilters}/>
         </div>
         <div className="h-full flex-1">
           <Pagination

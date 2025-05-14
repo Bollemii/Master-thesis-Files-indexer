@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { DocumentsPagination, ProcessStatus } from "../types/api";
+import { DocumentsPagination, ProcessStatus, TopicsList } from "../types/api";
 import { CorpusList } from "../components/CorpusList";
 import { CorpusDetail } from "../components/CorpusDetail";
 import { TopicDetail } from "../components/TopicDetail";
@@ -15,6 +15,7 @@ export function Dashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [documents, setDocuments] = useState<DocumentsPagination>();
+  const [topics, setTopics] = useState<TopicsList>();
   const [processStatus, setProcessStatus] = useState<ProcessStatus>({
     status: "idle",
     last_run_time: null,
@@ -23,6 +24,10 @@ export function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9);
+  const [filters, setFilters] = useState({
+    processed: "all",
+    topicId: "",
+  });
   const { token, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,8 +59,13 @@ export function Dashboard() {
 
   const fetchDocuments = useCallback(async () => {
     try {
+      const filtersUrl = [
+        filters.processed !== "all" ? `processed:${filters.processed === "processed" ? "true" : "false"}` : "",
+        filters.topicId !== "" ? `topic:${filters.topicId}` : "",
+      ].join(",");
+
       const documents = await fetchWithAuth(
-        `/documents/?q=${encodeURIComponent(
+        `/documents/?filters=${encodeURIComponent(filtersUrl)}&q=${encodeURIComponent(
           searchQuery
         )}&page=${currentPage}&limit=${itemsPerPage}`,
         token
@@ -65,7 +75,17 @@ export function Dashboard() {
       console.error("Failed to fetch documents:", err);
       handleAuthError(err as Error);
     }
-  }, [token, searchQuery, currentPage, handleAuthError, itemsPerPage]);
+  }, [token, searchQuery, currentPage, itemsPerPage, filters, handleAuthError]);
+
+  const fetchTopics = useCallback(async () => {
+    try {
+      const topics = await fetchWithAuth("/topics", token);
+      setTopics(topics);
+    } catch (err) {
+      console.error("Failed to fetch topics:", err);
+      handleAuthError(err as Error);
+    }
+  }, [token, processStatus, handleAuthError]);
 
   const fetchProcessStatus = useCallback(async () => {
     try {
@@ -76,6 +96,11 @@ export function Dashboard() {
         status.status === "completed"
       ) {
         fetchDocuments();
+        fetchTopics();
+        setFilters((prev) => ({
+          ...prev,
+          processed: "processed",
+        }));
       }
 
       previousStatusRef.current = status.status;
@@ -94,6 +119,10 @@ export function Dashboard() {
       console.error("Failed to start process:", err);
       handleAuthError(err as Error);
     }
+  };
+
+  const handleApplyFilters = async (processed: string, topicId: string) => {
+    setFilters({ processed, topicId });
   };
 
   const handleUpload = async (file: File) => {
@@ -137,7 +166,11 @@ export function Dashboard() {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, fetchDocuments, currentPage, location.search, itemsPerPage]);
+  }, [searchQuery, location.search, currentPage, itemsPerPage, filters, fetchDocuments]);
+
+  useEffect(() => {
+    fetchTopics();
+  }, []);
 
   const totalPages = Math.ceil((documents?.total || 0) / itemsPerPage);
 
@@ -160,11 +193,13 @@ export function Dashboard() {
             element={
               <CorpusList
                 documents={documents?.items || []}
+                topics={topics?.items || []}
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={setCurrentPage}
                 itemsPerPage={itemsPerPage}
                 setItemsPerPage={setItemsPerPage}
+                applyFilters={handleApplyFilters}
               />
             }
           />

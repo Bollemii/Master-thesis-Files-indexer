@@ -24,6 +24,10 @@ export interface DocumentsPagination {
   n_not_processed: number;
 }
 
+export interface TopicsList {
+  items: TopicResponse[];
+}
+
 export interface ProcessStatus {
   status: "idle" | "running" | "completed" | "failed" | "cancelled";
   last_run_time: string | null;

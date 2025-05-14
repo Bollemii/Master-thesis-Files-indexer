@@ -8,17 +8,33 @@ from app.database.models import Document, DocumentTopic, Chunk
 # =================================================
 
 
-def get_document_count(filename: str | None = None) -> int:
+def get_document_count(
+    filename: str | None = None, processed: bool | None = None, topic: str | None = None
+) -> int:
     """Get the count of documents in the database"""
+    query = "MATCH (d:Document)"
+    parameters = {}
+
+    # Join to topic if needed
+    if topic is not None:
+        query += "-[:HAS_TOPIC]->(t:Topic)"
+
+    where_clauses = []
     if filename is not None:
-        result = execute_neo4j_query(
-            "MATCH (d:Document) WHERE tolower(d.filename) CONTAINS tolower($filename) RETURN COUNT(d) as count;",
-            parameters={"filename": filename},
-        )
-    else:
-        result = execute_neo4j_query(
-            "MATCH (d:Document) RETURN COUNT(d) as count;",
-        )
+        where_clauses.append("toLower(d.filename) CONTAINS toLower($filename)")
+        parameters["filename"] = filename
+    if processed is not None:
+        where_clauses.append("d.processed = $processed")
+        parameters["processed"] = processed
+    if topic is not None:
+        where_clauses.append("t.id = $topic")
+        parameters["topic"] = topic
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
+
+    query += " RETURN COUNT(DISTINCT d) AS count;"
+
+    result = execute_neo4j_query(query, parameters=parameters)
     return result[0]["count"] if result else 0
 
 
@@ -31,18 +47,39 @@ def get_document_count_not_processed() -> int:
 
 
 def get_all_documents(
-    with_text: bool = False, page: int | None = None, limit: int | None = None
+    with_text: bool = False,
+    processed: bool | None = None,
+    topic: str | None = None,
+    page: int | None = None,
+    limit: int | None = None,
 ) -> list[Document]:
     """Get all documents from the database"""
+    query = "MATCH (d:Document)"
+    parameters = {}
+
+    # Join to topic if needed
+    if topic is not None:
+        query += "-[:HAS_TOPIC]->(t:Topic)"
+
+    where_clauses = []
+    if processed is not None:
+        where_clauses.append("d.processed = $processed")
+        parameters["processed"] = processed
+    if topic is not None:
+        where_clauses.append("t.id = $topic")
+        parameters["topic"] = topic
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
+
     if page is not None and limit is not None:
-        result = execute_neo4j_query(
-            "MATCH (d:Document) RETURN d SKIP $skip LIMIT $limit;",
-            parameters={"skip": (page - 1) * limit, "limit": limit},
-        )
+        query += " RETURN d SKIP $skip LIMIT $limit;"
+        parameters["skip"] = (page - 1) * limit
+        parameters["limit"] = limit
     else:
-        result = execute_neo4j_query(
-            "MATCH (d:Document) RETURN d;",
-        )
+        query += " RETURN d;"
+
+    result = execute_neo4j_query(query, parameters=parameters)
+
     return (
         [
             Document(
@@ -102,26 +139,42 @@ def get_document_by_filename(filename: str) -> Document | None:
 
 
 def get_documents_by_filename_like(
-    filename: str, page: int | None = None, limit: int | None = None
+    filename: str,
+    processed: bool | None = None,
+    topic: str | None = None,
+    page: int | None = None,
+    limit: int | None = None,
 ) -> list[Document]:
     """Get documents by a partial filename match"""
     if not filename:
         raise ValueError("Filename must be provided.")
 
-    if page is not None or limit is not None:
-        result = execute_neo4j_query(
-            "MATCH (d:Document) WHERE tolower(d.filename) CONTAINS tolower($filename) RETURN d SKIP $skip LIMIT $limit;",
-            parameters={
-                "filename": filename,
-                "skip": (page - 1) * limit,
-                "limit": limit,
-            },
-        )
+    query = "MATCH (d:Document)"
+    parameters = {"filename": filename}
+
+    # Join to topic if needed
+    if topic is not None:
+        query += "-[:HAS_TOPIC]->(t:Topic)"
+
+    where_clauses = ["toLower(d.filename) CONTAINS toLower($filename)"]
+    if processed is not None:
+        where_clauses.append("d.processed = $processed")
+        parameters["processed"] = processed
+    if topic is not None:
+        where_clauses.append("t.id = $topic")
+        parameters["topic"] = topic
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
+
+    if page is not None and limit is not None:
+        query += " RETURN d SKIP $skip LIMIT $limit;"
+        parameters["skip"] = (page - 1) * limit
+        parameters["limit"] = limit
     else:
-        result = execute_neo4j_query(
-            "MATCH (d:Document) WHERE tolower(d.filename) CONTAINS tolower($filename) RETURN d;",
-            parameters={"filename": filename},
-        )
+        query += " RETURN d;"
+
+    result = execute_neo4j_query(query, parameters=parameters)
+
     return (
         [
             Document(

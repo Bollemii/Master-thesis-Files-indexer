@@ -7,13 +7,17 @@ from pydantic import BaseModel
 from sqlmodel import SQLModel
 
 
-class TopicResponse(BaseModel):
+class TopicBase(BaseModel):
     id: uuid.UUID
     name: str
     description: str | None
+
+class TopicResponse(TopicBase):
     weight: float
     words: dict[str, float]
 
+class TopicsList(BaseModel):
+    items: list[TopicBase]
 
 class DocumentList(BaseModel):
     id: uuid.UUID

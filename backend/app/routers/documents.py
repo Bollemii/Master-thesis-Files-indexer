@@ -194,17 +194,31 @@ async def get_document(
 @router.get("/documents/", response_model=DocumentsPagination, tags=["documents"])
 async def list_documents(
     q: str | None = None,
+    filters: str | None = None,
     page: int = 1,
     limit: int = 20,
     _: User = Depends(get_current_user),
 ):
     """List all documents with topics for each document"""
     try:
-        total = get_document_count(q)
+        # filters : processed:true,topic:<topic_id>
+        filters = filters.split(",") if filters else []
+        processed = None
+        topic = None
+        if filters:
+            for filt in filters:
+                if filt.startswith("processed:"):
+                    processed = filt.split(":")[1].lower() == "true"
+                elif filt.startswith("topic:"):
+                    topic = filt.split(":")[1].lower()
+
+        total = get_document_count(q, processed, topic)
         documents = (
-            get_documents_by_filename_like(q, page, limit)
+            get_documents_by_filename_like(q, processed, topic, page, limit)
             if q
-            else get_all_documents(page=page, limit=limit)
+            else get_all_documents(
+                processed=processed, topic=topic, page=page, limit=limit
+            )
         )
         n_not_processed = get_document_count_not_processed()
 
