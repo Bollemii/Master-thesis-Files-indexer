@@ -2,6 +2,7 @@ import os
 import pathlib
 from multiprocessing import cpu_count
 import pandas as pd
+import numpy as np
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import CountVectorizer
 
@@ -121,8 +122,9 @@ def run_lda(doc_df):
     lda.fit(X)
 
     topic_words = vectorizer.get_feature_names_out()
+    topic_word_prob = lda.components_ / lda.components_.sum(axis=1)[:, np.newaxis]
     topics = []
-    for topic in lda.components_:
+    for topic in topic_word_prob:
         words_in_topic = zip(topic_words, topic)
         sorted_words = sorted(words_in_topic, key=lambda x: float(x[1]), reverse=True)[
             :NB_TOP_WORDS
