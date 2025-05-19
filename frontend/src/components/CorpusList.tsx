@@ -13,7 +13,6 @@ interface CorpusListProps {
   onPageChange: (page: number) => void;
   itemsPerPage: number;
   setItemsPerPage: (itemsPerPage: number) => void;
-  applyFilters: (processed: string, topicId: string) => void;
 }
 
 export const CorpusList = memo(function CorpusList({
@@ -24,7 +23,6 @@ export const CorpusList = memo(function CorpusList({
   onPageChange,
   itemsPerPage,
   setItemsPerPage,
-  applyFilters,
 }: CorpusListProps) {
   const navigate = useNavigate();
   const topPage = useRef<HTMLDivElement>(null);
@@ -111,7 +109,7 @@ export const CorpusList = memo(function CorpusList({
               <option value={30}>30</option>
             </select>
           </div>
-          <DashboardFilters topics={topics} applyFilters={applyFilters}/>
+          <DashboardFilters topics={topics}/>
         </div>
         <div className="h-full flex-1">
           <Pagination

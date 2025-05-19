@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useContext } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { DocumentsPagination, ProcessStatus, TopicsList } from "../types/api";
@@ -10,8 +10,10 @@ import { TopBarDashboard } from "@/components/TopBarDashboard";
 import { Upload } from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import { ChatbotButton } from "@/components/ChatbotButton";
+import { DashboardFiltersContext } from "@/contexts/DashboardFiltersContext";
 
 export function Dashboard() {
+  const { filters, setProcessingStatus } = useContext(DashboardFiltersContext);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [documents, setDocuments] = useState<DocumentsPagination>();
@@ -24,10 +26,6 @@ export function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9);
-  const [filters, setFilters] = useState({
-    processed: "all",
-    topicId: "",
-  });
   const { token, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -97,10 +95,7 @@ export function Dashboard() {
       ) {
         fetchDocuments();
         fetchTopics();
-        setFilters((prev) => ({
-          ...prev,
-          processed: "processed",
-        }));
+        setProcessingStatus("all");
       }
 
       previousStatusRef.current = status.status;
@@ -119,10 +114,6 @@ export function Dashboard() {
       console.error("Failed to start process:", err);
       handleAuthError(err as Error);
     }
-  };
-
-  const handleApplyFilters = async (processed: string, topicId: string) => {
-    setFilters({ processed, topicId });
   };
 
   const handleUpload = async (file: File) => {
@@ -199,7 +190,6 @@ export function Dashboard() {
                 onPageChange={setCurrentPage}
                 itemsPerPage={itemsPerPage}
                 setItemsPerPage={setItemsPerPage}
-                applyFilters={handleApplyFilters}
               />
             }
           />
