@@ -1,7 +1,8 @@
+import { AppContext } from "@/contexts/AppContext";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthError, fetchWithAuth } from "@/services/api";
 import { ChevronDown, ChevronUp, FileText, Send, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PulseLoader } from "react-spinners";
 
@@ -28,9 +29,9 @@ const welcomeMessage: Message = {
 export function ChatbotConversation() {
   const navigate = useNavigate();
   const { token, logout } = useAuth();
+  const { setPollTaskId, chatbotStatus } = useContext(AppContext);
   const [history, setHistory] = useState<Message[]>([welcomeMessage]);
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleAuthError = useCallback(
@@ -46,6 +47,13 @@ export function ChatbotConversation() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [history]);
+
+  useEffect(() => {
+    if (chatbotStatus === "done") {
+      setHistory(JSON.parse(localStorage.getItem("chatbotHistory") || "[]"));
+      setPollTaskId(null);
+    }
+  }, [chatbotStatus]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -97,17 +105,19 @@ export function ChatbotConversation() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isLoading || !input.trim()) return;
-    setIsLoading(true);
-    const newMessage: Message = {
+    if (chatbotStatus === "pending" || !input.trim()) return;
+
+    const userMessage: Message = {
       id: crypto.randomUUID(),
       position: history.length,
       role: MessageRole.USER,
       content: input.trim(),
     };
+    const question = input.trim();
     setInput("");
     const oldHistory = [...history];
-    addMessage(newMessage);
+    addMessage(userMessage);
+
     try {
       const response = await fetchWithAuth(`/chatbot/ask`, token, {
         method: "POST",
@@ -115,26 +125,21 @@ export function ChatbotConversation() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          question: input.trim(),
+          question,
           conversation_history: oldHistory
             .slice(-5) // Keep the last 5 messages for context
             .map((message) => [message.role, message.content]),
         }),
       });
 
-      const assistantMessage: Message = {
-        id: crypto.randomUUID(),
-        position: history.length,
-        role: MessageRole.ASSISTANT,
-        content: response.answer,
-        sources: response.sources,
-      };
-      addMessage(assistantMessage);
+      const taskId = response.task_id;
+
+      // Déclenche le polling
+      setPollTaskId(taskId);
     } catch (error) {
       console.error("Error fetching response:", error);
       handleAuthError(error as Error);
     }
-    setIsLoading(false);
   };
 
   return (
@@ -152,10 +157,19 @@ export function ChatbotConversation() {
               <MessageBubble key={message.id} message={message} />
             ))
         )}
-        {isLoading && (
+        {chatbotStatus === "pending" && (
           <div className="flex justify-start">
             <div className="max-w-[80%] rounded-lg p-3 bg-gray-200 text-gray-800 animate-pulse">
               <PulseLoader size={6} />
+            </div>
+          </div>
+        )}
+        {chatbotStatus === "error" && (
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-lg p-3 bg-red-200 text-red-800">
+              <p className="whitespace-pre-wrap">
+                An error occurred while the assistant was processing your request. Please try again.
+              </p>
             </div>
           </div>
         )}
@@ -166,7 +180,7 @@ export function ChatbotConversation() {
         <button
           className="p-2 mr-2 text-gray-500 hover:text-gray-700 transition-colors duration-200 cursor-pointer"
           onClick={clearConversation}
-          disabled={isLoading}
+          disabled={chatbotStatus === "pending"}
           aria-label="Clear chat history"
           title="Clear chat history"
         >
@@ -196,7 +210,7 @@ export function ChatbotConversation() {
             />
             <button
               type="submit"
-              disabled={isLoading || !input.trim()}
+              disabled={chatbotStatus === "pending" || !input.trim()}
               className="cursor-pointer"
             >
               <Send size={24} />
