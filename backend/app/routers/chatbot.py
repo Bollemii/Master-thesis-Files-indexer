@@ -14,7 +14,6 @@ from app.utils.background_tasks_manager import (
     fail_task,
     get_task,
     remove_task,
-    tasks
 )
 from app.database.documents import get_similar_chunks_by_embedding
 
