@@ -11,16 +11,16 @@ export function DashboardFiltersProvider({
     topicId: "",
   });
 
-  const setProcessingStatus = (status: ProcessingStatus) => {
+  const setProcessingFilterStatus = (status: ProcessingStatus) => {
     setFilters((prev) => ({ ...prev, processed: status }));
   };
 
-  const setTopicId = (topicId: string) => {
-      setFilters((prev) => ({ ...prev, topicId }));
+  const setFilterTopicId = (topicId: string) => {
+    setFilters((prev) => ({ ...prev, topicId }));
   };
 
   return (
-    <DashboardFiltersContext.Provider value={{ filters, setFilters, setProcessingStatus, setTopicId }}>
+    <DashboardFiltersContext.Provider value={{ filters, setFilters, setProcessingFilterStatus, setFilterTopicId }}>
       {children}
     </DashboardFiltersContext.Provider>
   );

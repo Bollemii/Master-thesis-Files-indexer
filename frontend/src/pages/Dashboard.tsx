@@ -13,9 +13,10 @@ import { ChatbotButton } from "@/components/ChatbotButton";
 import { DashboardFiltersContext } from "@/contexts/DashboardFiltersContext";
 
 export function Dashboard() {
-  const { filters, setProcessingStatus } = useContext(DashboardFiltersContext);
+  const { filters, setProcessingFilterStatus } = useContext(DashboardFiltersContext);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(true);
   const [documents, setDocuments] = useState<DocumentsPagination>();
   const [topics, setTopics] = useState<TopicsList>();
   const [processStatus, setProcessStatus] = useState<ProcessStatus>({
@@ -95,11 +96,13 @@ export function Dashboard() {
       ) {
         fetchDocuments();
         fetchTopics();
-        setProcessingStatus("all");
+        setProcessingFilterStatus("all");
       }
 
       previousStatusRef.current = status.status;
       setProcessStatus(status);
+
+      return status;
     } catch (err) {
       console.error("Failed to fetch process status:", err);
       handleAuthError(err as Error);
@@ -109,7 +112,7 @@ export function Dashboard() {
   const startProcess = async () => {
     try {
       await fetchWithAuth("/documents/process", token, { method: "POST" });
-      await fetchProcessStatus();
+      setIsProcessing(true);
     } catch (err) {
       console.error("Failed to start process:", err);
       handleAuthError(err as Error);
@@ -140,10 +143,18 @@ export function Dashboard() {
   };
 
   useEffect(() => {
+    if (!isProcessing) return;
     fetchProcessStatus();
-    const interval = setInterval(fetchProcessStatus, 5000);
+    const interval = setInterval(async () => {
+      const status = await fetchProcessStatus();
+      if (status.status !== "running") {
+        clearInterval(interval);
+        setIsProcessing(false);
+      }
+    }, 5000);
+
     return () => clearInterval(interval);
-  }, [fetchProcessStatus]);
+  }, [fetchProcessStatus, isProcessing]);
 
   useEffect(() => {
     const isSearchChange = searchQuery !== (new URLSearchParams(location.search).get("q") ?? "");

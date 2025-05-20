@@ -10,11 +10,11 @@ export type DashboardFilters = {
 export const DashboardFiltersContext = createContext<{
   filters: DashboardFilters;
   setFilters: (filters: DashboardFilters) => void;
-  setProcessingStatus: (status: ProcessingStatus) => void;
-  setTopicId: (topicId: string) => void;
+  setProcessingFilterStatus: (status: ProcessingStatus) => void;
+  setFilterTopicId: (topicId: string) => void;
 }>({
   filters: { processed: "all", topicId: "" },
   setFilters: () => {},
-  setProcessingStatus: () => {},
-  setTopicId: () => {},
+  setProcessingFilterStatus: () => {},
+  setFilterTopicId: () => {},
 });

@@ -93,9 +93,9 @@ export const CorpusList = memo(function CorpusList({
           <span className="text-sm text-gray-500 dark:text-gray-400 mr-4">
             Items per page:
           </span>
-          <div className="rounded-md p-2 mr-2 border dark:border-gray-300 border-gray-700 dark:bg-gray-300 bg-white cursor-pointer">
+          <div className="rounded-md mr-2 border dark:border-gray-300 border-gray-700 dark:bg-gray-300 bg-white cursor-pointer">
             <select
-              style={{ cursor: "pointer" }}
+              className="cursor-pointer p-2"
               onChange={(e) => setItemsPerPageAndScroll(Number(e.target.value))}
               value={itemsPerPage}
             >

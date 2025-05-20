@@ -12,7 +12,7 @@ type DashboardFiltersProps = {
 }
 
 export default function DashboardFilters({ topics }: DashboardFiltersProps) {
-  const { filters, setFilters, setProcessingStatus, setTopicId } = useContext(DashboardFiltersContext)
+  const { filters, setFilters, setProcessingFilterStatus, setFilterTopicId } = useContext(DashboardFiltersContext)
   const [open, setOpen] = useState(false)
 
   const handleResetFilters = () => {
@@ -41,7 +41,7 @@ export default function DashboardFilters({ topics }: DashboardFiltersProps) {
                   className={`flex-1 rounded-none ${
                     filters.processed === "all" ? "bg-white dark:bg-gray-800 text-black dark:text-white hover:cursor-default" : "dark:bg-white bg-gray-800 dark:text-black text-white"
                   }`}
-                  onClick={() => setProcessingStatus("all")}
+                  onClick={() => setProcessingFilterStatus("all")}
                 >
                   All
                 </Button>
@@ -51,7 +51,7 @@ export default function DashboardFilters({ topics }: DashboardFiltersProps) {
                   className={`flex-1 rounded-none ${
                     filters.processed === "processed" ? "bg-white dark:bg-gray-800 text-black dark:text-white hover:cursor-default" : "dark:bg-white bg-gray-800 dark:text-black text-white"
                   }`}
-                  onClick={() => setProcessingStatus("processed")}
+                  onClick={() => setProcessingFilterStatus("processed")}
                 >
                   Processed
                 </Button>
@@ -61,7 +61,7 @@ export default function DashboardFilters({ topics }: DashboardFiltersProps) {
                   className={`flex-1 rounded-none ${
                     filters.processed === "unprocessed" ? "bg-white dark:bg-gray-800 text-black dark:text-white hover:cursor-default" : "dark:bg-white bg-gray-800 dark:text-black text-white"
                   }`}
-                  onClick={() => setProcessingStatus("unprocessed")}
+                  onClick={() => setProcessingFilterStatus("unprocessed")}
                 >
                   Unprocessed
                 </Button>
@@ -70,7 +70,7 @@ export default function DashboardFilters({ topics }: DashboardFiltersProps) {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Topic</label>
-              <Select value={filters.topicId !== "" ? filters.topicId : "all"} onValueChange={setTopicId}>
+              <Select value={filters.topicId !== "" ? filters.topicId : "all"} onValueChange={setFilterTopicId}>
                 <SelectTrigger className="hover:cursor-pointer">
                   <SelectValue placeholder="Select a topic" />
                 </SelectTrigger>
